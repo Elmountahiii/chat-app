@@ -3,6 +3,9 @@ import cors from "cors";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 
+// Routes
+import authRoutes from "./routes/authRoutes";
+
 dotenv.config();
 
 const app = express();
@@ -17,6 +20,7 @@ app.get("/health", (req, res) => {
   res.status(200).json({ message: "Server is healthy" });
 });
 
+app.use("/api/auth", authRoutes);
 
 const serverStart = async () => {
   try {

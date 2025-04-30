@@ -1,6 +1,5 @@
 import type { Request, Response } from "express";
 import { UserService } from "../services/userServices";
-import bcrypt from "bcrypt";
 
 export const signUp = async (req: Request, res: Response) => {
   try {
@@ -14,16 +13,17 @@ export const signUp = async (req: Request, res: Response) => {
       res.status(400).json({ message: "Email already exists" });
       return;
     }
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await Bun.password.hash(password, {
+      algorithm: "bcrypt",
+      cost: 10,
+    });
     const user = await UserService.createUser(username, email, hashedPassword);
     if (user) {
       const { password, ...userWithoutPassword } = user.toObject();
-      res
-        .status(201)
-        .json({
-          message: "User created successfully",
-          user: userWithoutPassword,
-        });
+      res.status(201).json({
+        message: "User created successfully",
+        user: userWithoutPassword,
+      });
     } else {
       res.status(500).json({ message: "Error creating user" });
     }
@@ -45,12 +45,15 @@ export const signin = async (req: Request, res: Response) => {
       res.status(400).json({ message: "Invalid email or password" });
       return;
     }
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await Bun.password.verify(password, user.password);
     if (!isPasswordValid) {
       res.status(400).json({ message: "Invalid email or password" });
       return;
     }
-    res.status(200).json({ message: "Login successful", user });
+    const { password: _, ...userWithoutPassword } = user.toObject();
+    res
+      .status(200)
+      .json({ message: "Login successful", user: userWithoutPassword });
   } catch (error) {
     console.error("Error during sign-up:", error);
     res.status(500).json({ message: "Internal server error" });
