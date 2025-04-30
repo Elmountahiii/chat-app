@@ -2,6 +2,9 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
+import { authMiddleware } from "./middlewares/authMiddleware";
+import cookieParser from "cookie-parser";
+
 
 // Routes
 import authRoutes from "./routes/authRoutes";
@@ -14,10 +17,15 @@ const MONGODB_URI =
   process.env.MONGODB_URI || "mongodb://localhost:27017/myapp";
 
 app.use(cors());
+
 app.use(express.json());
 
 app.get("/health", (req, res) => {
   res.status(200).json({ message: "Server is healthy" });
+});
+
+app.get("/protected", authMiddleware, (req, res) => {
+  res.status(200).json({ message: "Protected route accessed" });
 });
 
 app.use("/api/auth", authRoutes);

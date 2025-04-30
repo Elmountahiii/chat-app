@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { UserService } from "../services/userServices";
+import { generateToken, sendTokenInCookie } from "../services/jwtService";
 
 export const signUp = async (req: Request, res: Response) => {
   try {
@@ -51,6 +52,8 @@ export const signin = async (req: Request, res: Response) => {
       return;
     }
     const { password: _, ...userWithoutPassword } = user.toObject();
+    const token = generateToken(user._id.toString());
+    sendTokenInCookie(res, token);
     res
       .status(200)
       .json({ message: "Login successful", user: userWithoutPassword });
