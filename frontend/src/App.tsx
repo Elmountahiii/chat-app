@@ -1,16 +1,20 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { Toaster } from "sonner";
 
 import HomePage from "./routes/homePage";
-import AuthPage from "./routes/authPage";
+import SignUpPage from "./routes/signUpPage";
+import SignInPage from "./routes/signInPage";
 
 type Props = {};
 
 function App({}: Props) {
   return (
     <Router>
+      <Toaster richColors={true} />
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/auth" element={<AuthPage />} />
+        <Route path="/signup" element={<SignUpPage />} />
+        <Route path="/signin" element={<SignInPage />} />
       </Routes>
     </Router>
   );

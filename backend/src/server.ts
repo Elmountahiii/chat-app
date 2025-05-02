@@ -5,7 +5,6 @@ import mongoose from "mongoose";
 import { authMiddleware } from "./middlewares/authMiddleware";
 import cookieParser from "cookie-parser";
 
-
 // Routes
 import authRoutes from "./routes/authRoutes";
 
@@ -16,7 +15,12 @@ const PORT = process.env.PORT || 3000;
 const MONGODB_URI =
   process.env.MONGODB_URI || "mongodb://localhost:27017/myapp";
 
-app.use(cors());
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    credentials: true,
+  })
+);
 
 app.use(express.json());
 

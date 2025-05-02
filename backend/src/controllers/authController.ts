@@ -4,8 +4,9 @@ import { generateToken, sendTokenInCookie } from "../services/jwtService";
 
 export const signUp = async (req: Request, res: Response) => {
   try {
-    const { email, password, username } = req.body;
-    if (!email || !password || !username) {
+    const { email, password, userName } = req.body;
+    if (!email || !password || !userName) {
+      console.log("email", email, "password", password, "username", userName);
       res.status(400).json({ message: "All fields are required" });
       return;
     }
@@ -18,7 +19,7 @@ export const signUp = async (req: Request, res: Response) => {
       algorithm: "bcrypt",
       cost: 10,
     });
-    const user = await UserService.createUser(username, email, hashedPassword);
+    const user = await UserService.createUser(userName, email, hashedPassword);
     if (user) {
       const { password, ...userWithoutPassword } = user.toObject();
       res.status(201).json({
