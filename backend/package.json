@@ -1,25 +1,28 @@
 {
   "name": "backend",
-  "module": "server.ts",
-  "type": "module",
-  "private": true,
+  "version": "1.0.0",
+  "description": "To install dependencies:",
   "scripts": {
-    "build": "bun build src/server.ts --outdir=dist --minify",
-    "dev": "bun --watch  run src/server.ts",
-    "test": "bun test"
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "dev" : "npx tsx --watch src/server.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "author": "",
+  "license": "ISC",
   "devDependencies": {
+    "@tsconfig/node22": "^22.0.1",
     "@types/bcrypt": "^5.0.2",
-    "@types/bun": "latest",
+    "@types/cookie-parser": "^1.4.8",
     "@types/cors": "^2.8.17",
-    "@types/express": "^5.0.1"
-  },
-  "peerDependencies": {
-    "typescript": "^5"
+    "@types/express": "^5.0.1",
+    "@types/jsonwebtoken": "^9.0.9",
+    "@types/node": "^22.15.3",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
   },
   "dependencies": {
-    "@types/cookie-parser": "^1.4.8",
-    "@types/jsonwebtoken": "^9.0.9",
+    "bcrypt": "^5.1.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",

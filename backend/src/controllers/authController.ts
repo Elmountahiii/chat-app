@@ -1,12 +1,13 @@
 import type { Request, Response } from "express";
 import { UserService } from "../services/userServices";
 import { generateToken, sendTokenInCookie } from "../services/jwtService";
+import bcrypt from "bcrypt";
 
 export const signUp = async (req: Request, res: Response) => {
   try {
-    const { email, password, userName } = req.body;
-    if (!email || !password || !userName) {
-      console.log("email", email, "password", password, "username", userName);
+    const { email, password, username } = req.body;
+    if (!email || !password || !username) {
+      console.log("email", email, "password", password, "username", username);
       res.status(400).json({ message: "All fields are required" });
       return;
     }
@@ -15,11 +16,9 @@ export const signUp = async (req: Request, res: Response) => {
       res.status(400).json({ message: "Email already exists" });
       return;
     }
-    const hashedPassword = await Bun.password.hash(password, {
-      algorithm: "bcrypt",
-      cost: 10,
-    });
-    const user = await UserService.createUser(userName, email, hashedPassword);
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+    const user = await UserService.createUser(username, email, hashedPassword);
     if (user) {
       const { password, ...userWithoutPassword } = user.toObject();
       res.status(201).json({
@@ -47,7 +46,7 @@ export const signin = async (req: Request, res: Response) => {
       res.status(400).json({ message: "Invalid email or password" });
       return;
     }
-    const isPasswordValid = await Bun.password.verify(password, user.password);
+    const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       res.status(400).json({ message: "Invalid email or password" });
       return;

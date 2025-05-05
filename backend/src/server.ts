@@ -3,7 +3,6 @@ import cors from "cors";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import { authMiddleware } from "./middlewares/authMiddleware";
-import cookieParser from "cookie-parser";
 
 // Routes
 import authRoutes from "./routes/authRoutes";
