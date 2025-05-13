@@ -29,9 +29,38 @@ services:
       - my_network
     depends_on:
       - mongodb
-
+    
+  chat-frontend:
+    build:
+      context: ./frontend/
+      dockerfile: Dockerfile
+    container_name: chat-frontend
+    ports:
+      - "8080:80"
+    volumes:
+      - frontend_build:/app/dist
+    networks:
+      - my_network
+    depends_on:
+      - chat-backend
+  nginx:
+    build:
+      context: ./nginx/
+      dockerfile: Dockerfile
+    container_name: nginx
+    ports:
+      - "80:80"
+    volumes:
+      - frontend_build:/usr/share/nginx/html
+    networks:
+      - my_network
+    depends_on:
+      - chat-frontend
+  
 volumes:
   mongo_data:
+    driver: local
+  frontend_build: 
     driver: local
 networks:
   my_network:
