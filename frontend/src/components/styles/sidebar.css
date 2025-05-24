@@ -1,0 +1,114 @@
+.sidebar {
+	width: 100%;
+	background-color: var(--color-background-primary);
+	border-right: 1px solid var(--color-border);
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+  }
+  
+  @media (min-width: 768px) {
+	.sidebar {
+	  width: 320px;
+	}
+  }
+  
+  .sidebar-mobile {
+	position: fixed;
+	z-index: 10;
+	transition: transform 0.3s ease-in-out;
+  }
+  
+  .sidebar-mobile-closed {
+	transform: translateX(-100%);
+  }
+  
+  .sidebar-header {
+	padding: 1rem;
+	background-color: var(--color-background-secondary);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	border-bottom: 1px solid var(--color-border);
+  }
+  
+  .user-avatar {
+	height: 2.5rem;
+	width: 2.5rem;
+	border-radius: var(--radius-full);
+	background: var(--color-message-sent);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-shadow: var(--shadow-sm);
+  }
+  
+  .user-avatar-text {
+	color: white;
+	font-weight: 500;
+  }
+  
+  .header-actions {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+  }
+  
+  .icon-button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 2rem;
+	width: 2rem;
+	border-radius: var(--radius-full);
+	color: var(--color-text-secondary);
+	transition: background-color 0.2s;
+  }
+  
+  .icon-button:hover {
+	background-color: var(--color-background-tertiary);
+  }
+  
+  .search-container {
+	padding: 0.75rem;
+	border-bottom: 1px solid var(--color-border);
+  }
+  
+  .search-input-wrapper {
+	position: relative;
+  }
+  
+  .search-icon {
+	position: absolute;
+	left: 0.75rem;
+	top: 0.625rem;
+	height: 1rem;
+	width: 1rem;
+	color: var(--color-text-tertiary);
+  }
+  
+  .search-input {
+	width: 100%;
+	padding: 0.5rem 0.75rem 0.5rem 2.25rem;
+	border-radius: var(--radius-md);
+	background-color: var(--color-background-secondary);
+	border: none;
+	color: var(--color-text-primary);
+  }
+  
+  .search-input:focus {
+	outline: none;
+	box-shadow: 0 0 0 2px var(--color-primary);
+  }
+  
+  .user-list {
+	flex: 1;
+	overflow-y: auto;
+  }
+  
+  .empty-results {
+	padding: 1rem;
+	text-align: center;
+	color: var(--color-text-secondary);
+  }
+  

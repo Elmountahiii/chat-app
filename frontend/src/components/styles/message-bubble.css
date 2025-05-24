@@ -1,0 +1,62 @@
+.message-row {
+	display: flex;
+	margin-bottom: 1rem;
+  }
+  
+  .message-row-sent {
+	justify-content: flex-end;
+  }
+  
+  .message-row-received {
+	justify-content: flex-start;
+  }
+  
+  .message-bubble {
+	max-width: 70%;
+	border-radius: var(--radius-xl);
+	padding: 0.75rem;
+	position: relative;
+	box-shadow: var(--shadow-sm);
+  }
+  
+  .message-bubble-sent {
+	background: var(--color-message-sent);
+	color: var(--color-message-text-sent);
+  }
+  
+  .message-bubble-received {
+	background-color: var(--color-message-received);
+	color: var(--color-message-text-received);
+  }
+  
+  .message-text {
+	word-wrap: break-word;
+  }
+  
+  .message-meta {
+	display: flex;
+	align-items: center;
+	font-size: 0.75rem;
+	margin-top: 0.25rem;
+  }
+  
+  .message-meta-sent {
+	justify-content: flex-end;
+	color: rgba(255, 255, 255, 0.8);
+  }
+  
+  .message-meta-received {
+	justify-content: flex-start;
+	color: var(--color-text-tertiary);
+  }
+  
+  .message-time {
+	margin-right: 0.25rem;
+  }
+  
+  .message-status {
+	margin-left: 0.25rem;
+	display: flex;
+	align-items: center;
+  }
+  

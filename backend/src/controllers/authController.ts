@@ -1,13 +1,16 @@
 import type { Request, Response } from "express";
 import { UserService } from "../services/userServices";
-import { generateToken, sendTokenInCookie } from "../services/jwtService";
+import {
+  generateToken,
+  sendTokenInCookie,
+  verifyToken,
+} from "../services/jwtService";
 import bcrypt from "bcrypt";
 
 export const signUp = async (req: Request, res: Response) => {
   try {
     const { email, password, username } = req.body;
     if (!email || !password || !username) {
-      console.log("email", email, "password", password, "username", username);
       res.status(400).json({ message: "All fields are required" });
       return;
     }
@@ -61,4 +64,23 @@ export const signin = async (req: Request, res: Response) => {
     console.error("Error during sign-up:", error);
     res.status(500).json({ message: "Internal server error" });
   }
+};
+
+export const verify = async (req: Request, res: Response) => {
+  const token = req.cookies.token;
+  if (!token) {
+    res.status(401).json({ message: "Token missing" });
+    return;
+  }
+  const user = await verifyToken(token);
+  if (!user) {
+    res.status(401).json({
+      status: "Unauthorized",
+    });
+    return;
+  }
+  res.status(200).json({
+    status: "Authorized",
+    user,
+  });
 };

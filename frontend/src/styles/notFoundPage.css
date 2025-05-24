@@ -1,0 +1,105 @@
+.not-found-container {
+	height: 100vh;
+	height: 100svh;
+  }
+  
+  .content-wrapper {
+	margin: auto;
+	height: 100%;
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+  }
+  
+  .title {
+	font-size: 7rem;
+	font-weight: 700;
+	line-height: 1.2;
+  }
+  
+  .subtitle {
+	font-weight: 500;
+  }
+  
+  .description {
+	text-align: center;
+	color: var(--color-text-secondary);
+  }
+  
+  .button-group {
+	margin-top: 1.5rem;
+	display: flex;
+	gap: 1rem;
+  }
+
+  .not-found-container {
+	height: 100vh;
+	height: 100svh;
+  }
+  
+  .content-wrapper {
+	margin: auto;
+	height: 100%;
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+  }
+  
+  .title {
+	font-size: 7rem;
+	font-weight: 700;
+	line-height: 1.2;
+  }
+  
+  .subtitle {
+	font-weight: 500;
+  }
+  
+  .description {
+	text-align: center;
+	color: var(--color-text-secondary);
+  }
+  
+  .button-group {
+	margin-top: 1.5rem;
+	display: flex;
+	gap: 1rem;
+  }
+
+  .button-group button {
+	padding: 0.75rem 1.5rem;
+	border-radius: var(--radius-md);
+	font-weight: 500;
+	transition: all 0.2s ease-in-out;
+	border: none;
+	cursor: pointer;
+  }
+  
+  .button-group button:first-child {
+	background-color: var(--color-background-secondary);
+	color: var(--color-text-primary);
+  }
+  
+  .button-group button:first-child:hover {
+	background-color: var(--color-background-tertiary);
+  }
+  
+  .button-group button:last-child {
+	background: var(--color-message-sent);
+	color: var(--color-message-text-sent);
+  }
+  
+  .button-group button:last-child:hover {
+	opacity: 0.9;
+	transform: translateY(-1px);
+  }
+  
+  .button-group button:active {
+	transform: translateY(1px);
+  }

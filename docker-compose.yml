@@ -14,48 +14,48 @@ services:
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
     networks:
       - my_network
-  chat-backend:
-    build:
-      context: ./backend/
-      dockerfile: Dockerfile
-    container_name: chat-backend
-    ports : 
-      - "3000:3000"
-    environment:
-      - PORT=${PORT}
-      - MONGODB_URI=${MONGODB_URI}
-      - JWT_SECRET=${JWT_SECRET}
-    networks:
-      - my_network
-    depends_on:
-      - mongodb
+  # chat-backend:
+  #   build:
+  #     context: ./backend/
+  #     dockerfile: Dockerfile
+  #   container_name: chat-backend
+  #   ports : 
+  #     - "3000:3000"
+  #   environment:
+  #     - PORT=${PORT}
+  #     - MONGODB_URI=${MONGODB_URI}
+  #     - JWT_SECRET=${JWT_SECRET}
+  #   networks:
+  #     - my_network
+  #   depends_on:
+  #     - mongodb
     
-  chat-frontend:
-    build:
-      context: ./frontend/
-      dockerfile: Dockerfile
-    container_name: chat-frontend
-    ports:
-      - "8080:80"
-    volumes:
-      - frontend_build:/app/dist
-    networks:
-      - my_network
-    depends_on:
-      - chat-backend
-  nginx:
-    build:
-      context: ./nginx/
-      dockerfile: Dockerfile
-    container_name: nginx
-    ports:
-      - "80:80"
-    volumes:
-      - frontend_build:/usr/share/nginx/html
-    networks:
-      - my_network
-    depends_on:
-      - chat-frontend
+  # chat-frontend:
+  #   build:
+  #     context: ./frontend/
+  #     dockerfile: Dockerfile
+  #   container_name: chat-frontend
+  #   ports:
+  #     - "8080:80"
+  #   volumes:
+  #     - frontend_build:/app/dist
+  #   networks:
+  #     - my_network
+  #   depends_on:
+  #     - chat-backend
+  # nginx:
+  #   build:
+  #     context: ./nginx/
+  #     dockerfile: Dockerfile
+  #   container_name: nginx
+  #   ports:
+  #     - "80:80"
+  #   volumes:
+  #     - frontend_build:/usr/share/nginx/html
+  #   networks:
+  #     - my_network
+  #   depends_on:
+  #     - chat-frontend
   
 volumes:
   mongo_data:

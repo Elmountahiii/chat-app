@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import { authMiddleware } from "./middlewares/authMiddleware";
+import cookieParser from "cookie-parser";
 
 // Routes
 import authRoutes from "./routes/authRoutes";
@@ -22,6 +23,7 @@ app.use(
 );
 
 app.use(express.json());
+app.use(cookieParser());
 
 app.get("/health", (req, res) => {
   res.status(200).json({ message: "Server is healthy" });

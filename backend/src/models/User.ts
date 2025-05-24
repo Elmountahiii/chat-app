@@ -7,6 +7,7 @@ export type UserType = {
   password: string;
   createdAt: Date;
   updatedAt: Date;
+  profilePicture: string;
 };
 
 const userSchema = new Schema<UserType>(
@@ -24,6 +25,9 @@ const userSchema = new Schema<UserType>(
     password: {
       type: String,
       required: true,
+    },
+    profilePicture: {
+      type: String,
     },
   },
   { timestamps: true }

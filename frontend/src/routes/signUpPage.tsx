@@ -8,7 +8,7 @@ import "../styles/signUpPage.css";
 const SignUpPage = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = React.useState<SignUpTypes>({
-    userName: "",
+    username: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -109,9 +109,9 @@ const SignUpPage = () => {
           <div className="form-group">
             <input
               type="text"
-              id="userName"
-              name="userName"
-              value={formData.userName}
+              id="username"
+              name="username"
+              value={formData.username}
               onChange={handleChange}
               placeholder="Username"
               required

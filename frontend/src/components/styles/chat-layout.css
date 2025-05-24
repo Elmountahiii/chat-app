@@ -1,0 +1,29 @@
+.chat-layout {
+	display: flex;
+	height: 100vh;
+	background-color: var(--color-background-tertiary);
+  }
+  
+  .empty-conversation {
+	flex: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background-color: var(--color-background-tertiary);
+  }
+  
+  .empty-conversation-content {
+	text-align: center;
+  }
+  
+  .empty-conversation-title {
+	font-size: 1.25rem;
+	font-weight: 500;
+	color: var(--color-text-primary);
+	margin-bottom: 0.5rem;
+  }
+  
+  .empty-conversation-subtitle {
+	color: var(--color-text-secondary);
+  }
+  
