@@ -1,86 +1,140 @@
 import type { Request, Response } from "express";
-import { UserService } from "../services/userServices";
+import { AuthService } from "../services/authService";
+import { AuthValidator } from "../validators/authValidator";
 import {
-  generateToken,
-  sendTokenInCookie,
-  verifyToken,
-} from "../services/jwtService";
-import bcrypt from "bcrypt";
+  AppError,
+  createErrorResponse,
+  createSuccessResponse,
+} from "../types/common";
+import { config } from "../config/environment";
+import { logger } from "../config/logger";
 
-export const signUp = async (req: Request, res: Response) => {
-  try {
-    const { email, password, username } = req.body;
-    if (!email || !password || !username) {
-      res.status(400).json({ message: "All fields are required" });
-      return;
-    }
-    const existingUser = await UserService.findUserByEmail(email);
-    if (existingUser) {
-      res.status(400).json({ message: "Email already exists" });
-      return;
-    }
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-    const user = await UserService.createUser(username, email, hashedPassword);
-    if (user) {
-      const { password, ...userWithoutPassword } = user.toObject();
-      res.status(201).json({
-        message: "User created successfully",
-        user: userWithoutPassword,
+export class AuthController {
+  constructor(
+    private authService: AuthService,
+    private authValidator: AuthValidator
+  ) {}
+
+  private handleError(
+    error: unknown,
+    res: Response,
+    context: string,
+    data?: Record<string, any>
+  ): void {
+    if (error instanceof AppError) {
+      logger.error(`${context} - AppError:`, {
+        message: error.message,
+        statusCode: error.statusCode,
+        ...data,
       });
+      res.status(error.statusCode).json(createErrorResponse(error.message));
+    } else if (error instanceof Error) {
+      logger.error(`${context} - Error:`, {
+        message: error.message,
+        stack: error.stack,
+        ...data,
+      });
+      res.status(500).json(createErrorResponse("Internal server error"));
     } else {
-      res.status(500).json({ message: "Error creating user" });
+      logger.error(`${context} - Unknown error:`, {
+        error: String(error),
+        ...data,
+      });
+      res.status(500).json(createErrorResponse("Internal server error"));
     }
-  } catch (error) {
-    console.error("Error during sign-up:", error);
-    res.status(500).json({ message: "Internal server error" });
   }
-};
 
-export const signin = async (req: Request, res: Response) => {
-  try {
+  signUp = async (req: Request, res: Response) => {
+    const { username, email, password } = req.body;
+    try {
+      await this.authValidator.validateSignUpInput(username, email, password);
+      const user = await this.authService.registerUser(
+        username,
+        email,
+        password
+      );
+      const { password: _, ...userWithoutPassword } = user;
+
+      res
+        .status(201)
+        .json(
+          createSuccessResponse(
+            userWithoutPassword,
+            "Account created successfully"
+          )
+        );
+    } catch (e) {
+      this.handleError(e, res, "Error during sign up", {
+        username,
+        email,
+        password,
+      });
+    }
+  };
+
+  logIn = async (req: Request, res: Response) => {
     const { email, password } = req.body;
-    if (!email || !password) {
-      res.status(400).json({ message: "All fields are required" });
-      return;
+    try {
+      await this.authValidator.validateLoginInput(email, password);
+      const user = await this.authService.loginUser(email, password);
+      const { password: _, ...userWithoutPassword } = user;
+      const token = await this.authService.signToken(
+        userWithoutPassword._id.toString()
+      );
+      res.cookie("authToken", token, {
+        httpOnly: true,
+        secure: config.ENV === "production",
+        sameSite: "strict",
+        maxAge: 24 * 60 * 60 * 1000,
+      });
+      res
+        .status(200)
+        .json(createSuccessResponse(userWithoutPassword, "Login successful"));
+    } catch (e) {
+      this.handleError(e, res, "Error during login", { email, password });
     }
-    const user = await UserService.findUserByEmail(email);
-    if (!user) {
-      res.status(400).json({ message: "Invalid email or password" });
-      return;
-    }
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      res.status(400).json({ message: "Invalid email or password" });
-      return;
-    }
-    const { password: _, ...userWithoutPassword } = user.toObject();
-    const token = generateToken(user._id.toString());
-    sendTokenInCookie(res, token);
-    res
-      .status(200)
-      .json({ message: "Login successful", user: userWithoutPassword });
-  } catch (error) {
-    console.error("Error during sign-up:", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-};
+  };
 
-export const verify = async (req: Request, res: Response) => {
-  const token = req.cookies.token;
-  if (!token) {
-    res.status(401).json({ message: "Token missing" });
-    return;
-  }
-  const user = await verifyToken(token);
-  if (!user) {
-    res.status(401).json({
-      status: "Unauthorized",
-    });
-    return;
-  }
-  res.status(200).json({
-    status: "Authorized",
-    user,
-  });
-};
+  me = async (req: Request, res: Response) => {
+    const token = req.cookies.authToken;
+    try {
+      const user = await this.authService.verifyToken(token);
+      if (!user) {
+        res.status(401).json(createErrorResponse("Unauthorized"));
+      } else {
+        const { password: _, ...userWithoutPassword } = user;
+        res
+          .status(200)
+          .json(
+            createSuccessResponse(
+              userWithoutPassword,
+              "User profile retrieved successfully"
+            )
+          );
+      }
+    } catch (e) {
+      this.handleError(e, res, "Error retrieving user profile", {
+        token,
+      });
+    }
+  };
+
+  logout = async (req: Request, res: Response) => {
+    try {
+      res.clearCookie("authToken", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        path: "/",
+      });
+
+      res
+        .status(200)
+        .json(createSuccessResponse(null, "Logged out successfully"));
+    } catch (e) {
+      this.handleError(e, res, "Error logging out", {
+        token: req.cookies.authToken,
+      });
+    }
+  };
+}

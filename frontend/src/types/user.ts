@@ -1,19 +1,8 @@
 export type User = {
-  id: string;
-  email: string;
+  _id: string;
   username: string;
+  email: string;
   profilePicture: string;
-  online: boolean;
-  lastMessageTime: string;
-  lastMessage: string;
-  unreadCount: number;
+  createdAt: string;
+  updatedAt: string;
 };
-
-export type Message {
-  id: string;
-  text: string;
-  sender: string;
-  timestamp: string;
-  status: "sent" | "delivered" | "read";
-}
-

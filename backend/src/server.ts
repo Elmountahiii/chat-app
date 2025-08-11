@@ -1,29 +1,26 @@
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
+
+import morgan from "morgan";
+
 import mongoose from "mongoose";
 import { authMiddleware } from "./middlewares/authMiddleware";
 import cookieParser from "cookie-parser";
-
-// Routes
+import { config, corsConfig } from "./config/environment";
 import authRoutes from "./routes/authRoutes";
-
-dotenv.config();
+import { errorMiddleware } from "./middlewares/errorMiddleware";
+import { fileStream, logger } from "./config/logger";
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-const MONGODB_URI =
-  process.env.MONGODB_URI || "mongodb://localhost:27017/myapp";
 
 app.use(
-  cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
-    credentials: true,
+  morgan("combined", {
+    stream: fileStream,
   })
 );
-
 app.use(express.json());
 app.use(cookieParser());
+app.use(cors(corsConfig));
 
 app.get("/health", (req, res) => {
   res.status(200).json({ message: "Server is healthy" });
@@ -35,16 +32,19 @@ app.get("/protected", authMiddleware, (req, res) => {
 
 app.use("/api/auth", authRoutes);
 
+app.use(errorMiddleware);
+
 const serverStart = async () => {
   try {
-    console.log("Connecting to MongoDB...");
-    await mongoose.connect(MONGODB_URI);
-    console.log("Connected to MongoDB");
-    app.listen(PORT, () => {
-      console.log(`Server is running on http://localhost:${PORT}`);
+    logger.info("Connecting to database ....");
+    await mongoose.connect(config.MONGODB_URI);
+    logger.info("Connected to database successfully");
+    app.listen(config.PORT, () => {
+      logger.info(`Server is running on http://localhost:${config.PORT}`);
     });
   } catch (error) {
-    console.error("Error starting the server:", error);
+    logger.error("Error starting the server:", error);
+    process.exit(1);
   }
 };
 

@@ -1,4 +1,4 @@
-import { UserModel } from "../models/User";
+import { UserModel } from "../types/User";
 
 const profilePictureList = [
   "https://api.dicebear.com/9.x/notionists-neutral/svg?seed=Jack",
