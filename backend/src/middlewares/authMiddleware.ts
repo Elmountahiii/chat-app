@@ -1,27 +1,23 @@
 import type { Request, Response, NextFunction } from "express";
-import { verifyToken } from "../services/jwtService";
-
-import jwt from "jsonwebtoken";
-
-type DecodedToken = {
-  userId: string;
-};
+import { JwtService } from "../services/jwtService";
+import { createErrorResponse } from "../types/common";
 
 export const authMiddleware = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  const token = req.cookies.token;
+  const jwtService = new JwtService();
+  const token = req.cookies.authToken;
   if (!token) {
-    res.status(401).json({ message: "Token missing" });
+    res.status(401).json(createErrorResponse("Unauthorized access"));
     return;
   }
-  const user = await verifyToken(token);
-  if (!user) {
-    res.status(401).json({ message: "Invalid token" });
-    return;
+  try {
+    const userId = await jwtService.verifyToken(token);
+    req.headers["user-id"] = userId;
+    next();
+  } catch (error) {
+    res.status(401).json(createErrorResponse("Unauthorized access"));
   }
-  req.headers["user-id"] = user._id.toString();
-  next();
 };

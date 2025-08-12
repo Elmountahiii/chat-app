@@ -9,11 +9,17 @@ import type { StringValue } from "ms";
 export class AuthService {
   constructor(private authRepository: AuthRepository) {}
 
-  async registerUser(userName: string, email: string, password: string) {
+  async registerUser(
+    firstName: string,
+    lastName: string,
+    email: string,
+    password: string
+  ) {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
     const user = await this.authRepository.createUser(
-      userName,
+      firstName,
+      lastName,
       email,
       hashedPassword
     );
@@ -71,5 +77,4 @@ export class AuthService {
       throw new AppError("Invalid or expired token", 401);
     }
   }
-
 }

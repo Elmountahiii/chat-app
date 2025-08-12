@@ -3,6 +3,7 @@ import { AuthState } from "@/types/state/authState";
 import { create } from "zustand";
 import { HttpResponse } from "@/types/httpResponse";
 import { User } from "@/types/user";
+import { SignUpDataType } from "@/schema/auth/signUpSchema";
 
 type AuthStore = AuthState & AuthActions;
 const apiUrl = "http://localhost:3000/api";
@@ -23,7 +24,6 @@ export const useAuthStore = create<AuthStore>((set) => ({
         isLoading: true,
         error: null,
       });
-      console.log(`${apiUrl}/auth/login`);
       const response = await fetch(`${apiUrl}/auth/login`, {
         method: "POST",
         credentials: "include",
@@ -57,7 +57,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
     }
   },
 
-  signUp: async (username: string, email: string, password: string) => {
+  signUp: async (userData: SignUpDataType) => {
     try {
       set({
         isLoading: true,
@@ -70,7 +70,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ username, email, password }),
+        body: JSON.stringify(userData),
       });
       const data: HttpResponse<User> = await response.json();
 
@@ -84,12 +84,16 @@ export const useAuthStore = create<AuthStore>((set) => ({
 
       set({
         isLoading: false,
-        isAuthenticated: true,
         isRegistered: true,
         successMessage: data.successMessage,
-        user: data.data,
         error: null,
       });
+
+      setTimeout(() => {
+        set({
+          isRegistered: false,
+        });
+      }, 500);
     } catch (e) {
       console.warn(`Signup error:`, e);
       set({

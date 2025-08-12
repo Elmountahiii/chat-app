@@ -1,8 +1,10 @@
+import { SignUpDataType } from "@/schema/auth/signUpSchema";
 import { User } from "../user";
+
 
 export type AuthActions = {
   login: (email: string, password: string) => Promise<void>;
-  signUp: (username: string, email: string, password: string) => Promise<void>;
+  signUp: (userData: SignUpDataType) => Promise<void>;
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   checkAuthStatus: () => Promise<void>;

@@ -35,13 +35,13 @@ export function UserCard({ user, onLogout }: UserCardProps) {
             {user.profilePicture ? (
               <img
                 src={user.profilePicture}
-                alt={`${user.username}'s profile`}
+                alt={`${user.firstName}'s profile`}
                 className="w-16 h-16 rounded-full object-cover border-2 border-border"
               />
             ) : (
               <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center border-2 border-border">
                 <span className="text-2xl font-semibold text-muted-foreground">
-                  {user.username.charAt(0).toUpperCase()}
+                  {user.firstName.charAt(0).toUpperCase()}
                 </span>
               </div>
             )}
@@ -51,7 +51,9 @@ export function UserCard({ user, onLogout }: UserCardProps) {
 
           {/* User Info */}
           <div className="flex-1">
-            <CardTitle className="text-xl">{user.username}</CardTitle>
+            <CardTitle className="text-xl">
+              {user.firstName} {user.lastName}
+            </CardTitle>
             <p className="text-sm text-muted-foreground">{user.email}</p>
           </div>
         </div>

@@ -5,7 +5,7 @@ import { LoginDataType, LoginSchema } from "@/schema/auth/loginSchema";
 import { useRouter } from "next/navigation";
 
 import Link from "next/link";
-import { Eye, EyeOff, Loader2, Github } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 

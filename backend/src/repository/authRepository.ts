@@ -2,16 +2,22 @@ import { PROFILE_PICTURE_LIST } from "../types/constants";
 import { User, UserModel } from "../types/User";
 
 export class AuthRepository {
-  async createUser(userName: string, email: string, password: string) {
+  async createUser(
+    firstName: string,
+    lastName: string,
+    email: string,
+    password: string
+  ) {
     const randomIndex = Math.floor(Math.random() * PROFILE_PICTURE_LIST.length);
     const user = new UserModel({
-      userName,
+      firstName,
+      lastName,
       email,
       password,
       profilePicture: PROFILE_PICTURE_LIST[randomIndex],
     });
     await user.save();
-    return user;
+    return user.toObject() as User;
   }
 
   async findUserByEmail(email: string) {

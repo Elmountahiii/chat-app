@@ -45,11 +45,17 @@ export class AuthController {
   }
 
   signUp = async (req: Request, res: Response) => {
-    const { username, email, password } = req.body;
+    const { firstName, lastName, email, password } = req.body;
     try {
-      await this.authValidator.validateSignUpInput(username, email, password);
+      await this.authValidator.validateSignUpInput(
+        firstName,
+        lastName,
+        email,
+        password
+      );
       const user = await this.authService.registerUser(
-        username,
+        firstName,
+        lastName,
         email,
         password
       );
@@ -65,7 +71,8 @@ export class AuthController {
         );
     } catch (e) {
       this.handleError(e, res, "Error during sign up", {
-        username,
+        firstName,
+        lastName,
         email,
         password,
       });

@@ -41,7 +41,8 @@ const SignUpForm = (props: Props) => {
   const form = useForm<SignUpDataType>({
     resolver: zodResolver(SignUpSchema),
     defaultValues: {
-      username: "",
+      firstName: "",
+      lastName: "",
       email: "",
       password: "",
       confirmPassword: "",
@@ -69,30 +70,50 @@ const SignUpForm = (props: Props) => {
   }, [error]);
 
   const onSubmit = async (data: SignUpDataType) => {
-    signUp(data.username, data.email, data.password);
+    signUp(data);
   };
   return (
     <div>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <FormField
-            control={form.control}
-            name="username"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Username</FormLabel>
-                <FormControl>
-                  <Input
-                    type="text"
-                    placeholder="john_doe"
-                    {...field}
-                    disabled={isLoading}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <div className="flex gap-4">
+            <FormField
+              control={form.control}
+              name="firstName"
+              render={({ field }) => (
+                <FormItem className="flex-1">
+                  <FormLabel>First Name</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="text"
+                      placeholder="John"
+                      {...field}
+                      disabled={isLoading}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="lastName"
+              render={({ field }) => (
+                <FormItem className="flex-1">
+                  <FormLabel>Last Name</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="text"
+                      placeholder="Doe"
+                      {...field}
+                      disabled={isLoading}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
           <FormField
             control={form.control}
             name="email"

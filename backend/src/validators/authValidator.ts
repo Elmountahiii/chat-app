@@ -18,18 +18,25 @@ export class AuthValidator {
   }
 
   async validateSignUpInput(
-    userName: string,
+    firstName: string,
+    lastName: string,
     email: string,
     password: string
   ): Promise<boolean> {
     const { error } = SignUpSchema.safeParse({
-      username: userName,
+      firstName,
+      lastName,
       email,
       password,
     });
     if (error) {
       logger.error("Error validating registration input:", error);
-      logger.error("user credentials:", { userName, email, password });
+      logger.error("user credentials:", {
+        firstName,
+        lastName,
+        email,
+        password,
+      });
       throw new AppError("Invalid registration input", 400);
     }
     const isEmailTaken = await this.checkIfUserExistsByEmail(email);

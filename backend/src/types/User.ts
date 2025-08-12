@@ -2,7 +2,8 @@ import mongoose from "mongoose";
 const { Schema } = mongoose;
 
 export type User = {
-  userName: string;
+  firstName: string;
+  lastName: string;
   email: string;
   password: string;
   createdAt: Date;
@@ -12,10 +13,17 @@ export type User = {
 
 const userSchema = new Schema<User>(
   {
-    userName: {
+    firstName: {
       type: String,
-      required: true,
-      unique: true,
+      required: false,
+      default: "",
+      unique: false,
+    },
+    lastName: {
+      type: String,
+      required: false,
+      default: "",
+      unique: false,
     },
     email: {
       type: String,
