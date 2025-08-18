@@ -7,7 +7,7 @@ const envSchema = z.object({
   ENV: z.enum(["development", "production", "test"]).default("development"),
   PORT: z.number().min(1).max(65535).default(3001),
   MONGODB_URI: z.string(),
-  CLIENT_URL: z.url().default("http://localhost:3001"),
+  CLIENT_URL: z.url().default("http://localhost:3000"),
   JWT_SECRET: z.string().min(1, "JWT_SECRET is required"),
   JWT_EXPIRATION: z.string().default("1h"),
   JWT_REFRESH_SECRET: z.string().min(1, "JWT_REFRESH_SECRET is required"),

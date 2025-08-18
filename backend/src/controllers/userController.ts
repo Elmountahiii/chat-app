@@ -39,6 +39,8 @@ export class UserController {
     }
   }
 
+
+
   getUserProfile = async (req: Request, res: Response) => {
     const userId = req.headers["user-id"] as string;
     console.log("Fetching user profile for userId:", userId);

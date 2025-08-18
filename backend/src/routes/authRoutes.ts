@@ -1,14 +1,20 @@
 import express from "express";
 import { AuthValidator } from "../validators/authValidator";
 import { AuthService } from "../services/authService";
-import { AuthRepository } from "../repository/authRepository";
 import { AuthController } from "../controllers/authController";
+import { UserRepository } from "../repository/userRepository";
+import { JwtService } from "../services/jwtService";
 
 const AuthRouter = express.Router();
-const authRepository = new AuthRepository();
-const authService = new AuthService(authRepository);
+const userRepo = new UserRepository();
+const authService = new AuthService(userRepo);
 const authValidator = new AuthValidator(authService);
-const authController = new AuthController(authService, authValidator);
+const jwtService = new JwtService();
+const authController = new AuthController(
+  authService,
+  jwtService,
+  authValidator
+);
 
 AuthRouter.get("/me", authController.me);
 AuthRouter.post("/signup", authController.signUp);

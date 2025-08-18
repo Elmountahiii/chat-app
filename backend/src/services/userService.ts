@@ -18,4 +18,8 @@ export class UserService {
   ) {
     return await this.userRepository.updateUser(userId, updateData);
   }
+
+  async searchUsers(query: string, userId: string) {
+    return await this.userRepository.searchUsers(query, userId);
+  }
 }

@@ -8,10 +8,12 @@ import {
 } from "../types/common";
 import { config } from "../config/environment";
 import { logger } from "../config/logger";
+import { JwtService } from "../services/jwtService";
 
 export class AuthController {
   constructor(
     private authService: AuthService,
+    private jwtService: JwtService,
     private authValidator: AuthValidator
   ) {}
 
@@ -85,14 +87,16 @@ export class AuthController {
       await this.authValidator.validateLoginInput(email, password);
       const user = await this.authService.loginUser(email, password);
       const { password: _, ...userWithoutPassword } = user;
-      const token = await this.authService.signToken(
+      const token = await this.jwtService.signToken(
         userWithoutPassword._id.toString()
       );
+      console.log("token", token);
       res.cookie("authToken", token, {
         httpOnly: true,
         secure: config.ENV === "production",
         sameSite: "strict",
         maxAge: 24 * 60 * 60 * 1000,
+        path: "/",
       });
       res
         .status(200)
@@ -105,10 +109,15 @@ export class AuthController {
   me = async (req: Request, res: Response) => {
     const token = req.cookies.authToken;
     try {
-      const user = await this.authService.verifyToken(token);
-      if (!user) {
+      const userId = await this.jwtService.verifyToken(token);
+      if (!userId) {
         res.status(401).json(createErrorResponse("Unauthorized"));
       } else {
+        const user = await this.authService.getUserById(userId);
+        if (!user) {
+          res.status(404).json(createErrorResponse("User not found"));
+          return;
+        }
         const { password: _, ...userWithoutPassword } = user;
         res
           .status(200)
