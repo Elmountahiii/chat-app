@@ -9,6 +9,7 @@ import {
   CardAction,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 
 interface UserCardProps {
   user: User | null;
@@ -18,13 +19,7 @@ interface UserCardProps {
 export function UserCard({ user, onLogout }: UserCardProps) {
   if (!user) return null;
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
+
 
   return (
     <Card>
@@ -33,7 +28,9 @@ export function UserCard({ user, onLogout }: UserCardProps) {
           {/* Profile Picture */}
           <div className="relative">
             {user.profilePicture ? (
-              <img
+              <Image
+               width={64}
+                height={64}
                 src={user.profilePicture}
                 alt={`${user.firstName}'s profile`}
                 className="w-16 h-16 rounded-full object-cover border-2 border-border"

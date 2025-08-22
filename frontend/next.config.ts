@@ -2,16 +2,17 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
-    domains: ["api.dicebear.com"], // Add your external image hostnames here
-    // or for more granular control with remotePatterns:
-    // remotePatterns: [
-    //   {
-    //     protocol: 'https',
-    //     hostname: 'assets.example.com',
-    //     port: '',
-    //     pathname: '/account123/**',
-    //   },
-    // ],
+    dangerouslyAllowSVG: true,
+    contentDispositionType: 'attachment',
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'api.dicebear.com',
+        port: '',
+        pathname: '/**',
+      },
+    ],
   },
 };
 

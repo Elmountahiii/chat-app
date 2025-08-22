@@ -1,5 +1,6 @@
 "use client";
 import { User } from "@/types/user";
+import Image from "next/image";
 import React from "react";
 
 type UserCardCompactProps = {
@@ -11,7 +12,9 @@ function UserCardCompact({ user }: UserCardCompactProps) {
   return (
     <div className="flex items-center gap-3 p-3 rounded-lg border bg-card">
       {user.profilePicture ? (
-        <img
+        <Image
+         width={40}
+          height={40}
           src={user.profilePicture}
           alt={`${user.username}'s profile`}
           className="w-10 h-10 rounded-full object-cover"

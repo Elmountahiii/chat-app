@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { PROFILE_PICTURES } from "@/types/utils";
 import { Edit2 } from "lucide-react";
+import Image from "next/image";
 
 type Props = {
   isDialogOpen: boolean;
@@ -50,7 +51,9 @@ function ProfileImagePicker({
                   ? "border-primary ring-2 ring-primary/30"
                   : "border-border hover:border-primary/50"
               }`}>
-              <img
+              <Image
+               width={64}
+                height={64}
                 src={picture}
                 alt={`Profile option ${index + 1}`}
                 className="object-cover"

@@ -28,6 +28,7 @@ import { Input } from "@/components/ui/input";
 import { PROFILE_PICTURES } from "@/types/utils";
 import ProfileImagePicker from "./profileImagePicker";
 import { Button } from "../ui/button";
+import Image from "next/image";
 
 type profileSettingsProps = {
   cardTitle: string;
@@ -82,7 +83,9 @@ function ProfileSettings({
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="flex justify-center">
               <div className="relative">
-                <img
+                <Image
+                 width={40}
+                  height={40}
                   src={selectedPicture}
                   alt="Profile picture"
                   className="w-20 h-20 rounded-full object-cover border-2 border-border"
