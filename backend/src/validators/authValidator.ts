@@ -2,48 +2,25 @@ import { AppError } from "../types/common";
 import { LoginSchema } from "../schema/auth/loginSchema";
 import { SignUpSchema } from "../schema/auth/signUpSchema";
 import { AuthService } from "../services/authService";
-import { logger } from "../config/logger";
 
 export class AuthValidator {
   constructor(private authService: AuthService) {}
 
-  async validateLoginInput(email: string, password: string) {
-    const { error } = LoginSchema.safeParse({ email, password });
-    if (error) {
-      logger.error("Invalid login attempt");
-      logger.error("Error validating login input:", error);
-      logger.error("user credentials:", { email, password });
-      throw new AppError("Invalid login input", 400);
-    }
+  async validateLoginInput(body: unknown) {
+    const validatedData = LoginSchema.parse(body);
+    return validatedData;
   }
 
-  async validateSignUpInput(
-    firstName: string,
-    lastName: string,
-    email: string,
-    password: string
-  ): Promise<boolean> {
-    const { error } = SignUpSchema.safeParse({
-      firstName,
-      lastName,
-      email,
-      password,
-    });
-    if (error) {
-      logger.error("Error validating registration input:", error);
-      logger.error("user credentials:", {
-        firstName,
-        lastName,
-        email,
-        password,
-      });
-      throw new AppError("Invalid registration input", 400);
-    }
-    const isEmailTaken = await this.checkIfUserExistsByEmail(email);
+  async validateSignUpInput(body: unknown) {
+    const validatedData = SignUpSchema.parse(body);
+
+    const isEmailTaken = await this.checkIfUserExistsByEmail(
+      validatedData.email
+    );
     if (isEmailTaken) {
       throw new AppError("A user with this email already exists", 400);
     }
-    return true;
+    return validatedData;
   }
 
   async checkIfUserExistsByEmail(email: string): Promise<boolean> {

@@ -27,3 +27,9 @@ const friendshipSchema = new Schema(
 friendshipSchema.index({ requester: 1, recipient: 1 }, { unique: true });
 
 export const FriendshipModel = mongoose.model("Friendship", friendshipSchema);
+
+export type FriendshipDocumentType = mongoose.InferSchemaType<
+  typeof friendshipSchema
+> & {
+  _id: mongoose.Types.ObjectId;
+};

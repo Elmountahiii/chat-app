@@ -7,7 +7,7 @@ export const errorMiddleware = (
   res: Response,
   next: NextFunction
 ) => {
-  console.error(err.stack);
+    
   const statusCode =
     err instanceof AppError ? err.statusCode : HttpStatus.INTERNAL_SERVER_ERROR;
   res.status(statusCode).json(createErrorResponse(err.message));

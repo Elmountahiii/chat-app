@@ -24,6 +24,7 @@ export class JwtService {
       };
       return decode.userId;
     } catch (e) {
+      console.log("JWT verification error:", e);
       throw new AppError("Invalid or expired token", 401);
     }
   }

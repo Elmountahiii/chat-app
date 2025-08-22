@@ -1,7 +1,10 @@
-import { UserModel } from "../schema/mongodb/userSchema";
+import { UserDocumentType, UserModel } from "../schema/mongodb/userSchema";
 import { PROFILE_PICTURE_LIST } from "../types/constants";
 import { User } from "../types/User";
-import { FriendshipModel } from "../schema/mongodb/friendshipSchema";
+import {
+  FriendshipDocumentType,
+  FriendshipModel,
+} from "../schema/mongodb/friendshipSchema";
 
 export class UserRepository {
   async createUser(
@@ -25,35 +28,37 @@ export class UserRepository {
   }
 
   async findUserByEmail(email: string) {
+    return await UserModel.findOne({ email }).select("-password").lean();
+  }
+  async findUserByEmailWithPassword(email: string) {
     return await UserModel.findOne({ email }).lean();
   }
-
   async findUserById(userId: string) {
-    return await UserModel.findById(userId).lean();
+    return await UserModel.findById(userId).select("-password").lean();
   }
 
   async findByUserName(username: string) {
-    return await UserModel.findOne({ username }).lean();
+    return await UserModel.findOne({ username }).select("-password").lean();
   }
 
   async updateUser(userId: string, updateData: Partial<User>) {
     return await UserModel.findByIdAndUpdate(userId, updateData, {
       new: true,
-    }).lean();
+    })
+      .select("-password")
+      .lean();
   }
 
   async deleteUser(userId: string) {
-    return await UserModel.findByIdAndDelete(userId);
+    return await UserModel.findByIdAndDelete(userId).select("-password").lean();
   }
   async getAllUsers() {
-    return await UserModel.find({});
+    return await UserModel.find({}).select("-password").lean();
   }
   async searchUsers(query: string, userId: string) {
-    // sanitize and create case-insensitive regex
     const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const regex = new RegExp(escaped, "i");
 
-    // find matching users (exclude password)
     const users = await UserModel.find({
       $or: [
         { username: regex },
@@ -65,30 +70,27 @@ export class UserRepository {
       .select("-password")
       .lean();
 
-
-    // exclude the current user from results
-    const otherUsers = users.filter((u: any) => u._id.toString() !== userId);
+    const otherUsers = users.filter(
+      (u: UserDocumentType) => u._id.toString() !== userId
+    );
     if (otherUsers.length === 0) return [];
 
-    // build OR query to fetch all friendships between userId and matched users
-    const orClauses = otherUsers.flatMap((u: any) => [
+    const orClauses = otherUsers.flatMap((u: UserDocumentType) => [
       { requester: userId, recipient: u._id },
       { requester: u._id, recipient: userId },
     ]);
 
     const friendships = await FriendshipModel.find({ $or: orClauses }).lean();
 
-    // map friendship by the other user's id for quick lookup
-    const friendshipMap = new Map<string, any>();
-    friendships.forEach((f: any) => {
+    const friendshipMap = new Map<string, FriendshipDocumentType>();
+    friendships.forEach((f: FriendshipDocumentType) => {
       const requesterId = f.requester.toString();
       const recipientId = f.recipient.toString();
       const otherId = requesterId === userId ? recipientId : requesterId;
       friendshipMap.set(otherId, f);
     });
 
-    // attach friendship info to each user
-    return otherUsers.map((u: any) => {
+    return otherUsers.map((u: UserDocumentType) => {
       const f = friendshipMap.get(u._id.toString());
       if (!f) {
         return { ...u, friendship: { id: null, status: "none" } };

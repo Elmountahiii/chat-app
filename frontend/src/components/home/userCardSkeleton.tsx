@@ -1,9 +1,7 @@
 import React from "react";
 import { Card, CardContent, CardHeader } from "../ui/card";
 
-type Props = {};
-
-function UserCardSkeleton({}: Props) {
+function UserCardSkeleton() {
   return (
     <Card>
       <CardHeader>

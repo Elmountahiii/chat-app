@@ -36,7 +36,7 @@ const userSchema = new Schema<User>(
     },
     status: {
       type: String,
-      enum: ["online", "offline"],
+      enum: ["online", "offline", "away"],
       default: "offline",
     },
     lastSeen: {
@@ -52,3 +52,7 @@ const userSchema = new Schema<User>(
 );
 
 export const UserModel = mongoose.model<User>("User", userSchema);
+
+export type UserDocumentType = mongoose.InferSchemaType<typeof userSchema> & {
+  _id: mongoose.Types.ObjectId;
+};

@@ -23,9 +23,7 @@ import { SocialLogin } from "./socialLogin";
 import { useAuthStore } from "@/stateManagment/authStore";
 import { toast } from "sonner";
 
-type Props = {};
-
-function LoginForm({}: Props) {
+function LoginForm() {
   const {
     login,
     isLoading,
@@ -57,14 +55,14 @@ function LoginForm({}: Props) {
       toast.success(successMessage);
       clearSuccessMessage();
     }
-  }, [successMessage]);
+  }, [successMessage, clearSuccessMessage]);
 
   useEffect(() => {
     if (error) {
       toast.error(error);
       clearError();
     }
-  }, [error]);
+  }, [error, clearError]);
 
   const onSubmit = async (data: LoginDataType) => {
     login(data.email, data.password);
@@ -149,7 +147,9 @@ function LoginForm({}: Props) {
           </Button>
         </form>
         <div className="flex items-center justify-center mt-4">
-          <span className="text-sm text-gray-500">Don't have an account?</span>
+          <span className="text-sm text-gray-500">
+            Don&apos;t have an account?
+          </span>
           <Link
             href="/auth/signup"
             className="ml-2 text-sm font-medium text-blue-600 hover:text-blue-500">

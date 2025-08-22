@@ -20,9 +20,7 @@ import { Button } from "../ui/button";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
 
-type Props = {};
-
-const ForgetPasswordForm = (props: Props) => {
+const ForgetPasswordForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -36,6 +34,7 @@ const ForgetPasswordForm = (props: Props) => {
     setIsLoading(true);
 
     console.log("Forgot password data:", data);
+    console.log("message:", message);
 
     setTimeout(() => {
       setIsLoading(false);

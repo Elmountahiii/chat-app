@@ -1,9 +1,14 @@
 export type User = {
   _id: string;
-  email: string;
+  username: string;
   firstName: string;
   lastName: string;
+  email: string;
+  password: string;
+  createdAt: Date;
+  updatedAt: Date;
   profilePicture: string;
-  createdAt: string;
-  updatedAt: string;
+  status: "online" | "offline" | "away";
+  lastSeen: Date;
+  lastActive: Date;
 };

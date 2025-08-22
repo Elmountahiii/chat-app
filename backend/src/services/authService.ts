@@ -32,11 +32,12 @@ export class AuthService {
   }
 
   async loginUser(email: string, password: string) {
-    const user = await this.userRepo.findUserByEmail(email);
+    const user = await this.userRepo.findUserByEmailWithPassword(email);
     if (!user) throw new AppError("Wrong email or password", 401);
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) throw new AppError("Wrong email or password", 401);
-    return user;
+    const { password: _, ...userWithoutPassword } = user;
+    return userWithoutPassword;
   }
 
   async getUserById(userId: string) {

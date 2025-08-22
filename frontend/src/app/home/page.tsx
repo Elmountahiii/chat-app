@@ -3,20 +3,11 @@ import { UserCard } from "@/components/home/userCard";
 import UserCardSkeleton from "@/components/home/userCardSkeleton";
 import { useAuthStore } from "@/stateManagment/authStore";
 import { useRouter } from "next/navigation";
-import React, { useEffect } from "react";
+import React from "react";
 
-type Props = {};
-
-function page({}: Props) {
-  const { user, logout, isLoading, checkAuthStatus, isAuthenticated } =
-    useAuthStore();
+function Page() {
+  const { user, logout, isLoading } = useAuthStore();
   const router = useRouter();
-
-  useEffect(() => {
-    if (!isAuthenticated) {
-      checkAuthStatus();
-    }
-  }, [isAuthenticated, checkAuthStatus]);
 
   const handleLogout = async () => {
     await logout();
@@ -31,4 +22,4 @@ function page({}: Props) {
   );
 }
 
-export default page;
+export default Page;

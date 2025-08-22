@@ -1,3 +1,10 @@
+import { UpdateUserSchema } from "../schema/user/updateUserInfoSchema";
+
 export class UserValidator {
-  validateUserData = (userData: unknown) => {};
+  constructor() {}
+
+  validateUserData(data: unknown) {
+    const validatedData = UpdateUserSchema.parse(data);
+    return validatedData;
+  }
 }

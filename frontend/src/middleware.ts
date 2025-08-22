@@ -1,4 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
+import { HttpResponse } from "./types/httpResponse";
+import { User } from "./types/user";
 
 const protectedRoutes = ["/home"];
 const authRoutes = ["/auth/login", "/auth/signup"];
@@ -27,17 +29,15 @@ export async function middleware(request: NextRequest) {
     }
   }
   try {
-    const validationResponse = await fetch(
-      `${process.env.BACKEND_URL}/api/auth/me`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Cookie: request.headers.get("cookie") || "",
-        },
-      }
-    );
-    if (!validationResponse.ok) {
+    const response = await fetch(`${process.env.BACKEND_URL}/api/auth/me`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: request.headers.get("cookie") || "",
+      },
+    });
+    const validationResponse: HttpResponse<User> = await response.json();
+    if (!validationResponse.success) {
       redirectResponse.cookies.delete("authToken");
       return redirectResponse;
     } else {
@@ -48,6 +48,7 @@ export async function middleware(request: NextRequest) {
       }
     }
   } catch (e) {
+    console.log("Error during authentication check:", e);
     redirectResponse.cookies.delete("authToken");
     return redirectResponse;
   }

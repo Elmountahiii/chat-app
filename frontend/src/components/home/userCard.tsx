@@ -77,22 +77,6 @@ export function UserCard({ user, onLogout }: UserCardProps) {
                 {user._id}
               </p>
             </div>
-
-            <div>
-              <span className="font-medium text-muted-foreground">
-                Member since:
-              </span>
-              <p className="mt-1">{formatDate(user.createdAt)}</p>
-            </div>
-
-            {user.updatedAt !== user.createdAt && (
-              <div className="md:col-span-2">
-                <span className="font-medium text-muted-foreground">
-                  Last updated:
-                </span>
-                <p className="mt-1">{formatDate(user.updatedAt)}</p>
-              </div>
-            )}
           </div>
 
           {/* Activity Status */}

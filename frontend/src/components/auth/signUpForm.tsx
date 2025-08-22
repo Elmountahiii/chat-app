@@ -22,9 +22,7 @@ import { useAuthStore } from "@/stateManagment/authStore";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
-type Props = {};
-
-const SignUpForm = (props: Props) => {
+const SignUpForm = () => {
   const {
     signUp,
     isLoading,
@@ -60,14 +58,14 @@ const SignUpForm = (props: Props) => {
       toast.success(successMessage);
       clearSuccessMessage();
     }
-  }, [successMessage]);
+  }, [successMessage, clearSuccessMessage]);
 
   useEffect(() => {
     if (error) {
       toast.error(error);
       clearError();
     }
-  }, [error]);
+  }, [error, clearError]);
 
   const onSubmit = async (data: SignUpDataType) => {
     signUp(data);

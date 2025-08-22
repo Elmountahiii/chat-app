@@ -1,19 +1,20 @@
 import express from "express";
 import cors from "cors";
-
 import morgan from "morgan";
-
 import mongoose from "mongoose";
 import { authMiddleware } from "./middlewares/authMiddleware";
 import cookieParser from "cookie-parser";
 import { config, corsConfig } from "./config/environment";
 import authRoutes from "./routes/authRoutes";
 import userRoutes from "./routes/userRoutes";
-import friendsRoutes from "./routes/friendsRoutes";
+import friendshipRoutes from "./routes/friendshipRoutes";
 import { errorMiddleware } from "./middlewares/errorMiddleware";
 import { fileStream, logger } from "./config/logger";
+import http from "http";
+import { Provider } from "./utils/provider";
 
 const app = express();
+const server = http.createServer(app);
 
 app.use(
   morgan("combined", {
@@ -34,7 +35,7 @@ app.get("/protected", authMiddleware, (req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/user", authMiddleware, userRoutes);
-app.use("/api/friends", authMiddleware, friendsRoutes);
+app.use("/api/friends", authMiddleware, friendshipRoutes);
 
 app.use(errorMiddleware);
 
@@ -43,7 +44,8 @@ const serverStart = async () => {
     logger.info("Connecting to database ....");
     await mongoose.connect(config.MONGODB_URI);
     logger.info("Connected to database successfully");
-    app.listen(config.PORT, () => {
+    Provider.getInstance().getSocketService(server);
+    server.listen(config.PORT, () => {
       logger.info(`Server is running on http://localhost:${config.PORT}`);
     });
   } catch (error) {

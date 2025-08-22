@@ -1,5 +1,3 @@
-import mongoose from "mongoose";
-const { Schema } = mongoose;
 
 export type User = {
   username: string;
@@ -10,7 +8,7 @@ export type User = {
   createdAt: Date;
   updatedAt: Date;
   profilePicture: string;
-  status: "online" | "offline";
+  status: "online" | "offline" | "away";
   lastSeen: Date;
   lastActive: Date;
 };

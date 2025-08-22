@@ -1,7 +1,6 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Apple } from "lucide-react";
 
 interface SocialLoginProps {
   onGoogleLogin?: () => void;
@@ -11,7 +10,6 @@ interface SocialLoginProps {
 
 export function SocialLogin({
   onGoogleLogin,
-  onAppleLogin,
   disabled = false,
 }: SocialLoginProps) {
   return (
