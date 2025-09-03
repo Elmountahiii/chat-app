@@ -12,6 +12,7 @@ import { errorMiddleware } from "./middlewares/errorMiddleware";
 import { fileStream, logger } from "./config/logger";
 import http from "http";
 import { Provider } from "./utils/provider";
+import messageRoutes from "./routes/messageRoutes";
 
 const app = express();
 const server = http.createServer(app);
@@ -36,6 +37,7 @@ app.get("/protected", authMiddleware, (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/user", authMiddleware, userRoutes);
 app.use("/api/friends", authMiddleware, friendshipRoutes);
+app.use("/api/messages", authMiddleware, messageRoutes);
 
 app.use(errorMiddleware);
 

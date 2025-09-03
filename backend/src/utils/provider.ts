@@ -12,25 +12,33 @@ import { AuthController } from "../controllers/authController";
 import { FriendshipController } from "../controllers/friendshipController";
 import { UserController } from "../controllers/userController";
 import { FriendshipValidator } from "../validators/friendshipValidator";
+import { MessageRepository } from "../repository/messageRepository";
+import { MessageService } from "../services/messageService";
+import { MessageController } from "../controllers/messageController";
+import { MessageValidator } from "../validators/messageValidator";
 
 export enum ObjectsName {
   // repositories
   "UserRepository",
   "FriendshipRepository",
+  "MessageRepository",
   // services
   "AuthService",
   "FriendshipService",
   "JwtService",
   "SocketService",
   "UserService",
+  "MessageService",
   // controllers
   "AuthController",
   "FriendshipController",
   "UserController",
+  "MessageController",
   // validators
   "AuthValidator",
   "UserValidator",
   "FriendshipValidator",
+  "MessageValidator",
 }
 
 export class Provider {
@@ -67,6 +75,13 @@ export class Provider {
     );
   }
 
+  getMessageRepository() {
+    return this.getOrCreate(
+      ObjectsName.MessageRepository,
+      () => new MessageRepository(this.getFriendshipRepository())
+    );
+  }
+
   // services
   getAuthService() {
     return this.getOrCreate(
@@ -87,7 +102,12 @@ export class Provider {
     return this.getOrCreate(
       ObjectsName.SocketService,
       () =>
-        new SocketService(server, this.getUserService(), this.getJwtService())
+        new SocketService(
+          server,
+          this.getUserService(),
+          this.getJwtService(),
+          this.getMessageService()
+        )
     );
   }
 
@@ -95,6 +115,13 @@ export class Provider {
     return this.getOrCreate(
       ObjectsName.UserService,
       () => new UserService(this.getUserRepository())
+    );
+  }
+
+  getMessageService() {
+    return this.getOrCreate(
+      ObjectsName.MessageService,
+      () => new MessageService(this.getMessageRepository())
     );
   }
 
@@ -123,6 +150,17 @@ export class Provider {
     });
   }
 
+  getMessageController() {
+    return this.getOrCreate(
+      ObjectsName.MessageController,
+      () =>
+        new MessageController(
+          this.getMessageService(),
+          this.getMessageValidator()
+        )
+    );
+  }
+
   // validators
   getAuthValidator() {
     return this.getOrCreate(ObjectsName.AuthValidator, () => {
@@ -139,5 +177,12 @@ export class Provider {
     return this.getOrCreate(ObjectsName.FriendshipValidator, () => {
       return new FriendshipValidator();
     });
+  }
+
+  getMessageValidator() {
+    return this.getOrCreate(
+      ObjectsName.MessageValidator,
+      () => new MessageValidator()
+    );
   }
 }

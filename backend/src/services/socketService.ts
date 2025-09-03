@@ -2,6 +2,7 @@ import { Server } from "socket.io";
 import http from "http";
 import { UserService } from "./userService";
 import { JwtService } from "./jwtService";
+import { MessageService } from "./messageService";
 
 function getCookieValue(
   cookieString: string,
@@ -15,14 +16,17 @@ export class SocketService {
   private io: Server;
   private userService: UserService;
   private jwtService: JwtService;
+  private messageService: MessageService;
 
   constructor(
     server: http.Server,
     userService: UserService,
-    jwtService: JwtService
+    jwtService: JwtService,
+    messageService: MessageService
   ) {
     this.userService = userService;
     this.jwtService = jwtService;
+    this.messageService = messageService;
     this.io = new Server(server, {
       cors: {
         origin: "http://localhost:3000",
@@ -55,6 +59,8 @@ export class SocketService {
   private setupSocketListeners() {
     this.io.on("connection", (socket) => {
       const userId = socket.data.userId as string;
+      socket.join(userId);
+      console.log(`User connected: ${userId}`);
       this.userService.updateUser(userId, {
         status: "online",
       });
@@ -73,6 +79,34 @@ export class SocketService {
         this.userService.updateUser(socket.data.userId as string, {
           status: "offline",
         });
+      });
+
+      // messaging
+      socket.on("sendMessage", async (data) => {
+        const userId = socket.data.userId as string;
+        try {
+          const message = await this.messageService.sendMessage(
+            userId,
+            data.recipientId,
+            data.content
+          );
+          this.io.to(data.recipientId).emit("newMessage", message);
+          socket.emit("messageSent", message);
+        } catch (error) {
+          socket.emit("messageError", { error: error });
+        }
+      });
+
+      socket.on("markAsRead", async (data: { senderId: string }) => {
+        try {
+          await this.messageService.markAsRead(userId, data.senderId);
+          this.io.to(data.senderId).emit("messageRead", {
+            recipientId: userId,
+            senderId: data.senderId,
+          });
+        } catch (error) {
+          socket.emit("readError", { error: error });
+        }
       });
     });
   }

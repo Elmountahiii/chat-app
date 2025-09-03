@@ -1,7 +1,6 @@
 import jwt from "jsonwebtoken";
 import { AppError } from "../types/common";
 import { config } from "../config/environment";
-import type { StringValue } from "ms";
 
 export class JwtService {
   async signToken(userId: string) {
@@ -11,7 +10,7 @@ export class JwtService {
       },
       config.JWT_SECRET,
       {
-        expiresIn: config.JWT_EXPIRATION as StringValue,
+        expiresIn: "24h",
       }
     );
   }
