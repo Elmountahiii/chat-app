@@ -1,13 +1,14 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { TabsContent } from "../ui/tabs";
-import { MessageCircle, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { Input } from "../ui/input";
-import { useFriendshipStore } from "@/stateManagment/friendsStore";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { User } from "@/types/user";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
+import { MessageCircle } from "lucide-react";
+import { useChatStore } from "@/stateManagment/chatStore";
 
 const getStatusColor = (status: User["status"]) => {
   switch (status) {
@@ -20,24 +21,48 @@ const getStatusColor = (status: User["status"]) => {
   }
 };
 
-const OnlineFriends = () => {
-  const { friends, getAllFriends } = useFriendshipStore();
+type OnlineFriendsProps = {
+  changeDialogOpen: (open: boolean) => void;
+};
 
-  const onlineFriends = friends.filter((friend) => friend.status === "online");
-  const otherFriends = friends.filter((friend) => friend.status !== "online");
+const OnlineFriends = ({ changeDialogOpen }: OnlineFriendsProps) => {
+  const {
+    onlineFriends,
+    getOnlineFriends,
+    setActiveConversation,
+    conversations,
+    createConversation,
+  } = useChatStore();
+
+  const online = onlineFriends.filter((friend) => friend.status === "online");
+  const otherFriends = onlineFriends.filter(
+    (friend) => friend.status !== "online"
+  );
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredFriends = friends.filter((friend) =>
+  const filteredFriends = onlineFriends.filter((friend) =>
     friend.username.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleStartChat = (friend: User) => {
-    console.log("Starting chat with:", friend.username);
+    const selectedConversation = conversations.find((conversation) =>
+      conversation.participants.some(
+        (participant) => participant._id === friend._id
+      )
+    );
+
+    if (selectedConversation) {
+      console.log(
+        "Starting chat with conversation ID:",
+        selectedConversation._id
+      );
+      setActiveConversation(selectedConversation._id);
+    } else {
+      createConversation([friend._id], "individual");
+    }
+    changeDialogOpen(false);
   };
 
-  useEffect(() => {
-    getAllFriends();
-  }, [getAllFriends]);
   return (
     <TabsContent value="online" className="space-y-4 mt-4">
       <div className="relative">
@@ -51,13 +76,13 @@ const OnlineFriends = () => {
       </div>
 
       <div className="max-h-96 overflow-y-auto space-y-2">
-        {onlineFriends.length > 0 && (
+        {online.length > 0 && (
           <div className="space-y-2">
             <h3 className="text-sm font-medium text-green-600 flex items-center gap-2">
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              Online ({onlineFriends.length})
+              Online ({online.length})
             </h3>
-            {onlineFriends.map((friend) => (
+            {online.map((friend) => (
               <div
                 key={friend._id}
                 className="flex items-center justify-between p-3 rounded-lg border hover:bg-gray-50 transition-colors">

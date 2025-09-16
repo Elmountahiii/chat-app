@@ -7,7 +7,6 @@ import cookieParser from "cookie-parser";
 import { config, corsConfig } from "./config/environment";
 import authRoutes from "./routes/authRoutes";
 import userRoutes from "./routes/userRoutes";
-import friendshipRoutes from "./routes/friendshipRoutes";
 import { errorMiddleware } from "./middlewares/errorMiddleware";
 import { fileStream, logger } from "./config/logger";
 import http from "http";
@@ -36,7 +35,6 @@ app.get("/protected", authMiddleware, (req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/user", authMiddleware, userRoutes);
-app.use("/api/friends", authMiddleware, friendshipRoutes);
 app.use("/api/messages", authMiddleware, messageRoutes);
 
 app.use(errorMiddleware);

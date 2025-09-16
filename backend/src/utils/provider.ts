@@ -1,44 +1,39 @@
 import { Server } from "http";
-import { FriendshipRepository } from "../repository/friendshipRepository";
 import { UserRepository } from "../repository/userRepository";
 import { AuthService } from "../services/authService";
-import { FriendshipService } from "../services/friendshipService";
 import { JwtService } from "../services/jwtService";
 import { SocketService } from "../services/socketService";
 import { UserService } from "../services/userService";
 import { AuthValidator } from "../validators/authValidator";
 import { UserValidator } from "../validators/userValidator";
 import { AuthController } from "../controllers/authController";
-import { FriendshipController } from "../controllers/friendshipController";
 import { UserController } from "../controllers/userController";
 import { FriendshipValidator } from "../validators/friendshipValidator";
 import { MessageRepository } from "../repository/messageRepository";
 import { MessageService } from "../services/messageService";
 import { MessageController } from "../controllers/messageController";
 import { MessageValidator } from "../validators/messageValidator";
-
+import { TypedEventEmitter } from "../validators/events";
 export enum ObjectsName {
   // repositories
   "UserRepository",
-  "FriendshipRepository",
   "MessageRepository",
   // services
   "AuthService",
-  "FriendshipService",
   "JwtService",
   "SocketService",
   "UserService",
   "MessageService",
   // controllers
   "AuthController",
-  "FriendshipController",
   "UserController",
   "MessageController",
   // validators
   "AuthValidator",
   "UserValidator",
-  "FriendshipValidator",
   "MessageValidator",
+  // events
+  "MessageEventEmitter",
 }
 
 export class Provider {
@@ -68,17 +63,11 @@ export class Provider {
       () => new UserRepository()
     );
   }
-  getFriendshipRepository() {
-    return this.getOrCreate(
-      ObjectsName.FriendshipRepository,
-      () => new FriendshipRepository(this.getUserRepository())
-    );
-  }
 
   getMessageRepository() {
     return this.getOrCreate(
       ObjectsName.MessageRepository,
-      () => new MessageRepository(this.getFriendshipRepository())
+      () => new MessageRepository()
     );
   }
 
@@ -89,39 +78,30 @@ export class Provider {
       () => new AuthService(this.getUserRepository())
     );
   }
-  getFriendshipService() {
-    return this.getOrCreate(
-      ObjectsName.FriendshipService,
-      () => new FriendshipService(this.getFriendshipRepository())
-    );
-  }
+
   getJwtService() {
     return this.getOrCreate(ObjectsName.JwtService, () => new JwtService());
   }
   getSocketService(server: Server) {
     return this.getOrCreate(
       ObjectsName.SocketService,
-      () =>
-        new SocketService(
-          server,
-          this.getUserService(),
-          this.getJwtService(),
-          this.getMessageService()
-        )
+      () => new SocketService(server, this.getMessageEventEmitter())
     );
   }
 
   getUserService() {
     return this.getOrCreate(
       ObjectsName.UserService,
-      () => new UserService(this.getUserRepository())
+      () =>
+        new UserService(this.getUserRepository(), this.getMessageEventEmitter())
     );
   }
 
   getMessageService() {
     return this.getOrCreate(
       ObjectsName.MessageService,
-      () => new MessageService(this.getMessageRepository())
+      () =>
+        new MessageService(this.getMessageRepository(), this.getUserService())
     );
   }
 
@@ -130,23 +110,19 @@ export class Provider {
     return this.getOrCreate(ObjectsName.AuthController, () => {
       return new AuthController(
         this.getAuthService(),
-        this.getJwtService(),
-        this.getAuthValidator()
+        this.getAuthValidator(),
+        this.getMessageEventEmitter()
       );
     });
   }
-  getFriendshipController() {
-    return this.getOrCreate(ObjectsName.FriendshipController, () => {
-      return new FriendshipController(
-        this.getFriendshipService(),
-        this.getUserService(),
-        this.getFriendshipValidator()
-      );
-    });
-  }
+
   getUserController() {
     return this.getOrCreate(ObjectsName.UserController, () => {
-      return new UserController(this.getUserService(), this.getUserValidator());
+      return new UserController(
+        this.getUserService(),
+        this.getUserValidator(),
+        this.getMessageEventEmitter()
+      );
     });
   }
 
@@ -156,7 +132,9 @@ export class Provider {
       () =>
         new MessageController(
           this.getMessageService(),
-          this.getMessageValidator()
+          this.getUserService(),
+          this.getMessageValidator(),
+          this.getMessageEventEmitter()
         )
     );
   }
@@ -173,16 +151,16 @@ export class Provider {
     });
   }
 
-  getFriendshipValidator() {
-    return this.getOrCreate(ObjectsName.FriendshipValidator, () => {
-      return new FriendshipValidator();
-    });
-  }
-
   getMessageValidator() {
     return this.getOrCreate(
       ObjectsName.MessageValidator,
       () => new MessageValidator()
     );
+  }
+
+  getMessageEventEmitter() {
+    return this.getOrCreate(ObjectsName.MessageEventEmitter, () => {
+      return new TypedEventEmitter();
+    });
   }
 }

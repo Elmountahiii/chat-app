@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { UserDocumentType } from "./userSchema";
 const { Schema } = mongoose;
 
 const friendshipSchema = new Schema(
@@ -32,4 +33,12 @@ export type FriendshipDocumentType = mongoose.InferSchemaType<
   typeof friendshipSchema
 > & {
   _id: mongoose.Types.ObjectId;
+};
+
+export type PopulatedFriendshipType = Omit<
+  FriendshipDocumentType,
+  "requester" | "recipient"
+> & {
+  requester: UserDocumentType;
+  recipient: UserDocumentType;
 };

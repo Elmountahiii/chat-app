@@ -1,8 +1,8 @@
 import { AppError } from "../types/common";
-import { User } from "../types/User";
 import bcrypt from "bcrypt";
 import { UsernameGenerator } from "../utils/usernameGenerator";
 import { UserRepository } from "../repository/userRepository";
+import { UserDataUpdates } from "../schema/user/updateUserInfoSchema";
 
 export class AuthService {
   constructor(private userRepo: UserRepository) {}
@@ -48,7 +48,7 @@ export class AuthService {
     return await this.userRepo.findUserByEmail(email);
   }
 
-  async updateUser(userId: string, updateData: Partial<User>) {
+  async updateUser(userId: string, updateData: UserDataUpdates) {
     return await this.userRepo.updateUser(userId, updateData);
   }
 

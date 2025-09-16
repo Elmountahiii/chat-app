@@ -1,7 +1,10 @@
 import { User } from "./user";
 
-export type FriendshipRequest = {
-  id: string;
+export type FriendShipRequest = {
+  _id: string;
   requester: User;
-  sentAt: Date;
+  recipient: User;
+  status: "pending" | "accepted" | "declined";
+  createdAt: string;
+  updatedAt: string;
 };

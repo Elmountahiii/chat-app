@@ -1,30 +1,26 @@
 "use client";
-import { useFriendshipStore } from "@/stateManagment/friendsStore";
 import React, { useEffect } from "react";
 import { TabsContent } from "@/components/ui/tabs";
 import { UserCheck, UserX } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
-import { FriendshipRequest } from "@/types/FriendshipRequest";
+import { useChatStore } from "@/stateManagment/chatStore";
+import { FriendShipRequest } from "@/types/friendShipRequest";
 
 function FriendsRequests() {
   const {
     friendshipRequests,
     acceptFriendshipRequest,
     declineFriendshipRequest,
-    getAllFriendshipRequests,
-  } = useFriendshipStore();
+  } = useChatStore();
 
-  const handleAcceptRequest = (request: FriendshipRequest) => {
-    acceptFriendshipRequest(request.id);
+  const handleAcceptRequest = (request: FriendShipRequest) => {
+    acceptFriendshipRequest(request._id);
   };
 
-  const handleDeclineRequest = (request: FriendshipRequest) => {
-    declineFriendshipRequest(request.id);
+  const handleDeclineRequest = (request: FriendShipRequest) => {
+    declineFriendshipRequest(request._id);
   };
-  useEffect(() => {
-    getAllFriendshipRequests();
-  }, [getAllFriendshipRequests]);
 
   return (
     <TabsContent
@@ -38,7 +34,7 @@ function FriendsRequests() {
 
         {friendshipRequests.map((request) => (
           <div
-            key={request.id}
+            key={request._id}
             className="flex items-center justify-between p-3 rounded-lg border hover:bg-gray-50 transition-colors">
             <div className="flex items-center gap-3">
               <Avatar className="h-10 w-10">

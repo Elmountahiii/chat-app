@@ -3,7 +3,7 @@ import { AppError } from "../types/common";
 import { config } from "../config/environment";
 
 export class JwtService {
-  async signToken(userId: string) {
+  static async signToken(userId: string) {
     return jwt.sign(
       {
         userId: userId,
@@ -15,7 +15,7 @@ export class JwtService {
     );
   }
 
-  async verifyToken(token: string) {
+  static async verifyToken(token: string) {
     if (!token) throw new AppError("Unauthorized", 401);
     try {
       const decode = jwt.verify(token, config.JWT_SECRET) as jwt.JwtPayload & {

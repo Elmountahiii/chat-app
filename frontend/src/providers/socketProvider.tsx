@@ -1,24 +1,23 @@
 "use client";
-import { useConnectivityStore } from "@/stateManagment/connectivityStore";
+import { useAuthStore } from "@/stateManagment/authStore";
+import { useChatStore } from "@/stateManagment/chatStore";
 import React, { useEffect } from "react";
 
 interface SocketProviderProps {
   children: React.ReactNode;
 }
 const SocketProvider = ({ children }: SocketProviderProps) => {
-  const { connect, disconnect, status } = useConnectivityStore();
+  const { initializeSocket, disconnectSocket, status } = useChatStore();
+  const { checkAuthStatus } = useAuthStore();
 
   useEffect(() => {
-    connect();
+    initializeSocket();
+    checkAuthStatus();
 
     return () => {
-      disconnect();
+      disconnectSocket();
     };
-  }, [connect, disconnect]);
-
-  useEffect(() => {
-    console.log("Socket status:", status);
-  }, [status]);
+  }, [initializeSocket, disconnectSocket, checkAuthStatus]);
 
   return <div>{children}</div>;
 };

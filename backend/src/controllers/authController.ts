@@ -5,12 +5,13 @@ import { createErrorResponse, createSuccessResponse } from "../types/common";
 import { config } from "../config/environment";
 import { JwtService } from "../services/jwtService";
 import { HandleError } from "../utils/errorHandler";
+import { TypedEventEmitter } from "../validators/events";
 
 export class AuthController {
   constructor(
     private authService: AuthService,
-    private jwtService: JwtService,
-    private authValidator: AuthValidator
+    private authValidator: AuthValidator,
+    private messageEventEmitter: TypedEventEmitter
   ) {}
 
   signUp = async (req: Request, res: Response) => {
@@ -42,13 +43,17 @@ export class AuthController {
         validData.email,
         validData.password
       );
-      const token = await this.jwtService.signToken(user._id.toString());
+      const token = await JwtService.signToken(user._id.toString());
       res.cookie("authToken", token, {
-        httpOnly: true, 
+        httpOnly: true,
         secure: config.ENV === "production",
         sameSite: "strict",
         maxAge: 24 * 60 * 60 * 1000,
         path: "/",
+      });
+      this.messageEventEmitter.emit("user:statusChanged", {
+        userId: user._id.toString(),
+        newStatus: "online",
       });
       res.status(200).json(createSuccessResponse(user, "Login successful"));
     } catch (e) {
@@ -59,7 +64,7 @@ export class AuthController {
   me = async (req: Request, res: Response) => {
     const token = req.cookies.authToken;
     try {
-      const userId = await this.jwtService.verifyToken(token);
+      const userId = await JwtService.verifyToken(token);
       if (!userId) {
         res.status(401).json(createErrorResponse("Unauthorized"));
       } else {
@@ -68,6 +73,10 @@ export class AuthController {
           res.status(404).json(createErrorResponse("User not found"));
           return;
         }
+        this.messageEventEmitter.emit("user:statusChanged", {
+          userId: user._id.toString(),
+          newStatus: "online",
+        });
         res
           .status(200)
           .json(
@@ -82,12 +91,23 @@ export class AuthController {
   };
 
   logout = async (req: Request, res: Response) => {
+    const token = req.cookies.authToken;
     try {
+      const userId = await JwtService.verifyToken(token);
+      if (!userId) {
+        res.status(401).json(createErrorResponse("Unauthorized"));
+        return;
+      }
       res.clearCookie("authToken", {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
         path: "/",
+      });
+
+      this.messageEventEmitter.emit("user:statusChanged", {
+        userId,
+        newStatus: "offline",
       });
 
       res

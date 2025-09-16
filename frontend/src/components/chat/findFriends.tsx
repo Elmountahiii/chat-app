@@ -3,15 +3,15 @@ import React, { useState } from "react";
 import { TabsContent } from "../ui/tabs";
 import { Search } from "lucide-react";
 import { Input } from "../ui/input";
-import { useFriendshipStore } from "@/stateManagment/friendsStore";
 import PotentialFriendsList from "./potentialFriendsList";
 import { PotentialFriend } from "@/types/potentialFriend";
+import { useChatStore } from "@/stateManagment/chatStore";
 
 function FindFriends() {
   const [newFriendSearch, setNewFriendSearch] = useState("");
 
   const { potentialFriends, searchForPotentialFriends, sendFriendshipRequest } =
-    useFriendshipStore();
+    useChatStore();
   const sendFriendRequest = (potentialFriend: PotentialFriend) => {
     sendFriendshipRequest(potentialFriend._id);
   };

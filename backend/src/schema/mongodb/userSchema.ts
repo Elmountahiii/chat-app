@@ -1,8 +1,7 @@
 import mongoose from "mongoose";
-import { User } from "../../types/User";
 const { Schema } = mongoose;
 
-const userSchema = new Schema<User>(
+const userSchema = new Schema(
   {
     username: {
       type: String,
@@ -51,8 +50,9 @@ const userSchema = new Schema<User>(
   { timestamps: true }
 );
 
-export const UserModel = mongoose.model<User>("User", userSchema);
+export const UserModel = mongoose.model("User", userSchema);
 
 export type UserDocumentType = mongoose.InferSchemaType<typeof userSchema> & {
   _id: mongoose.Types.ObjectId;
 };
+
