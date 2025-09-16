@@ -24,7 +24,6 @@ export const fetchMessagesSchema = z.object({
 
 export const markConversationMessagesAsReadSchema = z.object({
   conversationId: z.string().min(1, "Conversation ID is required"),
-  messageId: z.string().min(1, "Message ID is required").optional(),
 });
 
 export const sendMessageSchema = z.object({

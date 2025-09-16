@@ -98,11 +98,7 @@ export class MessageService {
     return messages;
   }
 
-  async markConversationMessagesAsRead(
-    conversationId: string,
-    userId: string,
-    messageId?: string
-  ) {
+  async markConversationMessagesAsRead(conversationId: string, userId: string) {
     const conversation = await this.messageRepo.getConversationById(
       conversationId
     );
@@ -111,8 +107,7 @@ export class MessageService {
     }
     const readData = await this.messageRepo.markConversationMessagesAsRead(
       conversationId,
-      userId,
-      messageId
+      userId
     );
     return readData;
   }

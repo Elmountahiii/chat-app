@@ -4,6 +4,7 @@ import { useChatStore } from "@/stateManagment/chatStore";
 import { Conversation } from "@/types/converstation";
 import React, { useEffect, useRef, useState } from "react";
 import { Button } from "../ui/button";
+import { CheckCheck } from "lucide-react";
 import {
   ChevronLeft,
   MessageCircle,
@@ -52,6 +53,7 @@ function MainChatArea({
     hasMessages,
     loadingMessages,
     sendTyping,
+    markAsRead,
   } = useChatStore();
   const { user } = useAuthStore();
 
@@ -72,6 +74,10 @@ function MainChatArea({
 
   let otherParticipant: User | null =
     conversation?.participants.find((p) => p._id !== user?._id) || null;
+
+  const otherReadStatus = conversation?.readStatus.find(
+    (status) => status.userId === otherParticipant?._id
+  )?.lastReadMessage;
   const conversationMessages = messages[conversation?._id || ""] || [];
 
   const hasMoreMessages = hasMessages[conversation?._id || ""] || false;
@@ -79,6 +85,7 @@ function MainChatArea({
 
   useEffect(() => {
     if (activeConversationId !== null) {
+      markAsRead(activeConversationId);
       let limit = 20;
       const unreadCount =
         conversation?.readStatus.find((status) => {
@@ -93,7 +100,6 @@ function MainChatArea({
 
   useEffect(() => {
     if (messageUpdateType === "new") {
-      // Scroll to bottom for new messages
       if (messagesEndRef.current) {
         messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
       }
@@ -101,7 +107,6 @@ function MainChatArea({
       const newScrollHeight = scrollAreaRef.current.scrollHeight;
       const heightDifference = newScrollHeight - oldScrollHeightRef.current;
 
-      // Set scroll position to show the newly loaded messages
       scrollAreaRef.current.scrollTop = heightDifference;
     }
   }, [conversationMessages, messageUpdateType]);
@@ -324,6 +329,12 @@ function MainChatArea({
                                 minute: "2-digit",
                               }
                             )}
+                            {isMe &&
+                              index === conversationMessages.length - 1 &&
+                              otherReadStatus &&
+                              otherReadStatus._id === message._id && (
+                                <CheckCheck className="h-4 w-4 text-blue-500" />
+                              )}
                           </span>
                         </div>
                       </div>

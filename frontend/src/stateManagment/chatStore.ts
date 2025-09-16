@@ -9,6 +9,7 @@ import { Message } from "@/types/message";
 import { User } from "@/types/user";
 import { PotentialFriend } from "@/types/potentialFriend";
 import { FriendShipRequest } from "@/types/friendShipRequest";
+import { stat } from "fs";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
@@ -124,7 +125,10 @@ export const useChatStore = create<ChatStore>()(
                 if (status.userId !== userId) {
                   return {
                     ...status,
-                    unreadCount: status.unreadCount + 1,
+                    unreadCount:
+                      get().activeConversationId === conversationId
+                        ? 0
+                        : status.unreadCount + 1,
                   };
                 }
                 return status;
@@ -137,6 +141,8 @@ export const useChatStore = create<ChatStore>()(
             );
             updatedConversations.unshift(updatedConversation);
             set({ conversations: updatedConversations });
+            if (get().activeConversationId === conversationId)
+              get().markAsRead(conversationId);
           }
         );
 
@@ -157,6 +163,29 @@ export const useChatStore = create<ChatStore>()(
               lastReadAt,
               user,
             } = data;
+
+            console.log("Received message read receipt via socket:", data);
+            const state = get();
+            const conversation = state.conversations.map((convo) => {
+              if (convo._id === conversationId) {
+                return {
+                  ...convo,
+                  readStatus: convo.readStatus.map((status) => {
+                    if (status.userId === user._id) {
+                      return {
+                        ...status,
+                        lastReadMessage: { _id: messageId } as Message,
+                        unreadCount: 0,
+                      };
+                    }
+                    return status;
+                  }),
+                };
+              }
+              return convo;
+            });
+
+            set({ conversations: conversation });
           }
         );
 
@@ -439,28 +468,34 @@ export const useChatStore = create<ChatStore>()(
       deleteMessage: async (messageId) => {
         // todo : implement delete message later
       },
-      markAsRead: async (conversationId, messageId) => {
+      markAsRead: async (conversationId) => {
         set({ isLoading: true });
         try {
+          console.log("start");
           const rawResponse = await fetch(
             `${API_BASE_URL}/messages/conversations/${conversationId}/read`,
             {
-              method: "POST",
+              method: "PATCH",
               credentials: "include",
               headers: {
                 "Content-Type": "application/json",
               },
-              body: JSON.stringify({ messageId }),
             }
           );
+
           const response: HttpResponse<{
             conversationId: string;
             lastReadMessageId: string;
             messagesMarkedAsRead: number;
             totalUnreadMessagesCleared: number;
             lastReadAt: string;
+            targetMessage: {
+              id: string;
+              content: string;
+              createdAt: string;
+              sender: string;
+            };
           }> = await rawResponse.json();
-
           if (!response.success) {
             console.warn(
               "Failed to mark messages as read:",
@@ -469,6 +504,7 @@ export const useChatStore = create<ChatStore>()(
             return;
           }
         } catch (e) {
+          console.warn(`Mark messages as read error:`, e);
         } finally {
           set({ isLoading: false });
         }

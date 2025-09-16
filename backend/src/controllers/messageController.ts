@@ -131,35 +131,30 @@ export class MessageController {
   markConversationMessagesAsRead = async (req: Request, res: Response) => {
     const userId = req.headers["user-id"] as string;
     const conversationId = req.params.id;
-    const { messageId } = req.body;
 
     try {
       const markReadMessagesData =
         this.messageValidator.validateReadMessagesData({
           conversationId,
-          messageId,
         });
 
       const readData = await this.messageService.markConversationMessagesAsRead(
         markReadMessagesData.conversationId,
-        userId,
-        markReadMessagesData.messageId
+        userId
       );
-      if (readData.success) {
-        const user = await this.userService.findUserById(userId);
-        if (!user) {
-          res.status(404).send(createErrorResponse("User not found"));
-          return;
-        }
-        this.messageEventEmitter.emit("message:read", {
-          conversationId,
-          messageId: readData.data!.targetMessage.id.toString(),
-          totalUnreadMessagesCleared: readData.data!.totalUnreadMessagesCleared,
-          user,
-          lastReadAt: readData.data!.lastReadAt,
-        });
+      const user = await this.userService.findUserById(userId);
+      if (!user) {
+        res.status(404).send(createErrorResponse("User not found"));
+        return;
       }
-      res.status(204).send(createSuccessResponse(readData));
+      this.messageEventEmitter.emit("message:read", {
+        conversationId,
+        messageId: readData.targetMessage.id.toString(),
+        totalUnreadMessagesCleared: readData.totalUnreadMessagesCleared,
+        user,
+        lastReadAt: readData.lastReadAt,
+      });
+      res.status(200).send(createSuccessResponse(readData));
     } catch (error) {
       HandleError(
         error,
@@ -168,7 +163,6 @@ export class MessageController {
         {
           userId,
           conversationId,
-          messageId,
         }
       );
     }

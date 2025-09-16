@@ -31,7 +31,7 @@ export type ChatActions = {
   sendMessage: (conversationId: string, content: string) => Promise<void>;
   editMessage: (messageId: string, newContent: string) => Promise<void>;
   deleteMessage: (messageId: string) => Promise<void>;
-  markAsRead: (conversationId: string, messageId?: string) => Promise<void>;
+  markAsRead: (conversationId: string) => Promise<void>;
 
   // Real-time actions
   sendTyping: (conversationId: string, isTyping: boolean) => void;

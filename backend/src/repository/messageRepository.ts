@@ -162,32 +162,16 @@ export class MessageRepository {
     };
   }
 
-  async markConversationMessagesAsRead(
-    conversationId: string,
-    userId: string,
-    messageId?: string
-  ) {
-    const session = await mongoose.startSession();
-
+  async markConversationMessagesAsRead(conversationId: string, userId: string) {
     try {
-      await session.startTransaction();
-
-      let targetMessage;
-      if (messageId) {
-        targetMessage = await MessageModel.findById(messageId).session(session);
-      } else {
-        targetMessage = await MessageModel.findOne({ conversationId })
-          .sort({ createdAt: -1 })
-          .session(session);
-      }
+      const targetMessage = await MessageModel.findOne({ conversationId }).sort(
+        {
+          createdAt: -1,
+        }
+      );
 
       if (!targetMessage) {
-        await session.abortTransaction();
-        return {
-          success: false,
-          error: "Message not found",
-          data: null,
-        };
+        throw new AppError("No messages found in the conversation", 404);
       }
 
       // Count messages that will be marked as read
@@ -195,7 +179,7 @@ export class MessageRepository {
         conversationId: conversationId,
         createdAt: { $lte: targetMessage.createdAt },
         "readBy.userId": { $ne: userId },
-      }).session(session);
+      });
 
       // Mark all messages up to the target message as read using createdAt
       const markAsReadResult = await MessageModel.updateMany(
@@ -211,8 +195,7 @@ export class MessageRepository {
               readAt: new Date(),
             },
           },
-        },
-        { session }
+        }
       );
 
       // Update or create read status
@@ -223,51 +206,29 @@ export class MessageRepository {
         },
         {
           $set: {
-            unreadCount: 0,
             "readStatus.$.lastReadMessage": targetMessage._id,
             "readStatus.$.lastReadAt": new Date(),
+            "readStatus.$.unreadCount": 0,
           },
-        },
-        { session }
+        }
       );
-
-      await ConversationModel.findByIdAndUpdate(
-        conversationId,
-        {
-          $addToSet: {
-            readStatus: {
-              userId: userId,
-              lastReadMessage: targetMessage._id,
-              lastReadAt: new Date(),
-            },
-          },
-        },
-        { session }
-      );
-
-      await session.commitTransaction();
 
       return {
-        success: true,
-        data: {
-          conversationId,
-          lastReadMessageId: targetMessage._id,
-          messagesMarkedAsRead: markAsReadResult.modifiedCount,
-          totalUnreadMessagesCleared: unreadMessagesCount,
-          lastReadAt: new Date(),
-          targetMessage: {
-            id: targetMessage._id,
-            content: targetMessage.content,
-            createdAt: targetMessage.createdAt,
-            sender: targetMessage.sender,
-          },
+        conversationId,
+        lastReadMessageId: targetMessage._id,
+        messagesMarkedAsRead: markAsReadResult.modifiedCount,
+        totalUnreadMessagesCleared: unreadMessagesCount,
+        lastReadAt: new Date(),
+        targetMessage: {
+          id: targetMessage._id,
+          content: targetMessage.content,
+          createdAt: targetMessage.createdAt,
+          sender: targetMessage.sender,
         },
       };
     } catch (error) {
-      await session.abortTransaction();
       throw new AppError("Failed to mark messages as read", 500);
     } finally {
-      await session.endSession();
     }
   }
 }
