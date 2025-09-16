@@ -184,7 +184,21 @@ export const useChatStore = create<ChatStore>()(
         // Handle typing indicators
         socket.on(
           "user_typing",
-          (data: { conversationId: string; userId: string }) => {}
+          (data: {
+            conversationId: string;
+            userId: string;
+            isTyping: boolean;
+          }) => {
+            const { conversationId, userId, isTyping } = data;
+            const state = get();
+            const conversations = state.conversations.map((convo) => {
+              if (convo._id === conversationId) {
+                return { ...convo, isTyping: isTyping };
+              }
+              return convo;
+            });
+            set({ conversations });
+          }
         );
 
         // Handle connectivity status changes

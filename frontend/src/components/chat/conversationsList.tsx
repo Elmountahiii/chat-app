@@ -123,6 +123,9 @@ export const ConversationsList = ({
                   <div className="w-full">
                     <p className="text-sm text-gray-600 dark:text-gray-300 truncate">
                       {(() => {
+                        if (convo.isTyping) {
+                          return "Typing...";
+                        }
                         const lastMessage =
                           convo.lastMessage?.content ||
                           "Start a conversation...";

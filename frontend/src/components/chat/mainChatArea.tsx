@@ -51,6 +51,7 @@ function MainChatArea({
     conversations,
     hasMessages,
     loadingMessages,
+    sendTyping,
   } = useChatStore();
   const { user } = useAuthStore();
 
@@ -145,6 +146,7 @@ function MainChatArea({
       console.log("message is empty");
       return;
     }
+    sendTyping(conversation._id, false);
     sendMessage(conversation._id, newMessage);
     setMessageUpdateType("new");
     setNewMessage("");
@@ -346,7 +348,10 @@ function MainChatArea({
                 <div className="flex-1 relative">
                   <Input
                     value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
+                    onChange={(e) => {
+                      sendTyping(conversation._id, e.target.value.length > 0);
+                      setNewMessage(e.target.value);
+                    }}
                     onKeyDown={handleKeyPress}
                     placeholder="Type a message..."
                     className="pr-12 py-3 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus-visible:ring-2 focus-visible:ring-blue-500 text-sm"
