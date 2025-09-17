@@ -8,32 +8,32 @@ import { AuthValidator } from "../validators/authValidator";
 import { UserValidator } from "../validators/userValidator";
 import { AuthController } from "../controllers/authController";
 import { UserController } from "../controllers/userController";
-import { FriendshipValidator } from "../validators/friendshipValidator";
 import { MessageRepository } from "../repository/messageRepository";
 import { MessageService } from "../services/messageService";
 import { MessageController } from "../controllers/messageController";
 import { MessageValidator } from "../validators/messageValidator";
 import { TypedEventEmitter } from "../validators/events";
+
 export enum ObjectsName {
   // repositories
-  "UserRepository",
-  "MessageRepository",
+  UserRepository = "UserRepository",
+  MessageRepository = "MessageRepository",
   // services
-  "AuthService",
-  "JwtService",
-  "SocketService",
-  "UserService",
-  "MessageService",
+  AuthService = "AuthService",
+  JwtService = "JwtService",
+  SocketService = "SocketService",
+  UserService = "UserService",
+  MessageService = "MessageService",
   // controllers
-  "AuthController",
-  "UserController",
-  "MessageController",
+  AuthController = "AuthController",
+  UserController = "UserController",
+  MessageController = "MessageController",
   // validators
-  "AuthValidator",
-  "UserValidator",
-  "MessageValidator",
+  AuthValidator = "AuthValidator",
+  UserValidator = "UserValidator",
+  MessageValidator = "MessageValidator",
   // events
-  "MessageEventEmitter",
+  MessageEventEmitter = "MessageEventEmitter",
 }
 
 export class Provider {

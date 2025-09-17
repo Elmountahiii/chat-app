@@ -1,4 +1,3 @@
-import mongoose from "mongoose";
 import { MessageRepository } from "../repository/messageRepository";
 import { AppError } from "../types/common";
 import {

@@ -145,6 +145,7 @@ export class MessageRepository {
         }
         query.createdAt = { $lt: cursorMessage.createdAt };
       } catch (error) {
+        console.log(error);
         throw new AppError("Invalid cursor", 400);
       }
     }
@@ -227,8 +228,8 @@ export class MessageRepository {
         },
       };
     } catch (error) {
+      console.log(error);
       throw new AppError("Failed to mark messages as read", 500);
-    } finally {
-    }
+    } 
   }
 }
