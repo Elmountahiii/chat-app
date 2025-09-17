@@ -7,7 +7,7 @@ interface SocketProviderProps {
   children: React.ReactNode;
 }
 const SocketProvider = ({ children }: SocketProviderProps) => {
-  const { initializeSocket, disconnectSocket, status } = useChatStore();
+  const { initializeSocket, disconnectSocket } = useChatStore();
   const { checkAuthStatus } = useAuthStore();
 
   useEffect(() => {

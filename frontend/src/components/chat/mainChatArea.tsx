@@ -57,10 +57,8 @@ function MainChatArea({
   } = useChatStore();
   const { user } = useAuthStore();
 
-  const conversation = conversations.find(
-    (c) => c._id === activeConversationId
-  );
-
+  const conversation =
+    conversations.find((conv) => conv._id === activeConversationId) || null;
   const [newMessage, setNewMessage] = useState("");
   const [messageUpdateType, setMessageUpdateType] = useState<"new" | "old">(
     "new"
@@ -72,7 +70,7 @@ function MainChatArea({
   const scrollPositionRef = useRef<number>(0);
   const oldScrollHeightRef = useRef<number>(0);
 
-  let otherParticipant: User | null =
+  const otherParticipant: User | null =
     conversation?.participants.find((p) => p._id !== user?._id) || null;
 
   const otherReadStatus = conversation?.readStatus.find(
@@ -85,6 +83,7 @@ function MainChatArea({
 
   useEffect(() => {
     if (activeConversationId !== null) {
+      console.log("clg");
       markAsRead(activeConversationId);
       let limit = 20;
       const unreadCount =
@@ -96,7 +95,9 @@ function MainChatArea({
       }
       fetchMessages(activeConversationId, limit);
     }
-  }, [activeConversationId]);
+  }, [activeConversationId, user, fetchMessages, markAsRead]);
+
+
 
   useEffect(() => {
     if (messageUpdateType === "new") {
@@ -141,7 +142,6 @@ function MainChatArea({
   };
 
   const handleSendMessage = (): void => {
-    console.log("start of handleSendMessage");
     if (!conversation) {
       console.log("no conversation selected");
       return;

@@ -2,14 +2,13 @@ import { AuthActions } from "@/types/action/AuthActions";
 import { AuthState } from "@/types/state/authState";
 import { create } from "zustand";
 import { HttpResponse } from "@/types/httpResponse";
-import { persist, createJSONStorage } from "zustand/middleware";
 import { User } from "@/types/user";
 import { SignUpDataType } from "@/schema/auth/signUpSchema";
 
 type AuthStore = AuthState & AuthActions;
 const apiUrl = "http://localhost:3001/api";
 
-export const useAuthStore = create<AuthStore>((set, get) => ({
+export const useAuthStore = create<AuthStore>((set) => ({
   // State
   user: null,
   isAuthenticated: false,
@@ -119,6 +118,9 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         },
       });
       const data: HttpResponse<null> = await response.json();
+      if (!data.success) {
+        console.warn(`Logout failed:`, data.errorMessage);
+      }
       set({
         user: null,
         isAuthenticated: false,

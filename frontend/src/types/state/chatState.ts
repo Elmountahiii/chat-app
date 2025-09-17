@@ -10,7 +10,6 @@ export type ConnectivityStatus = "connected" | "disconnected" | "connecting";
 export type chatState = {
   socket: Socket | null;
   status: ConnectivityStatus;
-  currentUser: User | null;
   conversations: Conversation[];
   activeConversationId: string | null;
   messages: Record<string, Message[]>;

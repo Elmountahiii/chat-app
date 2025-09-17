@@ -45,11 +45,10 @@ function LoginForm() {
   });
 
   useEffect(() => {
-    console.log("isAuthenticated, redirecting to /home", isAuthenticated);
     if (isAuthenticated) {
       router.push("/home");
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, router]);
 
   useEffect(() => {
     if (successMessage) {

@@ -1,5 +1,3 @@
-import { User } from "../user";
-
 export type ChatActions = {
   // socket actions
   initializeSocket: () => void;
@@ -9,7 +7,6 @@ export type ChatActions = {
   setConnectivityStatus: (status: "online" | "offline" | "away") => void;
 
   // user actions
-  setCurrentUser: (user: User) => void;
   getOnlineFriends: () => Promise<void>;
   searchForPotentialFriends: (query: string) => Promise<void>;
   getAllFriendshipRequests: () => Promise<void>;

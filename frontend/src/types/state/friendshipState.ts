@@ -1,4 +1,4 @@
-import { FriendShipRequest } from "../FriendShipRequest";
+import { FriendShipRequest } from "../friendShipRequest";
 import { PotentialFriend } from "../potentialFriend";
 import { User } from "../user";
 

@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect } from "react";
+import React from "react";
 import { TabsContent } from "@/components/ui/tabs";
 import { UserCheck, UserX } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";

@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { TabsContent } from "../ui/tabs";
 import { Search } from "lucide-react";
 import { Input } from "../ui/input";
@@ -28,7 +28,6 @@ type OnlineFriendsProps = {
 const OnlineFriends = ({ changeDialogOpen }: OnlineFriendsProps) => {
   const {
     onlineFriends,
-    getOnlineFriends,
     setActiveConversation,
     conversations,
     createConversation,

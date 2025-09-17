@@ -12,9 +12,12 @@ import { ConversationsList } from "@/components/chat/conversationsList";
 import { Conversation } from "@/types/converstation";
 import { useChatStore } from "@/stateManagment/chatStore";
 import MainChatArea from "@/components/chat/mainChatArea";
+import { useAuthStore } from "@/stateManagment/authStore";
 
 export default function ChatPage() {
-  const { setActiveConversation, fetchConversations } = useChatStore();
+  const { setActiveConversation, fetchConversations, conversations } =
+    useChatStore();
+  const { user } = useAuthStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [showFriendsList, setShowFriendsList] = useState(false);
   const [selectedUserProfile, setSelectedUserProfile] = useState<User | null>(
@@ -24,7 +27,7 @@ export default function ChatPage() {
 
   useEffect(() => {
     fetchConversations();
-  }, []);
+  }, [fetchConversations]);
 
   const handleStartChat = (conversation: Conversation) => {
     setActiveConversation(conversation._id);
@@ -32,10 +35,22 @@ export default function ChatPage() {
 
   const handleUserProfileClick = (conversation: Conversation) => {
     setShowUserProfile(true);
+    const otherParticipant = conversation.participants.find(
+      (p) => p._id !== user?._id
+    );
+    if (otherParticipant) {
+      setSelectedUserProfile(otherParticipant);
+    }
   };
 
   const handleProfileStartChat = (user: User) => {
     setShowFriendsList(false);
+    const conversation = conversations.find((conv) =>
+      conv.participants.some((p) => p._id === user._id)
+    );
+    if (conversation) {
+      setActiveConversation(conversation._id);
+    }
   };
 
   return (
