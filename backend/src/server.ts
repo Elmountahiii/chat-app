@@ -12,6 +12,7 @@ import { fileStream, logger } from "./config/logger";
 import http from "http";
 import { Provider } from "./utils/provider";
 import messageRoutes from "./routes/messageRoutes";
+import { createErrorResponse } from "./types/common";
 
 const app = express();
 const server = http.createServer(app);
@@ -37,6 +38,12 @@ app.use("/api/auth", authRoutes);
 app.use("/api/user", authMiddleware, userRoutes);
 app.use("/api/messages", authMiddleware, messageRoutes);
 
+app.use((req, res) => {
+  logger.warn(`404 - Route not found: ${req.method} ${req.originalUrl}`);
+
+  res.status(404).json(createErrorResponse("Route not found"));
+});
+
 app.use(errorMiddleware);
 
 const serverStart = async () => {
@@ -46,7 +53,7 @@ const serverStart = async () => {
     logger.info("Connected to database successfully");
     Provider.getInstance().getSocketService(server);
     server.listen(config.PORT, () => {
-      logger.info(`Server is running on http://localhost:${config.PORT}`);
+      logger.info(`Server is running on http://0.0.0.0:${config.PORT}`);
     });
   } catch (error) {
     logger.error("Error starting the server:", error);

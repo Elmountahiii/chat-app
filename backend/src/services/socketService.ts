@@ -3,6 +3,7 @@ import http from "http";
 import { TypedEventEmitter } from "../validators/events";
 import { getCookieValue } from "../utils/utils";
 import { JwtService } from "./jwtService";
+import { corsConfig } from "../config/environment";
 
 export class SocketService {
   private io: Server;
@@ -13,12 +14,11 @@ export class SocketService {
   ) {
     this.io = new Server(server, {
       cors: {
-        origin: "http://localhost:3000",
+        origin: [corsConfig.origin],
         methods: ["GET", "POST"],
         credentials: true,
       },
     });
-
     this.io.use(this.authenticateSocket.bind(this));
     this.setupSocketListeners();
     this.setupEventListeners();

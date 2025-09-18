@@ -1,33 +1,47 @@
 FROM node:22-alpine AS base
 
 FROM base AS deps
-RUN apk add --no-cache libc6-compat
 WORKDIR /app
+COPY package*.json ./
+RUN npm ci
 
-COPY package.json package-lock.json* ./
-RUN npm ci --omit=dev
-
-FROM base AS builder
+FROM base AS dev-builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+RUN  npm run build
 
-RUN npm run build
 
-FROM base AS runner
+FROM base AS prod-builder
+WORKDIR /app
+ENV NODE_ENV=production
+COPY package*.json ./
+RUN npm ci --omit=dev
+
+
+FROM base AS runtime
 WORKDIR /app
 
 ENV NODE_ENV=production
-
+ENV PORT=3001
+ENV MONGODB_URI=mongodb://admin:password@127.0.0.1:27017/chatapp?authSource=admin
+ENV JWT_SECRET=your_jwt_secret
+ENV NEXT_PUBLIC_FRONTEND_URL=http://localhost:3000
+ENV NEXT_PUBLIC_BACKEND_URL=http://localhost:3001
+ENV NEXT_PUBLIC_SOCKET_URL=http://localhost:3001/socket.io
+	
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nodejs
 
-COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
-COPY --from=deps --chown=nodejs:nodejs /app/node_modules ./node_modules
-COPY --chown=nodejs:nodejs package.json ./
+RUN mkdir -p /app/logs
+RUN chown -R nodejs:nodejs /app/logs
+
+COPY --from=dev-builder --chown=nodejs:nodejs /app/dist ./dist
+COPY --from=prod-builder --chown=nodejs:nodejs /app/node_modules ./node_modules
+COPY --chown=nodejs:nodejs package*.json ./
 
 USER nodejs
 
-EXPOSE 3000
+EXPOSE 3001
 
-CMD ["npm", "run", "start"]
+CMD ["node", "dist/server.js"]

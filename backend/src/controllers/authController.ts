@@ -46,7 +46,7 @@ export class AuthController {
       const token = await JwtService.signToken(user._id.toString());
       res.cookie("authToken", token, {
         httpOnly: true,
-        secure: config.ENV === "production",
+        secure: config.NODE_ENV === "production",
         sameSite: "strict",
         maxAge: 24 * 60 * 60 * 1000,
         path: "/",

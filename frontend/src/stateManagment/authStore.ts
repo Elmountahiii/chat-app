@@ -6,7 +6,11 @@ import { User } from "@/types/user";
 import { SignUpDataType } from "@/schema/auth/signUpSchema";
 
 type AuthStore = AuthState & AuthActions;
-const apiUrl = "http://localhost:3001/api";
+
+const API_BASE_URL =
+  process.env.NODE_ENV === "production"
+    ? "/api"
+    : process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001/api";
 
 export const useAuthStore = create<AuthStore>((set) => ({
   // State
@@ -19,12 +23,14 @@ export const useAuthStore = create<AuthStore>((set) => ({
 
   // Actions
   login: async (email: string, password: string) => {
+    console.log("API_BASE_URL:", API_BASE_URL);
+    console.log("node env:", process.env.NODE_ENV);
     try {
       set({
         isLoading: true,
         error: null,
       });
-      const response = await fetch(`${apiUrl}/auth/login`, {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -64,7 +70,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
         error: null,
       });
 
-      const response = await fetch(`${apiUrl}/auth/signup`, {
+      const response = await fetch(`${API_BASE_URL}/auth/signup`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -110,7 +116,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
         isLoading: true,
         error: null,
       });
-      const response = await fetch(`${apiUrl}/auth/logout`, {
+      const response = await fetch(`${API_BASE_URL}/auth/logout`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -147,7 +153,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
   checkAuthStatus: async () => {
     try {
       set({ isLoading: true });
-      const response = await fetch(`${apiUrl}/auth/me`, {
+      const response = await fetch(`${API_BASE_URL}/auth/me`, {
         method: "GET",
         credentials: "include",
       });

@@ -10,10 +10,14 @@ import { PotentialFriend } from "@/types/potentialFriend";
 import { FriendShipRequest } from "@/types/friendShipRequest";
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
+  process.env.NODE_ENV === "production"
+    ? "/api"
+    : process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001/api";
 
 const SOCKET_URL =
-  process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:3001";
+  process.env.NODE_ENV === "production"
+    ? ""
+    : process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:3001";
 
 type ChatStore = chatState & ChatActions;
 
