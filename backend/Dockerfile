@@ -27,8 +27,6 @@ ENV PORT=3001
 ENV MONGODB_URI=mongodb://admin:password@127.0.0.1:27017/chatapp?authSource=admin
 ENV JWT_SECRET=your_jwt_secret
 ENV NEXT_PUBLIC_FRONTEND_URL=http://localhost:3000
-ENV NEXT_PUBLIC_BACKEND_URL=http://localhost:3001
-ENV NEXT_PUBLIC_SOCKET_URL=http://localhost:3001/socket.io
 	
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nodejs

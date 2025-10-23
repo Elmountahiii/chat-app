@@ -61,4 +61,16 @@ const serverStart = async () => {
   }
 };
 
+const shutdown = () => {
+  logger.info("Shutting down server...");
+  server.close(async () => {
+    await mongoose.disconnect();
+    logger.info("Server shut down complete.");
+    process.exit(0);
+  });
+};
+
+process.on("SIGTERM", () => shutdown());
+process.on("SIGINT", () => shutdown());
+
 serverStart();

@@ -7,10 +7,16 @@ import { SignUpDataType } from "@/schema/auth/signUpSchema";
 
 type AuthStore = AuthState & AuthActions;
 
-const API_BASE_URL =
-  process.env.NODE_ENV === "production"
-    ? "/api"
-    : process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001/api";
+const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL
+  ? process.env.NEXT_PUBLIC_BACKEND_URL
+  : "http://localhost:3001/api";
+
+console.log(
+  "auth store NEXT_PUBLIC_BACKEND_URL : ",
+  process.env.NEXT_PUBLIC_BACKEND_URL
+);
+
+console.log("Auth store API_BASE_URL : ", API_BASE_URL);
 
 export const useAuthStore = create<AuthStore>((set) => ({
   // State
@@ -23,8 +29,6 @@ export const useAuthStore = create<AuthStore>((set) => ({
 
   // Actions
   login: async (email: string, password: string) => {
-    console.log("API_BASE_URL:", API_BASE_URL);
-    console.log("node env:", process.env.NODE_ENV);
     try {
       set({
         isLoading: true,

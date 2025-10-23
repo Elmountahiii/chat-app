@@ -3,7 +3,7 @@ import http from "http";
 import { TypedEventEmitter } from "../validators/events";
 import { getCookieValue } from "../utils/utils";
 import { JwtService } from "./jwtService";
-import { corsConfig } from "../config/environment";
+import { config } from "../config/environment";
 
 export class SocketService {
   private io: Server;
@@ -14,7 +14,7 @@ export class SocketService {
   ) {
     this.io = new Server(server, {
       cors: {
-        origin: [corsConfig.origin],
+        origin: [config.NEXT_PUBLIC_FRONTEND_URL, "http://localhost:3000"],
         methods: ["GET", "POST"],
         credentials: true,
       },
@@ -46,6 +46,7 @@ export class SocketService {
   private setupSocketListeners() {
     this.io.on("connection", (socket) => {
       const userId = socket.data.userId as string;
+      console.log(`User connected: ${userId}`);
       socket.join(userId);
 
       // ? Update user status

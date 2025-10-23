@@ -6,10 +6,9 @@ const protectedRoutes = ["/home"];
 const authRoutes = ["/auth/login", "/auth/signup"];
 const publicRoutes = ["/", "/about", "/contact"];
 
-const API_BASE_URL =
-  process.env.NODE_ENV === "production"
-    ? "/api"
-    : process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001/api";
+const API_BASE_URL = `${
+  process.env.BACKEND_ENDPOINT || "http://localhost:3001"
+}/api`;
 
 export async function middleware(request: NextRequest) {
   const loginUrl = new URL("/auth/login", request.url);
@@ -33,15 +32,11 @@ export async function middleware(request: NextRequest) {
       return NextResponse.next();
     }
   }
-  try {
-    const backendUrl =
-      process.env.NODE_ENV === "production"
-        ? "http://chatapp-backend:3001/api/auth/me"
-        : `${
-            process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001"
-          }/api/auth/me`;
 
-    const response = await fetch(backendUrl, {
+  try {
+    console.log("BACKEND_ENDPOINT ", process.env.BACKEND_ENDPOINT);
+    console.log("API_BASE_URL:", API_BASE_URL);
+    const response = await fetch(`${API_BASE_URL}/auth/me`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

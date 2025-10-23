@@ -9,15 +9,12 @@ import { User } from "@/types/user";
 import { PotentialFriend } from "@/types/potentialFriend";
 import { FriendShipRequest } from "@/types/friendShipRequest";
 
-const API_BASE_URL =
-  process.env.NODE_ENV === "production"
-    ? "/api"
-    : process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001/api";
+const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL
+  ? process.env.NEXT_PUBLIC_BACKEND_URL
+  : "http://localhost:3001/api";
 
 const SOCKET_URL =
-  process.env.NODE_ENV === "production"
-    ? ""
-    : process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:3001";
+  process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:3001";
 
 type ChatStore = chatState & ChatActions;
 
@@ -39,16 +36,31 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
   // actions
   initializeSocket: () => {
+    console.log("---------------- ENV --------");
+    console.log(
+      "NEXT_PUBLIC_BACKEND_URL : ",
+      process.env.NEXT_PUBLIC_BACKEND_URL
+    );
+    console.log(
+      "NEXT_PUBLIC_SOCKET_URL : ",
+      process.env.NEXT_PUBLIC_SOCKET_URL
+    );
+    console.log("----------------------------------");
+    console.log("is Production : ", process.env.NODE_ENV);
+    console.log("API_BASE_URL : ", API_BASE_URL);
+    console.log("SOCKET_URL : ", SOCKET_URL);
     if (get().status === "connected" || get().status === "connecting") {
       console.log("Socket is already connected or connecting");
       return;
     }
     set({ status: "connecting" });
+    console.log("socketIO url : ", SOCKET_URL);
     const socket = io(SOCKET_URL, {
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
       withCredentials: true,
+      path: "/socket.io",
     });
 
     socket.on("connect_error", (err) => {
@@ -58,6 +70,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
     socket.on("connect", async () => {
       set({ status: "connected", socket });
+      console.log("Connected to socket with ID:", socket.id);
       await get().fetchConversations();
       const state = get();
       state.conversations.forEach((conversation) => {

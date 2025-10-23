@@ -24,6 +24,8 @@ services:
       dockerfile: Dockerfile
     container_name: chatapp-backend
     restart: unless-stopped
+    ports:
+      - 3001:3001
     volumes:
       - backend-logs:/app/logs
     environment:
@@ -32,8 +34,6 @@ services:
       - MONGODB_URI=mongodb://${MONGO_ROOT_USER:-admin}:${MONGO_ROOT_PASSWORD:-password}@database:27017/${MONGO_DB:-chatapp}?authSource=admin
       - JWT_SECRET=${JWT_SECRET:-your_jwt_secret}
       - NEXT_PUBLIC_FRONTEND_URL=${NEXT_PUBLIC_FRONTEND_URL}
-      - NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL}
-      - NEXT_PUBLIC_SOCKET_URL=${NEXT_PUBLIC_SOCKET_URL}
     depends_on:
       - database
     networks:
@@ -42,7 +42,19 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+      - NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL}
+      - NEXT_PUBLIC_SOCKET_URL=${NEXT_PUBLIC_SOCKET_URL}
+      - BACKEND_ENDPOINT=${BACKEND_ENDPOINT}
     container_name: chatapp-frontend
+    ports:
+      - 3000:3000
+    environment:
+      - NODE_ENV=production
+      - BACKEND_ENDPOINT=${BACKEND_ENDPOINT}
+      - NEXT_PUBLIC_FRONTEND_URL=${NEXT_PUBLIC_FRONTEND_URL}
+      - NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL}
+      - NEXT_PUBLIC_SOCKET_URL=${NEXT_PUBLIC_SOCKET_URL}
     restart: unless-stopped
     depends_on:
       - backend
