@@ -1,15 +1,39 @@
 #!/bin/bash
 set -e
 
+RED='\e[31m'
+GREEN='\e[32m'
+YELLOW='\e[33m'
+NC='\e[0m'
+
 domain="chat.elmountahi.dev"
 email="youssef@elmountahi.dev"
 
 
-echo "---- Starting Nginx for certificate generation..."
+staging=1
 
-docker-compose up -d nginx
+if [ $staging != "0" ]; then
+  staging_arg="--staging"
+fi
 
-echo "Done "
+echo -e "${YELLOW}Requesting certificate for ${GREEN}$domain ${YELLOW}...${NC}\n\n"
 
+docker-compose run --rm -p 80:80 --entrypoint "\
+  certbot certonly --standalone \
+    $staging_arg \
+    --email $email \
+    -d $domain \
+    --rsa-key-size 4096 \
+    --agree-tos \
+    --force-renewal \
+    --non-interactive \
+    --no-eff-email" certbot
 
-echo "---- Requesting certificate for $domain ..."
+echo -e "${GREEN}Certificate obtained successfully! ${NC}\n\n"
+
+echo -e "${YELLOW}Restarting all services...${NC}\n\n"
+docker-compose down
+docker-compose up -d
+
+echo -e "${GREEN}Deployment completed successfully! ${NC}\n\n"
+echo -e "${GREEN}All services started. ${NC}\n\n"
