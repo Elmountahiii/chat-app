@@ -3,7 +3,7 @@ version: '3.8'
 services:
   database:
     build:
-      context: ./mongodb
+      context: ../mongodb
       dockerfile: Dockerfile
     container_name: chatapp-mongodb
     restart: unless-stopped
@@ -11,7 +11,7 @@ services:
       - "27017:27017"
     volumes:
       - mongo-data:/data/db
-      - ./mongodb/init:/docker-entrypoint-initdb.d
+      - ../mongodb/init:/docker-entrypoint-initdb.d
     environment:
       - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USER:-admin}
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD:-password}
@@ -20,7 +20,7 @@ services:
       - chatapp-network
   backend:
     build:
-      context: ./backend
+      context: ../backend
       dockerfile: Dockerfile
     container_name: chatapp-backend
     restart: unless-stopped
@@ -40,7 +40,7 @@ services:
       - chatapp-network
   frontend:
     build:
-      context: ./frontend
+      context: ../frontend
       dockerfile: Dockerfile
       args:
       - NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL}
@@ -62,7 +62,7 @@ services:
       - chatapp-network
   nginx:
     build:
-      context: ./nginx
+      context: ../nginx
       dockerfile: Dockerfile
     container_name: chatapp-nginx
     restart: unless-stopped
@@ -73,11 +73,25 @@ services:
       - frontend
     networks:
       - chatapp-network
+    volumes:
+      - certbot-data:/etc/letsencrypt
+      - certbot-www:/var/www/certbot
+  certbot:
+    image: certbot/certbot
+    container_name: chatapp-certbot
+    volumes:
+      - certbot-data:/etc/letsencrypt
+      - certbot-www:/var/www/certbot
+    command: certonly --webroot -w /var/www/certbot --force-renewal --email youssef@elmountahi.dev -d chat.elmountahi.dev --agree-tos --no-eff-email
 
 volumes:
   mongo-data:
     driver: local
   backend-logs:
+    driver: local
+  certbot-data:
+    driver: local
+  certbot-www:
     driver: local
 
 networks:
