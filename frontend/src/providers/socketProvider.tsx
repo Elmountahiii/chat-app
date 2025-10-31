@@ -8,7 +8,7 @@ interface SocketProviderProps {
 }
 const SocketProvider = ({ children }: SocketProviderProps) => {
   const { initializeSocket, disconnectSocket } = useChatStore();
-  const { checkAuthStatus } = useAuthStore();
+  const { checkAuthStatus, user } = useAuthStore();
 
   useEffect(() => {
     initializeSocket();
@@ -18,6 +18,12 @@ const SocketProvider = ({ children }: SocketProviderProps) => {
       disconnectSocket();
     };
   }, [initializeSocket, disconnectSocket, checkAuthStatus]);
+
+  useEffect(() => {
+    if (user) {
+      initializeSocket();
+    }
+  }, [user]);
 
   return <div>{children}</div>;
 };

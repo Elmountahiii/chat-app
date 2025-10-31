@@ -40,3 +40,4 @@ docker-compose up -d
 
 echo -e "${GREEN}Deployment completed successfully! ${NC}\n\n"
 echo -e "${GREEN}All services started. ${NC}\n\n"
+exit 0

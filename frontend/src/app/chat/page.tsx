@@ -126,7 +126,6 @@ export default function ChatPage() {
         user={selectedUserProfile}
         isOpen={showUserProfile}
         onClose={() => setShowUserProfile(false)}
-        onStartChat={handleProfileStartChat}
       />
     </div>
   );

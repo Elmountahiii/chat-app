@@ -1,5 +1,4 @@
 "use client";
-
 import {
   Dialog,
   DialogContent,
@@ -7,39 +6,22 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { User } from "@/types/user";
-import {
-  Calendar,
-  Mail,
-  MessageCircle,
-  Phone,
-  Video,
-  UserPlus,
-} from "lucide-react";
+import { Calendar, Mail } from "lucide-react";
 
 interface UserProfileDialogProps {
   user: User | null;
   isOpen: boolean;
   onClose: () => void;
-  onStartChat?: (user: User) => void;
 }
 
 export function UserProfileDialog({
   user,
   isOpen,
   onClose,
-  onStartChat,
 }: UserProfileDialogProps) {
   if (!user) return null;
-
-  const handleStartChat = () => {
-    if (onStartChat) {
-      onStartChat(user);
-      onClose();
-    }
-  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -64,7 +46,14 @@ export function UserProfileDialog({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        console.log("open state : ", open);
+        if (!open) {
+          onClose();
+        }
+      }}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="sr-only">User Profile</DialogTitle>
@@ -131,25 +120,6 @@ export function UserProfileDialog({
                 </span>
               </div>
             )}
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex space-x-2 w-full pt-4">
-            <Button
-              onClick={handleStartChat}
-              className="flex-1 bg-blue-600 hover:bg-blue-700">
-              <MessageCircle className="h-4 w-4 mr-2" />
-              Message
-            </Button>
-            <Button variant="outline" size="icon">
-              <Phone className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" size="icon">
-              <Video className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" size="icon">
-              <UserPlus className="h-4 w-4" />
-            </Button>
           </div>
         </div>
       </DialogContent>

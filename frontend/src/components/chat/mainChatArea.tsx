@@ -10,15 +10,22 @@ import {
   MessageCircle,
   MoreVertical,
   Paperclip,
-  Phone,
   Send,
-  Video,
+  UserX,
+  UserRound,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { User } from "@/types/user";
 import { Input } from "../ui/input";
 import { EmojiSelector } from "./EmojiSelector";
 import { formatDistanceToNow, isToday, isYesterday, format } from "date-fns";
+
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "../ui/dropdown-menu";
 
 type MainChatAreaProps = {
   setShowFriendsList: (show: boolean) => void;
@@ -69,6 +76,7 @@ function MainChatArea({
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const scrollPositionRef = useRef<number>(0);
   const oldScrollHeightRef = useRef<number>(0);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const otherParticipant: User | null =
     conversation?.participants.find((p) => p._id !== user?._id) || null;
@@ -83,7 +91,6 @@ function MainChatArea({
 
   useEffect(() => {
     if (activeConversationId !== null) {
-      console.log("clg");
       markAsRead(activeConversationId);
       let limit = 20;
       const unreadCount =
@@ -96,8 +103,6 @@ function MainChatArea({
       fetchMessages(activeConversationId, limit);
     }
   }, [activeConversationId, user, fetchMessages, markAsRead]);
-
-
 
   useEffect(() => {
     if (messageUpdateType === "new") {
@@ -157,6 +162,16 @@ function MainChatArea({
     setNewMessage("");
   };
 
+  const handleBlockUser = () => {
+    console.log("blocking user");
+  };
+
+  const handleViewProfile = () => {
+    setDropdownOpen(false);
+    if (conversation) {
+      handleUserProfileClick(conversation);
+    }
+  };
   return (
     <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-gray-900">
       {conversation ? (
@@ -217,24 +232,30 @@ function MainChatArea({
               </div>
             </div>
             <div className="flex space-x-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="hover:bg-gray-100 dark:hover:bg-gray-800">
-                <Phone className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="hover:bg-gray-100 dark:hover:bg-gray-800">
-                <Video className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="hover:bg-gray-100 dark:hover:bg-gray-800">
-                <MoreVertical className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-              </Button>
+              <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer">
+                    <MoreVertical className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    className="cursor-pointer"
+                    onClick={handleViewProfile}>
+                    <UserRound className="mr-2 h-4 w-4" />
+                    View Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="cursor-pointer"
+                    onClick={handleBlockUser}>
+                    <UserX className="mr-2 h-4 w-4" />
+                    Block User
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
 
