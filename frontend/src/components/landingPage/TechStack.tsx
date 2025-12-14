@@ -1,82 +1,71 @@
 import React from "react";
-import {
-	DockerLogo,
-	ExpressJsLogo,
-	MongoDbLogo,
-	NextjsLogo,
-	NodejsLogo,
-	SocketIoLogo,
-} from "./Icons";
+import { Docker, Expressjs, MongoDB, Nextjs, Nodejs, SocketIO } from "./Icons";
 
 const techStack = [
 	{
 		name: "Next.js",
-		logo: <NextjsLogo />,
+		logo: <Nextjs />,
 		description:
-			"For building a fast, server-rendered React frontend that provides an excellent user experience and is optimized for performance.",
-	},
-	{
-		name: "MongoDB",
-		logo: <MongoDbLogo />,
-		description:
-			"Chosen for its flexible, schema-less data model, which is perfect for storing diverse chat messages and user profiles efficiently.",
+			"Server-rendered React framework for a fast, SEO-friendly, and dynamic frontend experience.",
 	},
 	{
 		name: "Node.js",
-		logo: <NodejsLogo />,
+		logo: <Nodejs />,
 		description:
-			"The runtime environment for our backend, enabling fast, event-driven I/O that is ideal for a real-time chat application.",
+			"Event-driven runtime environment ensuring efficient handling of concurrent connections.",
 	},
 	{
 		name: "Express.js",
-		logo: <ExpressJsLogo />,
+		logo: <Expressjs />,
 		description:
-			"A minimal and powerful Node.js framework used to build the robust and scalable REST API that powers the application's backend.",
+			"Minimalist web framework for building a robust and scalable RESTful API.",
 	},
 	{
 		name: "Socket.IO",
-		logo: <SocketIoLogo />,
+		logo: <SocketIO />,
 		description:
-			"Facilitates real-time, bidirectional communication between the client and server, enabling instant messaging capabilities.",
+			"Real-time engine powering instant messaging, typing indicators, and live updates.",
+	},
+	{
+		name: "MongoDB",
+		logo: <MongoDB />,
+		description:
+			"NoSQL database for flexible schema design and efficient storage of chat history.",
 	},
 	{
 		name: "Docker",
-		logo: <DockerLogo />,
+		logo: <Docker />,
 		description:
-			"Containerizes the application, ensuring a consistent and reproducible environment for both development and deployment.",
+			"Containerization platform ensuring consistent environments from development to production.",
 	},
 ];
 
 function TechStack() {
 	return (
-		<section className="py-20 bg-gray-50">
+		<section id="tech-stack" className="py-24 bg-white">
 			<div className="container mx-auto px-6">
 				<div className="text-center mb-16">
-					<h3 className="text-3xl md:text-4xl font-bold text-gray-900">
-						Built With the Best
-					</h3>
-					<p className="text-gray-700 mt-4 max-w-2xl mx-auto">
-						This project is powered by a carefully selected stack of modern,
-						scalable, and robust technologies to ensure a premium user
-						experience.
+					<h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+						Built With Modern Tech
+					</h2>
+					<p className="text-gray-600 max-w-2xl mx-auto text-lg">
+						Leveraging the power of the MERN stack and modern DevOps tools.
 					</p>
 				</div>
-				<div className="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
 					{techStack.map((tech) => (
 						<div
 							key={tech.name}
-							className="group relative transition-transform transform hover:-translate-y-2"
+							className="group relative p-1 rounded-2xl bg-gradient-to-br from-gray-100 to-gray-50 hover:from-blue-500 hover:to-indigo-500 transition-all duration-300 shadow-sm hover:shadow-xl"
 						>
-							<div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-xl blur opacity-0 group-hover:opacity-75 transition duration-300"></div>
-
-							<div className="relative bg-white p-8 rounded-xl h-full flex flex-col items-center text-center shadow-lg border border-gray-200">
-								<div className="text-gray-700 w-16 h-16 mb-6 flex items-center justify-center">
+							<div className="bg-white h-full rounded-xl p-8 flex flex-col items-center text-center relative z-10">
+								<div className="w-16 h-16 mb-6 transform group-hover:scale-110 transition-transform duration-300">
 									{tech.logo}
 								</div>
-								<h4 className="text-xl font-bold text-gray-900 mb-3">
+								<h3 className="text-xl font-bold text-gray-900 mb-3">
 									{tech.name}
-								</h4>
-								<p className="text-gray-700 text-sm leading-relaxed flex-grow">
+								</h3>
+								<p className="text-gray-600 text-sm leading-relaxed">
 									{tech.description}
 								</p>
 							</div>

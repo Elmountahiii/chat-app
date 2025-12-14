@@ -64,7 +64,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 		});
 
 		socket.on("connect_error", (err) => {
-			console.error("Socket connection error:", err);
+			// console.error("Socket connection error:", err);
 			set({ status: "disconnected", socket: null });
 		});
 
