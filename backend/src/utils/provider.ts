@@ -13,154 +13,222 @@ import { MessageService } from "../services/messageService";
 import { MessageController } from "../controllers/messageController";
 import { MessageValidator } from "../validators/messageValidator";
 import { TypedEventEmitter } from "../validators/events";
+import { ConversationService } from "../services/conversatioService";
+import { ConversationRepository } from "../repository/conversationRepository";
+import { FriendshipRepository } from "../repository/friendshipRepository";
+import { FriendshipService } from "../services/friendsipService";
+import { FriendshipController } from "../controllers/friendshipController";
+import { ConversationController } from "../controllers/conversationController";
+import { AuthRepository } from "../repository/authRepository";
 
 export enum ObjectsName {
-  // repositories
-  UserRepository = "UserRepository",
-  MessageRepository = "MessageRepository",
-  // services
-  AuthService = "AuthService",
-  JwtService = "JwtService",
-  SocketService = "SocketService",
-  UserService = "UserService",
-  MessageService = "MessageService",
-  // controllers
-  AuthController = "AuthController",
-  UserController = "UserController",
-  MessageController = "MessageController",
-  // validators
-  AuthValidator = "AuthValidator",
-  UserValidator = "UserValidator",
-  MessageValidator = "MessageValidator",
-  // events
-  MessageEventEmitter = "MessageEventEmitter",
+	// repositories
+	AuthRepository = "AuthRepository",
+	UserRepository = "UserRepository",
+	MessageRepository = "MessageRepository",
+	ConversationRepository = "ConversationRepository",
+	FriendshipRepository = "FriendshipRepository",
+
+	// services
+	AuthService = "AuthService",
+	JwtService = "JwtService",
+	SocketService = "SocketService",
+	UserService = "UserService",
+	MessageService = "MessageService",
+	ConversationService = "ConversationService",
+	FriendshipService = "FriendshipService",
+	// controllers
+	AuthController = "AuthController",
+	UserController = "UserController",
+	MessageController = "MessageController",
+	ConversationController = "ConversationController",
+	FriendshipController = "FriendshipController",
+	// validators
+	AuthValidator = "AuthValidator",
+	UserValidator = "UserValidator",
+	MessageValidator = "MessageValidator",
+	ConversationValidator = "ConversationValidator",
+	// events
+	MessageEventEmitter = "MessageEventEmitter",
 }
 
 export class Provider {
-  private static instance: Provider;
-  private objects = new Map<ObjectsName, unknown>();
+	private static instance: Provider;
+	private objects = new Map<ObjectsName, unknown>();
 
-  private constructor() {}
+	private constructor() {}
 
-  static getInstance(): Provider {
-    if (!Provider.instance) {
-      Provider.instance = new Provider();
-    }
-    return Provider.instance;
-  }
+	static getInstance(): Provider {
+		if (!Provider.instance) {
+			Provider.instance = new Provider();
+		}
+		return Provider.instance;
+	}
 
-  private getOrCreate<T>(key: ObjectsName, factory: () => T): T {
-    if (!this.objects.has(key)) {
-      this.objects.set(key, factory());
-    }
-    return this.objects.get(key) as T;
-  }
+	private getOrCreate<T>(key: ObjectsName, factory: () => T): T {
+		if (!this.objects.has(key)) {
+			this.objects.set(key, factory());
+		}
+		return this.objects.get(key) as T;
+	}
 
-  // repositories
-  getUserRepository() {
-    return this.getOrCreate(
-      ObjectsName.UserRepository,
-      () => new UserRepository()
-    );
-  }
+	// repositories
 
-  getMessageRepository() {
-    return this.getOrCreate(
-      ObjectsName.MessageRepository,
-      () => new MessageRepository()
-    );
-  }
+	getAuthRepository() {
+		return this.getOrCreate(
+			ObjectsName.AuthRepository,
+			() => new AuthRepository(),
+		);
+	}
+	getUserRepository() {
+		return this.getOrCreate(
+			ObjectsName.UserRepository,
+			() => new UserRepository(),
+		);
+	}
 
-  // services
-  getAuthService() {
-    return this.getOrCreate(
-      ObjectsName.AuthService,
-      () => new AuthService(this.getUserRepository())
-    );
-  }
+	getMessageRepository() {
+		return this.getOrCreate(
+			ObjectsName.MessageRepository,
+			() => new MessageRepository(),
+		);
+	}
 
-  getJwtService() {
-    return this.getOrCreate(ObjectsName.JwtService, () => new JwtService());
-  }
-  getSocketService(server: Server) {
-    return this.getOrCreate(
-      ObjectsName.SocketService,
-      () => new SocketService(server, this.getMessageEventEmitter())
-    );
-  }
+	getConversationRepository() {
+		return this.getOrCreate(
+			ObjectsName.ConversationRepository,
+			() => new ConversationRepository(),
+		);
+	}
 
-  getUserService() {
-    return this.getOrCreate(
-      ObjectsName.UserService,
-      () =>
-        new UserService(this.getUserRepository(), this.getMessageEventEmitter())
-    );
-  }
+	getFriendshipRepository() {
+		return this.getOrCreate(
+			ObjectsName.FriendshipRepository,
+			() => new FriendshipRepository(),
+		);
+	}
 
-  getMessageService() {
-    return this.getOrCreate(
-      ObjectsName.MessageService,
-      () =>
-        new MessageService(this.getMessageRepository(), this.getUserService())
-    );
-  }
+	// services
+	getAuthService() {
+		return this.getOrCreate(
+			ObjectsName.AuthService,
+			() => new AuthService(this.getAuthRepository()),
+		);
+	}
 
-  // controllers
-  getAuthController() {
-    return this.getOrCreate(ObjectsName.AuthController, () => {
-      return new AuthController(
-        this.getAuthService(),
-        this.getAuthValidator(),
-        this.getMessageEventEmitter()
-      );
-    });
-  }
+	getJwtService() {
+		return this.getOrCreate(ObjectsName.JwtService, () => new JwtService());
+	}
+	getSocketService(server: Server) {
+		return this.getOrCreate(
+			ObjectsName.SocketService,
+			() =>
+				new SocketService(
+					server,
+					this.getUserService(),
+					this.getFriendshipService(),
+					this.getConversationService(),
+					this.getMessageService(),
+				),
+		);
+	}
 
-  getUserController() {
-    return this.getOrCreate(ObjectsName.UserController, () => {
-      return new UserController(
-        this.getUserService(),
-        this.getUserValidator(),
-        this.getMessageEventEmitter()
-      );
-    });
-  }
+	getUserService() {
+		return this.getOrCreate(
+			ObjectsName.UserService,
+			() => new UserService(this.getUserRepository()),
+		);
+	}
 
-  getMessageController() {
-    return this.getOrCreate(
-      ObjectsName.MessageController,
-      () =>
-        new MessageController(
-          this.getMessageService(),
-          this.getUserService(),
-          this.getMessageValidator(),
-          this.getMessageEventEmitter()
-        )
-    );
-  }
+	getMessageService() {
+		return this.getOrCreate(
+			ObjectsName.MessageService,
+			() =>
+				new MessageService(
+					this.getMessageRepository(),
+					this.getConversationService(),
+				),
+		);
+	}
 
-  // validators
-  getAuthValidator() {
-    return this.getOrCreate(ObjectsName.AuthValidator, () => {
-      return new AuthValidator(this.getAuthService());
-    });
-  }
-  getUserValidator() {
-    return this.getOrCreate(ObjectsName.UserValidator, () => {
-      return new UserValidator();
-    });
-  }
+	getConversationService() {
+		return this.getOrCreate(
+			ObjectsName.ConversationService,
+			() =>
+				new ConversationService(
+					this.getConversationRepository(),
+					this.getFriendshipService(),
+				),
+		);
+	}
 
-  getMessageValidator() {
-    return this.getOrCreate(
-      ObjectsName.MessageValidator,
-      () => new MessageValidator()
-    );
-  }
+	getFriendshipService() {
+		return this.getOrCreate(
+			ObjectsName.FriendshipService,
+			() => new FriendshipService(this.getFriendshipRepository()),
+		);
+	}
 
-  getMessageEventEmitter() {
-    return this.getOrCreate(ObjectsName.MessageEventEmitter, () => {
-      return new TypedEventEmitter();
-    });
-  }
+	// controllers
+	getAuthController() {
+		return this.getOrCreate(ObjectsName.AuthController, () => {
+			return new AuthController(this.getAuthService(), this.getAuthValidator());
+		});
+	}
+
+	getUserController() {
+		return this.getOrCreate(ObjectsName.UserController, () => {
+			return new UserController(this.getUserService(), this.getUserValidator());
+		});
+	}
+
+	getMessageController() {
+		return this.getOrCreate(
+			ObjectsName.MessageController,
+			() =>
+				new MessageController(
+					this.getMessageService(),
+					this.getMessageValidator(),
+				),
+		);
+	}
+
+	getFriendshipController() {
+		return this.getOrCreate(
+			ObjectsName.FriendshipController,
+			() => new FriendshipController(this.getFriendshipService()),
+		);
+	}
+
+	getConversationController() {
+		return this.getOrCreate(
+			ObjectsName.ConversationController,
+			() => new ConversationController(this.getConversationService()),
+		);
+	}
+
+	// validators
+	getAuthValidator() {
+		return this.getOrCreate(ObjectsName.AuthValidator, () => {
+			return new AuthValidator();
+		});
+	}
+	getUserValidator() {
+		return this.getOrCreate(ObjectsName.UserValidator, () => {
+			return new UserValidator();
+		});
+	}
+
+	getMessageValidator() {
+		return this.getOrCreate(
+			ObjectsName.MessageValidator,
+			() => new MessageValidator(),
+		);
+	}
+
+	getMessageEventEmitter() {
+		return this.getOrCreate(ObjectsName.MessageEventEmitter, () => {
+			return new TypedEventEmitter();
+		});
+	}
 }

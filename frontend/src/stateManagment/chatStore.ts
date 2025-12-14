@@ -36,25 +36,25 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
 	// actions
 	initializeSocket: () => {
-		console.log("---------------- ENV --------");
-		console.log(
-			"NEXT_PUBLIC_BACKEND_URL : ",
-			process.env.NEXT_PUBLIC_BACKEND_URL,
-		);
-		console.log(
-			"NEXT_PUBLIC_SOCKET_URL : ",
-			process.env.NEXT_PUBLIC_SOCKET_URL,
-		);
-		console.log("----------------------------------");
-		console.log("is Production : ", process.env.NODE_ENV);
-		console.log("API_BASE_URL : ", API_BASE_URL);
-		console.log("SOCKET_URL : ", SOCKET_URL);
+		// console.log("---------------- ENV --------");
+		// console.log(
+		// 	"NEXT_PUBLIC_BACKEND_URL : ",
+		// 	process.env.NEXT_PUBLIC_BACKEND_URL,
+		// );
+		// console.log(
+		// 	"NEXT_PUBLIC_SOCKET_URL : ",
+		// 	process.env.NEXT_PUBLIC_SOCKET_URL,
+		// );
+		// console.log("----------------------------------");
+		// console.log("is Production : ", process.env.NODE_ENV);
+		// console.log("API_BASE_URL : ", API_BASE_URL);
+		// console.log("SOCKET_URL : ", SOCKET_URL);
 		if (get().status === "connected" || get().status === "connecting") {
 			console.log("Socket is already connected or connecting");
 			return;
 		}
 		set({ status: "connecting" });
-		console.log("socketIO url : ", SOCKET_URL);
+		// console.log("socketIO url : ", SOCKET_URL);
 		const socket = io(SOCKET_URL, {
 			reconnectionAttempts: 5,
 			reconnectionDelay: 1000,
@@ -718,4 +718,41 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 			set({ isLoading: false });
 		}
 	},
+
+	unfriendUser: async (userId) => {
+		set({
+			isLoading: true,
+		});
+
+		try {
+			const rawResponse = await fetch(
+				`${API_BASE_URL}/user/remove-friend/${userId}`,
+				{
+					method: "POST",
+					credentials: "include",
+					headers: {
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify({}),
+				},
+			);
+
+			const response: HttpResponse<FriendShipRequest> =
+				await rawResponse.json();
+			console.log("the fucking response : ", response);
+
+			if (!response.success) {
+				console.warn(`remove friend error:`, response.errorMessage);
+				return;
+			}
+			console.log("unfriend userResponse : ", response.data);
+		} catch (err) {
+			console.warn(`remove friend error hhh:`, err);
+		} finally {
+			set({
+				isLoading: false,
+			});
+		}
+	},
+	blockFriend: async (userId) => {},
 }));

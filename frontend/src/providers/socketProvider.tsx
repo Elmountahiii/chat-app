@@ -39,7 +39,6 @@ const SocketProvider = ({ children }: SocketProviderProps) => {
 	useEffect(() => {
 		if (!user) return;
 
-		console.log("firendship request", friendshipRequests);
 
 		for (const request of friendshipRequests) {
 			if (request.requester._id === user._id) {

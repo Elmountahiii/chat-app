@@ -1,77 +1,52 @@
 import mongoose from "mongoose";
+import { User } from "./userSchema";
+import { PopulatedMessage } from "./messageSchema";
 
 const { Schema } = mongoose;
 
 const conversationSchema = new Schema(
-  {
-    participants: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-        required: true,
-      },
-    ],
-    type: {
-      type: String,
-      enum: ["individual", "group"],
-      required: true,
-    },
-    groupName: {
-      type: String,
-    },
-    groupAdmin: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-    },
-    lastMessage: {
-      content: String,
-      sender: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-      },
-      timeStamp: {
-        type: Date,
-        default: Date.now,
-      },
-      messageType: {
-        type: String,
-        enum: ["text", "image", "file", "audio"],
-        required: true,
-        default: "text",
-      },
-    },
-
-    readStatus: [
-      {
-        userId: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "User",
-          required: true,
-        },
-        lastReadMessage: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Message",
-        },
-        lastReadAt: { type: Date },
-        unreadCount: { type: Number, default: 0 },
-      },
-    ],
-  },
-  {
-    timestamps: true,
-  }
+	{
+		_id: {
+			type: mongoose.Schema.Types.ObjectId,
+			auto: true,
+			required: true,
+		},
+		participantOne: {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: "User",
+			required: true,
+		},
+		participantTwo: {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: "User",
+			required: true,
+		},
+		lastMessage: {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: "Message",
+			required: false,
+		},
+	},
+	{
+		timestamps: true,
+	},
 );
 
-conversationSchema.index({ participants: 1 });
 conversationSchema.index({ updatedAt: -1 });
+conversationSchema.index({ participantOne: 1, participantTwo: 1 });
 
 export const ConversationModel = mongoose.model(
-  "Conversation",
-  conversationSchema
+	"Conversation",
+	conversationSchema,
 );
 
-export type ConversationDocumentType = mongoose.InferSchemaType<
-  typeof conversationSchema
+export type Conversation = mongoose.InferSchemaType<typeof conversationSchema>;
+
+export type PopulatedConversation = Omit<
+	Conversation,
+	"participantOne" | "participantTwo" | "lastMessage"
 > & {
-  _id: mongoose.Types.ObjectId;
+	participantOne: User;
+	participantTwo: User;
+	lastMessage: PopulatedMessage | undefined;
 };

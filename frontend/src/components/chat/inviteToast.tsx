@@ -10,8 +10,6 @@ type Props = {
 };
 
 function InviteToast({ invite, onAccept, onDecline }: Props) {
-	const [isHovered, setIsHovered] = useState(false);
-
 	const handleAccept = () => {
 		onAccept(invite._id);
 	};
@@ -21,11 +19,7 @@ function InviteToast({ invite, onAccept, onDecline }: Props) {
 	};
 
 	return (
-		<div
-			className="flex items-center gap-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700 rounded-xl shadow-md border border-blue-200 dark:border-gray-600 min-w-[340px] max-w-[450px] transition-all duration-200 hover:shadow-lg"
-			onMouseEnter={() => setIsHovered(true)}
-			onMouseLeave={() => setIsHovered(false)}
-		>
+		<div className="flex items-center gap-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700 rounded-xl shadow-md border border-blue-200 dark:border-gray-600 min-w-[340px] max-w-[450px] transition-all duration-200 hover:shadow-lg">
 			{/* Avatar with Badge */}
 			<div className="relative flex-shrink-0">
 				<img

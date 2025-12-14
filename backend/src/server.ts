@@ -7,6 +7,8 @@ import cookieParser from "cookie-parser";
 import { config, corsConfig } from "./config/environment";
 import authRoutes from "./routes/authRoutes";
 import userRoutes from "./routes/userRoutes";
+import friendshipRoutes from "./routes/friendshipRoute";
+import conversationRoutes from "./routes/conversationRoute";
 import { errorMiddleware } from "./middlewares/errorMiddleware";
 import { fileStream, logger } from "./config/logger";
 import http from "http";
@@ -18,59 +20,61 @@ const app = express();
 const server = http.createServer(app);
 
 app.use(
-  morgan("combined", {
-    stream: fileStream,
-  })
+	morgan("combined", {
+		stream: fileStream,
+	}),
 );
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors(corsConfig));
 
 app.get("/health", (req, res) => {
-  res.status(200).json({ message: "Server is healthy" });
+	res.status(200).json({ message: "Server is healthy" });
 });
 
 app.get("/protected", authMiddleware, (req, res) => {
-  res.status(200).json({ message: "Protected route accessed" });
+	res.status(200).json({ message: "Protected route accessed" });
 });
 
 app.use("/api/auth", authRoutes);
 app.use("/api/user", authMiddleware, userRoutes);
 app.use("/api/messages", authMiddleware, messageRoutes);
+app.use("/api/friendship", authMiddleware, friendshipRoutes);
+app.use("/api/conversations", authMiddleware, conversationRoutes);
 
 app.use((req, res) => {
-  logger.warn(`404 - Route not found: ${req.method} ${req.originalUrl}`);
+	logger.warn(`404 - Route not found: ${req.method} ${req.originalUrl}`);
 
-  res.status(404).json(createErrorResponse("Route not found"));
+	res.status(404).json(createErrorResponse("Route not found"));
 });
 
 app.use(errorMiddleware);
 
 const serverStart = async () => {
-  try {
-    logger.info("Connecting to database ....");
-    await mongoose.connect(config.MONGODB_URI);
-    logger.info("Connected to database successfully");
-    Provider.getInstance().getSocketService(server);
-    server.listen(config.PORT, () => {
-      logger.info(`Server is running on http://0.0.0.0:${config.PORT}`);
-    });
-  } catch (error) {
-    logger.error("Error starting the server:", error);
-    process.exit(1);
-  }
+	try {
+		logger.info("Connecting to database ....");
+		await mongoose.connect(config.MONGODB_URI);
+		logger.info("Connected to database successfully");
+		Provider.getInstance().getSocketService(server);
+		server.listen(config.PORT, () => {
+			logger.info(`Server is running on http://0.0.0.0:${config.PORT}`);
+		});
+	} catch (error) {
+		logger.error("Error starting the server:", error);
+		process.exit(1);
+	}
 };
 
 const shutdown = () => {
-  logger.info("Shutting down server...");
-  server.close(async () => {
-    await mongoose.disconnect();
-    logger.info("Server shut down complete.");
-    process.exit(0);
-  });
+	logger.info("Shutting down server...");
+	server.close(async () => {
+		await mongoose.disconnect();
+		logger.info("Server shut down complete.");
+		process.exit(0);
+	});
 };
 
-process.on("SIGTERM", () => shutdown());
-process.on("SIGINT", () => shutdown());
+// process.on("SIGTERM", () => shutdown());
+// process.on("SIGINT", () => shutdown());
 
 serverStart();

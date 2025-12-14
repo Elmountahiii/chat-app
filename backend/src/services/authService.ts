@@ -1,62 +1,67 @@
 import { AppError } from "../types/common";
 import bcrypt from "bcrypt";
 import { UsernameGenerator } from "../utils/usernameGenerator";
-import { UserRepository } from "../repository/userRepository";
-import { UserDataUpdates } from "../schema/user/updateUserInfoSchema";
+import { AuthRepository } from "../repository/authRepository";
 
 export class AuthService {
-  constructor(private userRepo: UserRepository) {}
+	constructor(private authRepo: AuthRepository) {}
 
-  async registerUser(
-    firstName: string,
-    lastName: string,
-    email: string,
-    password: string
-  ) {
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-    const usernameGenerator = new UsernameGenerator(
-      firstName,
-      lastName,
-      this.userRepo
-    );
-    const username = await usernameGenerator.generate();
-    const user = await this.userRepo.createUser(
-      username,
-      firstName,
-      lastName,
-      email,
-      hashedPassword
-    );
-    return user;
-  }
+	async registerUser(
+		firstName: string,
+		lastName: string,
+		email: string,
+		password: string,
+	) {
+		const existingUser = await this.authRepo.findUserByEmail(email);
+		if (existingUser) {
+			throw new AppError("Email already in use", 400);
+		}
 
-  async loginUser(email: string, password: string) {
-    const user = await this.userRepo.findUserByEmailWithPassword(email);
-    if (!user) throw new AppError("Wrong email or password", 401);
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) throw new AppError("Wrong email or password", 401);
-    const { password: _, ...userWithoutPassword } = user;
-    return userWithoutPassword;
-  }
+		const salt = await bcrypt.genSalt(10);
+		const hashedPassword = await bcrypt.hash(password, salt);
+		const usernameGenerator = new UsernameGenerator(
+			firstName,
+			lastName,
+			this.authRepo,
+		);
+		const username = await usernameGenerator.generate();
+		const user = await this.authRepo.createUser(
+			username,
+			firstName,
+			lastName,
+			email,
+			hashedPassword,
+		);
+		const { password: _, ...userWithoutPassword } = user;
+		return userWithoutPassword;
+	}
 
-  async getUserById(userId: string) {
-    return await this.userRepo.findUserById(userId);
-  }
+	async loginUser(email: string, password: string) {
+		const user = await this.authRepo.findUserByEmailWithPassword(email);
+		if (!user) throw new AppError("Wrong email or password", 401);
+		const isPasswordValid = await bcrypt.compare(password, user.password);
+		if (!isPasswordValid) throw new AppError("Wrong email or password", 401);
+		const { password: _, ...userWithoutPassword } = user;
+		return userWithoutPassword;
+	}
 
-  async getUserByEmail(email: string) {
-    return await this.userRepo.findUserByEmail(email);
-  }
+	async findUserByEmail(email: string) {
+		return await this.authRepo.findUserByEmail(email);
+	}
 
-  async updateUser(userId: string, updateData: UserDataUpdates) {
-    return await this.userRepo.updateUser(userId, updateData);
-  }
+	async findUserById(userId: string) {
+		return await this.authRepo.findUserById(userId);
+	}
 
-  async deleteUser(userId: string) {
-    return await this.userRepo.deleteUser(userId);
-  }
+	async emailExists(email: string) {
+		return await this.authRepo.emailExists(email);
+	}
 
-  async getAllUsers() {
-    return await this.userRepo.getAllUsers();
-  }
+	async usernameExists(username: string) {
+		return await this.authRepo.usernameExists(username);
+	}
+
+	async updatePassword(userId: string, hashedPassword: string) {
+		return await this.authRepo.updatePassword(userId, hashedPassword);
+	}
 }

@@ -1,161 +1,282 @@
 import { Server, Socket } from "socket.io";
 import http from "http";
-import { TypedEventEmitter } from "../validators/events";
-import { getCookieValue } from "../utils/utils";
 import { JwtService } from "./jwtService";
 import { config } from "../config/environment";
+import { ConversationService } from "./conversatioService";
+import { UserService } from "./userService";
+import { FriendshipService } from "./friendsipService";
+import { MessageService } from "./messageService";
 
 export class SocketService {
-  private io: Server;
+	private io: Server;
 
-  constructor(
-    server: http.Server,
-    private messageEventEmitter: TypedEventEmitter
-  ) {
-    this.io = new Server(server, {
-      cors: {
-        origin: [config.NEXT_PUBLIC_FRONTEND_URL, "http://localhost:3000"],
-        methods: ["GET", "POST"],
-        credentials: true,
-      },
-    });
-    this.io.use(this.authenticateSocket.bind(this));
-    this.setupSocketListeners();
-    this.setupEventListeners();
-  }
+	constructor(
+		server: http.Server,
+		private userService: UserService,
+		private friendshipService: FriendshipService,
+		private conversationService: ConversationService,
+		private messageService: MessageService,
+	) {
+		this.io = new Server(server, {
+			cors: {
+				origin: [config.NEXT_PUBLIC_FRONTEND_URL, "http://localhost:3000"],
+				methods: ["GET", "POST"],
+				credentials: true,
+			},
+		});
+		this.io.use(this.authenticateSocket.bind(this));
+		this.setupSocketListeners();
+	}
 
-  private authenticateSocket(socket: Socket, next: (err?: Error) => void) {
-    const cookieHeader = socket.handshake.headers.cookie;
-    if (!cookieHeader) {
-      return next(new Error("Unauthorized"));
-    }
-    const token = getCookieValue(cookieHeader, "authToken");
-    if (!token) {
-      return next(new Error("Unauthorized"));
-    }
-    JwtService.verifyToken(token)
-      .then((payload) => {
-        socket.data.userId = payload;
-        next();
-      })
-      .catch((e) => {
-        console.log("error ", e);
-        next(new Error("Authentication error: Invalid token"));
-      });
-  }
-  private setupSocketListeners() {
-    this.io.on("connection", (socket) => {
-      const userId = socket.data.userId as string;
-      console.log(`User connected: ${userId}`);
-      socket.join(userId);
+	private authenticateSocket(socket: Socket, next: (err?: Error) => void) {
+		const authHeader = socket.handshake.headers.authorization;
+		if (!authHeader) {
+			return next(new Error("Unauthorized"));
+		}
+		const token = authHeader.startsWith("Bearer ")
+			? authHeader.substring(7)
+			: authHeader;
+		if (!token) {
+			return next(new Error("Unauthorized"));
+		}
+		JwtService.verifyToken(token)
+			.then((payload) => {
+				socket.data.userId = payload;
+				next();
+			})
+			.catch((e) => {
+				console.log("error ", e);
+				next(new Error("Authentication error: Invalid token"));
+			});
+	}
 
-      // ? Update user status
-      this.messageEventEmitter.emit("user:statusChanged", {
-        userId,
-        newStatus: "online",
-      });
+	private setupSocketListeners() {
+		this.io.on("connection", async (socket) => {
+			const userId = socket.data.userId as string;
+			socket.join(userId);
 
-      // ? react to user status changes
-      socket.on("user:status", (data) => {
-        const { status } = data as {
-          status: "online" | "offline" | "away";
-        };
-        this.messageEventEmitter.emit("user:statusChanged", {
-          userId,
-          newStatus: status,
-        });
-      });
+			// User connected actions
+			try {
+				await this.userService.updateUserStatus(userId, "online");
+				const friends = await this.friendshipService.getFriendsList(userId);
+				friends.forEach((friend) => {
+					this.io.to(friend._id.toString()).emit("user:statusChanged", {
+						userId,
+						status: "online",
+					});
+				});
+			} catch (error) {
+				console.error("Error updating user status on connect:", error);
+			}
 
-      // ? join conversation
-      socket.on("join_conversation", (data) => {
-        const { conversationId } = data as { conversationId: string };
-        socket.join(`conversation_${conversationId}`);
-      });
+			socket.on("disconnect", async () => {
+				try {
+					await this.userService.updateUserStatus(userId, "offline");
+					const friends = await this.friendshipService.getFriendsList(userId);
+					friends.forEach((friend) => {
+						this.io.to(friend._id.toString()).emit("user:statusChanged", {
+							userId,
+							status: "offline",
+						});
+					});
+					socket.leave(userId);
+					const rooms = Array.from(socket.rooms);
+					rooms.forEach((room) => {
+						if (room.startsWith("conversation_")) {
+							socket.leave(room);
+						}
+					});
+				} catch (error) {
+					console.error("Error updating user status on disconnect:", error);
+				}
+			});
 
-      // ? leave conversation
-      socket.on("leave_conversation", (data) => {
-        const { conversationId } = data;
-        socket.leave(`conversation_${conversationId}`);
-        console.log(`User ${userId} left conversation ${conversationId}`);
-      });
+			// conversation actions
+			socket.on(
+				"create_conversation",
+				async (data: {
+					participantOneId: string;
+					participantTwoId: string;
+				}) => {
+					try {
+						const { participantOneId, participantTwoId } = data;
+						const conversation =
+							await this.conversationService.createConversation(
+								participantOneId,
+								participantTwoId,
+							);
 
-      // ? react to typing
-      socket.on("typing", (data) => {
-        const { conversationId, isTyping } = data as {
-          conversationId: string;
-          isTyping: boolean;
-        };
+						const conversationRoomId = `conversation_${conversation._id.toString()}`;
+						const participantOneSockets = await this.io
+							.in(participantOneId)
+							.fetchSockets();
+						const participantTwoSockets = await this.io
+							.in(participantTwoId)
+							.fetchSockets();
 
-        socket.to(`conversation_${conversationId}`).emit("user_typing", {
-          conversationId,
-          userId,
-          isTyping,
-        });
-      });
+						participantOneSockets.forEach((s) => s.join(conversationRoomId));
+						participantTwoSockets.forEach((s) => s.join(conversationRoomId));
 
-      // ? react to user status changes
-      socket.on("disconnect", () => {
-        socket.leave(userId);
-        const rooms = Array.from(socket.rooms);
-        rooms.forEach((room) => {
-          if (room.startsWith("conversation_")) {
-            socket.leave(room);
-          }
-        });
-        this.messageEventEmitter.emit("user:statusChanged", {
-          userId,
-          newStatus: "offline",
-        });
-      });
-    });
-  }
-  private setupEventListeners() {
-    this.messageEventEmitter.on("message:created", (data) => {
-      this.io
-        .to(`conversation_${data.conversationId}`)
-        .emit("new_message", data);
-    });
+						this.io
+							.to(participantOneId)
+							.to(participantTwoId)
+							.emit("conversation_created", { conversation });
+					} catch (error) {
+						console.error("Error creating conversation:", error);
+						socket.emit("error", {
+							event: "create_conversation",
+							message: "Failed to create conversation",
+						});
+					}
+				},
+			);
 
-    this.messageEventEmitter.on("message:read", (data) => {
-      this.io
-        .to(`conversation_${data.conversationId}`)
-        .emit("message_read", data);
-    });
+			socket.on("join_conversation", (data: { conversationId: string }) => {
+				try {
+					const { conversationId } = data;
+					socket.join(`conversation_${conversationId}`);
+				} catch (error) {
+					console.error("Error joining conversation:", error);
+					socket.emit("error", {
+						event: "join_conversation",
+						message: "Failed to join conversation",
+					});
+				}
+			});
 
-    this.messageEventEmitter.on("message:edited", (data) => {
-      this.io
-        .to(`conversation_${data.conversationId}`)
-        .emit("message_edited", data);
-    });
-    this.messageEventEmitter.on("message:deleted", (data) => {
-      this.io
-        .to(`conversation_${data.conversationId}`)
-        .emit("message_deleted", data);
-    });
+			socket.on(
+				"typing_conversation",
+				(data: { conversationId: string; isTyping: boolean }) => {
+					try {
+						const { conversationId, isTyping } = data;
 
-    this.messageEventEmitter.on("conversation:created", async (data) => {
-      data.participants.forEach((participantId) => {
-        if (participantId === data.userId) return;
-        this.io
-          .to(participantId)
-          .emit("conversation_created", { conversation: data.conversation });
-      });
-    });
+						socket
+							.to(`conversation_${conversationId}`)
+							.emit("conversation_typing", {
+								conversationId,
+								userId,
+								isTyping,
+							});
+					} catch (error) {
+						console.error("Error handling typing event:", error);
+					}
+				},
+			);
 
-    this.messageEventEmitter.on("broadcast:statusChanged", (data) => {
-      data.friends.forEach((friend) => {
-        this.io.to(friend._id.toString()).emit("user:statusChanged", {
-          status: data.status,
-          user: data.user,
-        });
-      });
-    });
+			// messaging actions
+			socket.on(
+				"send_message",
+				async (data: { conversationId: string; content: string }) => {
+					try {
+						const { conversationId, content } = data;
+						const message = await this.messageService.sendMessage({
+							conversationId,
+							senderId: userId,
+							content,
+						});
+						this.io
+							.to(`conversation_${conversationId}`)
+							.emit("new_message", message);
+					} catch (error) {
+						console.error("Error sending message:", error);
+						socket.emit("error", {
+							event: "send_message",
+							message: "Failed to send message",
+						});
+					}
+				},
+			);
 
-    this.messageEventEmitter.on("broadcast:requestSent", (data) => {
-      this.io.to(data.receiverId).emit("friend:requestReceived", {
-        senderId: data.userId,
-        friendship: data.friendShipRequest,
-      });
-    });
-  }
+			socket.on(
+				"read_all_messages",
+				async (data: { conversationId: string }) => {
+					try {
+						const { conversationId } = data;
+						await this.messageService.markConversationMessagesAsRead(
+							conversationId,
+							userId,
+						);
+						this.io.to(`conversation_${conversationId}`).emit("messages_read", {
+							conversationId,
+							userId,
+						});
+					} catch (error) {
+						console.error("Error marking messages as read:", error);
+						socket.emit("error", {
+							event: "read_all_messages",
+							message: "Failed to mark messages as read",
+						});
+					}
+				},
+			);
+
+			// friendShip actions
+			socket.on(
+				"send_friendship_request",
+				async (data: { receiverId: string }) => {
+					try {
+						const { receiverId } = data;
+						const friendship =
+							await this.friendshipService.sendFriendshipRequest(
+								userId,
+								receiverId,
+							);
+						this.io.to(receiverId).emit("friendship_request_received", {
+							friendship,
+						});
+					} catch (error) {
+						console.error("Error sending friendship request:", error);
+						socket.emit("error", {
+							event: "send_friendship_request",
+							message: "Failed to send friendship request",
+						});
+					}
+				},
+			);
+
+			socket.on(
+				"accept_friendship_request",
+				async (data: { friendshipId: string }) => {
+					try {
+						const { friendshipId } = data;
+						const friendship =
+							await this.friendshipService.accepetFriendshipRequest(
+								userId,
+								friendshipId,
+							);
+						this.io
+							.to(friendship.requester._id.toString())
+							.to(friendship.recipient._id.toString())
+							.emit("friendship_request_accepted", { friendship });
+					} catch (error) {
+						console.error("Error accepting friendship request:", error);
+						socket.emit("error", {
+							event: "accept_friendship_request",
+							message: "Failed to accept friendship request",
+						});
+					}
+				},
+			);
+
+			socket.on(
+				"decline_friendship_request",
+				async (data: { friendshipId: string }) => {
+					try {
+						const { friendshipId } = data;
+						await this.friendshipService.declineFriendshipRequest(
+							userId,
+							friendshipId,
+						);
+						socket.emit("friendship_request_declined", { friendshipId });
+					} catch (error) {
+						console.error("Error declining friendship request:", error);
+						socket.emit("error", {
+							event: "decline_friendship_request",
+							message: "Failed to decline friendship request",
+						});
+					}
+				},
+			);
+		});
+	}
 }
