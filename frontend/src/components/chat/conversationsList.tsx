@@ -3,7 +3,7 @@ import React from "react";
 import { ScrollArea } from "../ui/scroll-area";
 import { useChatStore } from "@/stateManagment/chatStore";
 import { useFriendshipStore } from "@/stateManagment/friendshipStore";
-import { Conversation } from "@/types/converstation";
+import { Conversation } from "@/types/conversation";
 import { useAuthStore } from "@/stateManagment/authStore";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Users } from "lucide-react";

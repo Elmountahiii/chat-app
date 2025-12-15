@@ -48,4 +48,6 @@ export type PopulatedFriendship = Omit<
 	requester: User;
 	recipient: User;
 	blockedBy: User | null;
+	createdAt: string;
+	updatedAt: string;
 };

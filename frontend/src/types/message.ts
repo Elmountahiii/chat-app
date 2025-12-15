@@ -1,5 +1,3 @@
-// ...existing code...
-
 import { User } from "./user";
 
 export interface Message {
@@ -9,8 +7,8 @@ export interface Message {
 	content: string;
 	readBy: {
 		user: User;
-		readAt: Date;
+		readAt: string;
 	}[];
-	createdAt: Date;
-	updatedAt: Date;
+	createdAt: string;
+	updatedAt: string;
 }

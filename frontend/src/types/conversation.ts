@@ -7,6 +7,6 @@ export type Conversation = {
 	participantTwo: User;
 	lastMessage?: Message;
 	unreadCount: number;
-	createdAt: Date;
-	updatedAt: Date;
+	createdAt: string;
+	updatedAt: string;
 };

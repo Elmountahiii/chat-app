@@ -49,4 +49,7 @@ export type PopulatedConversation = Omit<
 	participantOne: User;
 	participantTwo: User;
 	lastMessage: PopulatedMessage | undefined;
+	unreadCount: number;
+	createdAt: string;
+	updatedAt: string;
 };

@@ -3,7 +3,7 @@ import { io } from "socket.io-client";
 import type { Socket } from "socket.io-client";
 
 import { HttpResponse } from "@/types/httpResponse";
-import { Conversation } from "@/types/converstation";
+import { Conversation } from "@/types/conversation";
 import { Message } from "@/types/message";
 import { FriendShipRequest } from "@/types/friendShipRequest";
 import { useFriendshipStore } from "./friendshipStore";

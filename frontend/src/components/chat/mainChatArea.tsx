@@ -1,7 +1,7 @@
 "use client";
 import { useAuthStore } from "@/stateManagment/authStore";
 import { useChatStore } from "@/stateManagment/chatStore";
-import { Conversation } from "@/types/converstation";
+import { Conversation } from "@/types/conversation";
 import React, { useEffect, useRef, useState } from "react";
 import { Button } from "../ui/button";
 import { CheckCheck } from "lucide-react";

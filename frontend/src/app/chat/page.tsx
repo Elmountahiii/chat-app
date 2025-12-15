@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { FriendsDialog } from "@/components/chat/FriendsDialog";
 import { UserProfileDialog } from "@/components/chat/UserProfileDialog";
 import { ConversationsList } from "@/components/chat/conversationsList";
-import { Conversation } from "@/types/converstation";
+import { Conversation } from "@/types/conversation";
 import { useChatStore } from "@/stateManagment/chatStore";
 import MainChatArea from "@/components/chat/mainChatArea";
 import { useAuthStore } from "@/stateManagment/authStore";

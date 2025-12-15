@@ -1,24 +1,13 @@
 import mongoose from "mongoose";
-import { ConversationModel } from "../schema/mongodb/conversationSchema";
-import { PopulatedMessage } from "../schema/mongodb/messageSchema";
-import { User } from "../schema/mongodb/userSchema";
-
-export type ConversationWithDetails = {
-	_id: mongoose.Types.ObjectId;
-	participantOne: User;
-	participantTwo: User;
-	lastMessage?: PopulatedMessage;
-	unreadCount: number;
-	createdAt: Date;
-	updatedAt: Date;
-};
+import {
+	ConversationModel,
+	PopulatedConversation,
+} from "../schema/mongodb/conversationSchema";
 
 export class ConversationRepository {
 	constructor() {}
 
-	async getUserConversations(
-		userId: string,
-	): Promise<ConversationWithDetails[]> {
+	async getUserConversations(userId: string): Promise<PopulatedConversation[]> {
 		const conversations = await ConversationModel.aggregate([
 			{
 				$match: {
@@ -120,13 +109,13 @@ export class ConversationRepository {
 			{ $project: { unreadMessages: 0 } },
 		]);
 
-		return conversations as ConversationWithDetails[];
+		return conversations as PopulatedConversation[];
 	}
 
 	async getConversationById(
 		id: string,
 		userId: string,
-	): Promise<ConversationWithDetails | null> {
+	): Promise<PopulatedConversation | null> {
 		const conversations = await ConversationModel.aggregate([
 			{
 				$match: {
@@ -225,14 +214,14 @@ export class ConversationRepository {
 		]);
 
 		return conversations.length > 0
-			? (conversations[0] as ConversationWithDetails)
+			? (conversations[0] as PopulatedConversation)
 			: null;
 	}
 
 	async getUserConversationWithAnotherUser(
 		userId: string,
 		otherUserId: string,
-	): Promise<ConversationWithDetails | null> {
+	): Promise<PopulatedConversation | null> {
 		const conversations = await ConversationModel.aggregate([
 			{
 				$match: {
@@ -340,14 +329,14 @@ export class ConversationRepository {
 		]);
 
 		return conversations.length > 0
-			? (conversations[0] as ConversationWithDetails)
+			? (conversations[0] as PopulatedConversation)
 			: null;
 	}
 
 	async createConversation(
 		participantOneId: string,
 		participantTwoId: string,
-	): Promise<ConversationWithDetails> {
+	): Promise<PopulatedConversation> {
 		const conversation = new ConversationModel({
 			participantOne: participantOneId,
 			participantTwo: participantTwoId,
@@ -403,12 +392,12 @@ export class ConversationRepository {
 			},
 		]);
 
-		return conversations[0] as ConversationWithDetails;
+		return conversations[0] as PopulatedConversation;
 	}
 
 	async getUserConversationsWithUnreadCounts(
 		userId: string,
-	): Promise<ConversationWithDetails[]> {
+	): Promise<PopulatedConversation[]> {
 		const conversations = await ConversationModel.aggregate([
 			{
 				$match: {
@@ -510,7 +499,7 @@ export class ConversationRepository {
 			{ $project: { unreadMessages: 0 } },
 		]);
 
-		return conversations as ConversationWithDetails[];
+		return conversations as PopulatedConversation[];
 	}
 
 	async deleteConversation(id: string): Promise<boolean> {

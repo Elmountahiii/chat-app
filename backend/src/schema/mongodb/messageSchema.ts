@@ -46,4 +46,6 @@ export type Message = mongoose.InferSchemaType<typeof messageSchema>;
 export type PopulatedMessage = Omit<Message, "sender" | "readBy"> & {
 	sender: User;
 	readBy: { user: User; readAt: Date }[];
+	createdAt: string;
+	updatedAt: string;
 };
