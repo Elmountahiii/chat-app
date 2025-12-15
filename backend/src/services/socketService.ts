@@ -217,38 +217,40 @@ export class SocketService {
 
 			// friendShip actions
 			socket.on(
-				"send_friendship_request",
-				async (data: { receiverId: string }) => {
+				"notify_friendship_request_sent",
+				async (data: { friendshipId: string }) => {
 					try {
-						const { receiverId } = data;
+						const { friendshipId } = data;
 						const friendship =
-							await this.friendshipService.sendFriendshipRequest(
-								userId,
-								receiverId,
-							);
+							await this.friendshipService.getFriendshipById(friendshipId);
+						if (!friendship) {
+							throw new Error("Friendship not found");
+						}
+						const receiverId = friendship.recipient._id.toString();
 						this.io.to(receiverId).emit("friendship_request_received", {
 							friendship,
 						});
 					} catch (error) {
 						console.error("Error sending friendship request:", error);
 						socket.emit("error", {
-							event: "send_friendship_request",
-							message: "Failed to send friendship request",
+							event: "notify_friendship_request_sent",
+							message: "Failed to notify friendship request",
 						});
 					}
 				},
 			);
 
 			socket.on(
-				"accept_friendship_request",
+				"notify_friendship_request_accepted",
 				async (data: { friendshipId: string }) => {
 					try {
 						const { friendshipId } = data;
 						const friendship =
-							await this.friendshipService.accepetFriendshipRequest(
-								userId,
-								friendshipId,
-							);
+							await this.friendshipService.getFriendshipById(friendshipId);
+
+						if (!friendship) {
+							throw new Error("Friendship not found");
+						}
 						this.io
 							.to(friendship.requester._id.toString())
 							.to(friendship.recipient._id.toString())
@@ -256,7 +258,7 @@ export class SocketService {
 					} catch (error) {
 						console.error("Error accepting friendship request:", error);
 						socket.emit("error", {
-							event: "accept_friendship_request",
+							event: "notify_friendship_request_accepted",
 							message: "Failed to accept friendship request",
 						});
 					}

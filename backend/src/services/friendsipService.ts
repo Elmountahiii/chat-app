@@ -3,6 +3,11 @@ import { FriendshipRepository } from "../repository/friendshipRepository";
 export class FriendshipService {
 	constructor(private firendshipRepo: FriendshipRepository) {}
 
+	async getFriendshipById(friendshipId: string) {
+		const friendship =
+			await this.firendshipRepo.getFriendshipById(friendshipId);
+		return friendship;
+	}
 	async getFriendsList(userId: string) {
 		const friends = await this.firendshipRepo.getFriendsList(userId);
 		return friends;

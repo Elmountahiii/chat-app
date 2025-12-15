@@ -9,6 +9,7 @@ import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { MessageCircle } from "lucide-react";
 import { useChatStore } from "@/stateManagment/chatStore";
+import { useFriendshipStore } from "@/stateManagment/friendshipStore";
 
 const getStatusColor = (status: User["status"]) => {
 	switch (status) {
@@ -27,8 +28,9 @@ type OnlineFriendsProps = {
 
 const OnlineFriends = ({ changeDialogOpen }: OnlineFriendsProps) => {
 	const [searchQuery, setSearchQuery] = useState("");
-	const { friends, setActiveConversation, conversations, createConversation } =
+	const { setActiveConversation, conversations, createConversation } =
 		useChatStore();
+	const { friends } = useFriendshipStore();
 
 	const online = friends.filter((friend) => friend.status === "online");
 	const otherFriends = friends.filter((friend) => friend.status !== "online");

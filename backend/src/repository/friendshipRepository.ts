@@ -8,6 +8,17 @@ import { User, UserModel } from "../schema/mongodb/userSchema";
 export class FriendshipRepository {
 	constructor() {}
 
+	async getFriendshipById(
+		friendshipId: string,
+	): Promise<PopulatedFriendship | null> {
+		const friendship = (await FriendshipModel.findById(friendshipId)
+			.populate("requester")
+			.populate("recipient")
+			.populate("blockedBy")
+			.lean()) as PopulatedFriendship | null;
+		return friendship;
+	}
+
 	async getFriendsList(userId: string): Promise<User[]> {
 		const Friendships = await FriendshipModel.find({
 			$or: [{ requester: userId }, { recipient: userId }],

@@ -2,6 +2,7 @@
 import React from "react";
 import { ScrollArea } from "../ui/scroll-area";
 import { useChatStore } from "@/stateManagment/chatStore";
+import { useFriendshipStore } from "@/stateManagment/friendshipStore";
 import { Conversation } from "@/types/converstation";
 import { useAuthStore } from "@/stateManagment/authStore";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
@@ -17,7 +18,8 @@ export const ConversationsList = ({
 	handleStartChat,
 	handleUserProfileClick,
 }: ConversationsListProps) => {
-	const { conversations, activeConversationId, friends } = useChatStore();
+	const { conversations, activeConversationId } = useChatStore();
+	const { friends } = useFriendshipStore();
 	const { user } = useAuthStore();
 	if (!user) return null;
 	return (

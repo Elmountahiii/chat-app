@@ -4,7 +4,7 @@ import { TabsContent } from "@/components/ui/tabs";
 import { UserCheck, UserX } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
-import { useChatStore } from "@/stateManagment/chatStore";
+import { useFriendshipStore } from "@/stateManagment/friendshipStore";
 import { FriendShipRequest } from "@/types/friendShipRequest";
 
 function FriendsRequests() {
@@ -12,10 +12,10 @@ function FriendsRequests() {
 		friendshipRequests,
 		acceptFriendshipRequest,
 		declineFriendshipRequest,
-	} = useChatStore();
+	} = useFriendshipStore();
 
 	const requestList = friendshipRequests.filter((request) => {
-		if (request.status == "pending") return request;
+		return request.status === "pending";
 	});
 
 	const handleAcceptRequest = (request: FriendShipRequest) => {

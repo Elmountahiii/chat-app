@@ -13,12 +13,12 @@ import { UserPlus, Users, UserCheck } from "lucide-react";
 import FriendsRequests from "./friendsRequests";
 import FindFriends from "./findFriends";
 import OnlineFriends from "./onlineFriends";
-import { useChatStore } from "@/stateManagment/chatStore";
+import { useFriendshipStore } from "@/stateManagment/friendshipStore";
 import { useState } from "react";
 
 export function FriendsDialog() {
 	const [open, setOpen] = useState(false);
-	const { friendshipRequests, friends } = useChatStore();
+	const { friendshipRequests, friends } = useFriendshipStore();
 
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>

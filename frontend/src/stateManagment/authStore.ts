@@ -1,17 +1,36 @@
-import { AuthActions } from "@/types/action/AuthActions";
-import { AuthState } from "@/types/state/authState";
 import { create } from "zustand";
 import { HttpResponse } from "@/types/httpResponse";
 import { User } from "@/types/user";
 import { SignUpDataType } from "@/schema/auth/signUpSchema";
 
-type AuthStore = AuthState & AuthActions;
+interface AuthenticationState {
+	// state
+	user: User | null;
+	isAuthenticated: boolean;
+	isRegistered: boolean;
+	isLoading: boolean;
+	error: string | null;
+	successMessage: string | null;
+
+	// actions
+	login: (email: string, password: string) => Promise<void>;
+	signUp: (userData: SignUpDataType) => Promise<void>;
+	logout: () => Promise<void>;
+	resetPassword: (email: string) => Promise<void>;
+	checkAuthStatus: () => Promise<void>;
+	setUser: (user: User | null) => void;
+	clearSuccessMessage: () => void;
+	setSuccessMessage: (message: string) => void;
+	clearError: () => void;
+	setLoading: (loading: boolean) => void;
+	setError: (error: string) => void;
+}
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL
 	? process.env.NEXT_PUBLIC_BACKEND_URL
 	: "http://localhost:3001/api";
 
-export const useAuthStore = create<AuthStore>((set) => ({
+export const useAuthStore = create<AuthenticationState>((set) => ({
 	// State
 	user: null,
 	isAuthenticated: false,
@@ -22,7 +41,11 @@ export const useAuthStore = create<AuthStore>((set) => ({
 
 	// Actions
 	login: async (email: string, password: string) => {
-		console.log("%c 🌐 [HTTP] Logging in...", "color: #eab308; font-weight: bold;", { email });
+		console.log(
+			"%c 🌐 [HTTP] Logging in...",
+			"color: #eab308; font-weight: bold;",
+			{ email },
+		);
 		try {
 			set({
 				isLoading: true,
@@ -39,14 +62,22 @@ export const useAuthStore = create<AuthStore>((set) => ({
 
 			const result: HttpResponse<User> = await response.json();
 			if (!result.success) {
-				console.log("%c ❌ [HTTP] Login Failed:", "color: #ef4444; font-weight: bold;", result.errorMessage);
+				console.log(
+					"%c ❌ [HTTP] Login Failed:",
+					"color: #ef4444; font-weight: bold;",
+					result.errorMessage,
+				);
 				set({
 					isLoading: false,
 					error: result.errorMessage,
 				});
 				return;
 			}
-			console.log("%c ✅ [HTTP] Login Success:", "color: #22c55e; font-weight: bold;", result.data);
+			console.log(
+				"%c ✅ [HTTP] Login Success:",
+				"color: #22c55e; font-weight: bold;",
+				result.data,
+			);
 
 			set({
 				isLoading: false,
@@ -56,7 +87,11 @@ export const useAuthStore = create<AuthStore>((set) => ({
 				error: null,
 			});
 		} catch (e) {
-			console.log("%c ❌ [HTTP] Login Error:", "color: #ef4444; font-weight: bold;", e);
+			console.log(
+				"%c ❌ [HTTP] Login Error:",
+				"color: #ef4444; font-weight: bold;",
+				e,
+			);
 			set({
 				isLoading: false,
 				error: "Something went wrong. Please try again later.",
@@ -65,7 +100,11 @@ export const useAuthStore = create<AuthStore>((set) => ({
 	},
 
 	signUp: async (userData: SignUpDataType) => {
-		console.log("%c 🌐 [HTTP] Signing Up...", "color: #eab308; font-weight: bold;", userData);
+		console.log(
+			"%c 🌐 [HTTP] Signing Up...",
+			"color: #eab308; font-weight: bold;",
+			userData,
+		);
 		try {
 			set({
 				isLoading: true,
@@ -83,14 +122,22 @@ export const useAuthStore = create<AuthStore>((set) => ({
 			const result: HttpResponse<User> = await response.json();
 
 			if (!result.success) {
-				console.log("%c ❌ [HTTP] Sign Up Failed:", "color: #ef4444; font-weight: bold;", result.errorMessage);
+				console.log(
+					"%c ❌ [HTTP] Sign Up Failed:",
+					"color: #ef4444; font-weight: bold;",
+					result.errorMessage,
+				);
 				set({
 					isLoading: false,
 					error: result.errorMessage,
 				});
 				return;
 			}
-			console.log("%c ✅ [HTTP] Sign Up Success:", "color: #22c55e; font-weight: bold;", result.data);
+			console.log(
+				"%c ✅ [HTTP] Sign Up Success:",
+				"color: #22c55e; font-weight: bold;",
+				result.data,
+			);
 
 			set({
 				isLoading: false,
@@ -105,7 +152,11 @@ export const useAuthStore = create<AuthStore>((set) => ({
 				});
 			}, 500);
 		} catch (e) {
-			console.log("%c ❌ [HTTP] Sign Up Error:", "color: #ef4444; font-weight: bold;", e);
+			console.log(
+				"%c ❌ [HTTP] Sign Up Error:",
+				"color: #ef4444; font-weight: bold;",
+				e,
+			);
 			set({
 				isLoading: false,
 				error:
@@ -115,7 +166,10 @@ export const useAuthStore = create<AuthStore>((set) => ({
 	},
 
 	logout: async () => {
-		console.log("%c 🌐 [HTTP] Logging out...", "color: #eab308; font-weight: bold;");
+		console.log(
+			"%c 🌐 [HTTP] Logging out...",
+			"color: #eab308; font-weight: bold;",
+		);
 		try {
 			set({
 				isLoading: true,
@@ -130,9 +184,16 @@ export const useAuthStore = create<AuthStore>((set) => ({
 			});
 			const result: HttpResponse<null> = await response.json();
 			if (!result.success) {
-				console.log("%c ❌ [HTTP] Logout Failed:", "color: #ef4444; font-weight: bold;", result.errorMessage);
+				console.log(
+					"%c ❌ [HTTP] Logout Failed:",
+					"color: #ef4444; font-weight: bold;",
+					result.errorMessage,
+				);
 			} else {
-				console.log("%c ✅ [HTTP] Logout Success:", "color: #22c55e; font-weight: bold;");
+				console.log(
+					"%c ✅ [HTTP] Logout Success:",
+					"color: #22c55e; font-weight: bold;",
+				);
 			}
 
 			set({
@@ -143,7 +204,11 @@ export const useAuthStore = create<AuthStore>((set) => ({
 				successMessage: "Logged out successfully",
 			});
 		} catch (e) {
-			console.log("%c ❌ [HTTP] Logout Error:", "color: #ef4444; font-weight: bold;", e);
+			console.log(
+				"%c ❌ [HTTP] Logout Error:",
+				"color: #ef4444; font-weight: bold;",
+				e,
+			);
 			set({
 				user: null,
 				isAuthenticated: false,
@@ -159,7 +224,10 @@ export const useAuthStore = create<AuthStore>((set) => ({
 	},
 
 	checkAuthStatus: async () => {
-		console.log("%c 🌐 [HTTP] Checking Auth Status...", "color: #eab308; font-weight: bold;");
+		console.log(
+			"%c 🌐 [HTTP] Checking Auth Status...",
+			"color: #eab308; font-weight: bold;",
+		);
 		try {
 			set({ isLoading: true });
 			const response = await fetch(`${API_BASE_URL}/auth/me`, {
@@ -171,13 +239,21 @@ export const useAuthStore = create<AuthStore>((set) => ({
 			});
 			const result: HttpResponse<User> = await response.json();
 			if (!result.success) {
-				console.log("%c ❌ [HTTP] Check Auth Status Failed:", "color: #ef4444; font-weight: bold;", result.errorMessage);
+				console.log(
+					"%c ❌ [HTTP] Check Auth Status Failed:",
+					"color: #ef4444; font-weight: bold;",
+					result.errorMessage,
+				);
 				set({
 					isLoading: false,
 				});
 				return;
 			}
-			console.log("%c ✅ [HTTP] Auth Status Checked:", "color: #22c55e; font-weight: bold;", result.data);
+			console.log(
+				"%c ✅ [HTTP] Auth Status Checked:",
+				"color: #22c55e; font-weight: bold;",
+				result.data,
+			);
 			set({
 				isLoading: false,
 				isAuthenticated: true,
@@ -186,7 +262,11 @@ export const useAuthStore = create<AuthStore>((set) => ({
 				error: null,
 			});
 		} catch (e) {
-			console.log("%c ❌ [HTTP] Check Auth Status Error:", "color: #ef4444; font-weight: bold;", e);
+			console.log(
+				"%c ❌ [HTTP] Check Auth Status Error:",
+				"color: #ef4444; font-weight: bold;",
+				e,
+			);
 			set({
 				user: null,
 				isAuthenticated: false,

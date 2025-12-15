@@ -2,6 +2,7 @@
 import InviteToast from "@/components/chat/inviteToast";
 import { useAuthStore } from "@/stateManagment/authStore";
 import { useChatStore } from "@/stateManagment/chatStore";
+import { useFriendshipStore } from "@/stateManagment/friendshipStore";
 import React, { useEffect, useRef } from "react";
 import { toast } from "sonner";
 
@@ -12,11 +13,14 @@ const SocketProvider = ({ children }: SocketProviderProps) => {
 	const {
 		initializeSocket,
 		disconnectSocket,
+	} = useChatStore();
+	const {
 		friendshipRequests,
 		getAllFriendshipRequests,
 		acceptFriendshipRequest,
 		declineFriendshipRequest,
-	} = useChatStore();
+	} = useFriendshipStore();
+
 	const { checkAuthStatus, user } = useAuthStore();
 	const processedInvites = useRef(new Set<string>());
 
@@ -47,7 +51,7 @@ const SocketProvider = ({ children }: SocketProviderProps) => {
 			if (!processedInvites.current.has(request._id)) {
 				processedInvites.current.add(request._id);
 			}
-			if (request.status != "pending") {
+			if (request.status !== "pending") {
 				toast.dismiss(request._id);
 				continue;
 			}
@@ -71,7 +75,7 @@ const SocketProvider = ({ children }: SocketProviderProps) => {
 				},
 			);
 		}
-	}, [user, friendshipRequests]);
+	}, [user, friendshipRequests, acceptFriendshipRequest, declineFriendshipRequest]);
 
 	return <div>{children}</div>;
 };
