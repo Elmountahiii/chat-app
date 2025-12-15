@@ -53,11 +53,12 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 		});
 
 		socket.on("connect_error", (err) => {
-			console.error("Socket connection error:", err);
+			console.log("%c ❌ [Socket] Connection Error:", "color: #ef4444; font-weight: bold;", err);
 			set({ status: "disconnected", socket: null });
 		});
 
 		socket.on("connect", async () => {
+			console.log("%c ⚡ [Socket] Connected", "color: #0ea5e9; font-weight: bold;");
 			set({ status: "connected", socket });
 			await get().getAllFriends();
 			await get().fetchConversations();
@@ -72,7 +73,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 		});
 
 		socket.on("disconnect", () => {
-			console.log("Disconnected from socket");
+			console.log("%c 🔌 [Socket] Disconnected", "color: #0ea5e9; font-weight: bold;");
 			set({ status: "disconnected", socket: null });
 		});
 
@@ -80,6 +81,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 		socket.on(
 			"user:statusChanged",
 			(data: { userId: string; status: "online" | "offline" | "away" }) => {
+				console.log("%c 👤 [Socket] User Status Changed:", "color: #0ea5e9; font-weight: bold;", data);
 				set((state) => ({
 					friends: state.friends.map((friend) => {
 						if (friend._id === data.userId) {
@@ -94,7 +96,9 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 		// Conversation events
 		socket.on(
 			"conversation_created",
-			(data: { conversation: Conversation }) => {},
+			(data: { conversation: Conversation }) => {
+				console.log("%c 💬 [Socket] Conversation Created:", "color: #0ea5e9; font-weight: bold;", data);
+			},
 		);
 
 		socket.on(
@@ -103,36 +107,48 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 				conversationId: string;
 				userId: string;
 				isTyping: boolean;
-			}) => {},
+			}) => {
+				console.log("%c ⌨️ [Socket] Typing Status:", "color: #0ea5e9; font-weight: bold;", data);
+			},
 		);
 
 		// Message events
-		socket.on("new_message", (message: Message) => {});
+		socket.on("new_message", (message: Message) => {
+			console.log("%c 📩 [Socket] New Message:", "color: #0ea5e9; font-weight: bold;", message);
+		});
 
 		socket.on(
 			"messages_read",
-			(data: { conversationId: string; userId: string }) => {},
+			(data: { conversationId: string; userId: string }) => {
+				console.log("%c 👀 [Socket] Messages Read:", "color: #0ea5e9; font-weight: bold;", data);
+			},
 		);
 
 		// Friendship events
 		socket.on(
 			"friendship_request_received",
-			(data: { friendship: FriendShipRequest }) => {},
+			(data: { friendship: FriendShipRequest }) => {
+				console.log("%c 🤝 [Socket] Friend Request Received:", "color: #0ea5e9; font-weight: bold;", data);
+			},
 		);
 
 		socket.on(
 			"friendship_request_accepted",
-			(data: { friendship: FriendShipRequest }) => {},
+			(data: { friendship: FriendShipRequest }) => {
+				console.log("%c 🤝 [Socket] Friend Request Accepted:", "color: #0ea5e9; font-weight: bold;", data);
+			},
 		);
 
 		socket.on(
 			"friendship_request_declined",
-			(data: { friendshipId: string }) => {},
+			(data: { friendshipId: string }) => {
+				console.log("%c 🤝 [Socket] Friend Request Declined:", "color: #0ea5e9; font-weight: bold;", data);
+			},
 		);
 
 		// Error handling
 		socket.on("error", (error: { event: string; message: string }) => {
-			console.error(`Socket error in ${error.event}:`, error.message);
+			console.log("%c ⚠️ [Socket] Error:", "color: #ef4444; font-weight: bold;", error);
 			// You can add toast notifications here
 		});
 	},
@@ -153,6 +169,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
 	// conversation actions
 	fetchConversations: async () => {
+		console.log("%c 🌐 [HTTP] Fetching Conversations...", "color: #eab308; font-weight: bold;");
 		set({ isLoading: true });
 		try {
 			const response = await fetch(`${API_BASE_URL}/conversations`, {
@@ -164,21 +181,22 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 			});
 			const result: HttpResponse<Conversation[]> = await response.json();
 			if (!result.success) {
-				console.warn("Failed to fetch conversations:", result.errorMessage);
+				console.log("%c ❌ [HTTP] Fetch Conversations Failed:", "color: #ef4444; font-weight: bold;", result.errorMessage);
 				return;
 			}
 
-			console.log("conversation List : ", result.data);
+			console.log("%c ✅ [HTTP] Conversations Fetched:", "color: #22c55e; font-weight: bold;", result.data);
 
 			set({ conversations: result.data, isLoading: false });
 		} catch (e) {
-			console.warn(`Fetch conversations error:`, e);
+			console.log("%c ❌ [HTTP] Fetch Conversations Error:", "color: #ef4444; font-weight: bold;", e);
 		} finally {
 			set({ isLoading: false });
 		}
 	},
 
 	createConversation: async (participants, type, groupName) => {
+		console.log("%c 🌐 [HTTP] Creating Conversation...", "color: #eab308; font-weight: bold;", { participants, type, groupName });
 		set({ isLoading: true });
 		try {
 			const rawResponse = await fetch(
@@ -194,9 +212,12 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 			);
 			const response: HttpResponse<Conversation> = await rawResponse.json();
 			if (!response.success) {
-				console.warn("Failed to create conversation:", response.errorMessage);
+				console.log("%c ❌ [HTTP] Create Conversation Failed:", "color: #ef4444; font-weight: bold;", response.errorMessage);
 				return;
 			}
+
+			console.log("%c ✅ [HTTP] Conversation Created:", "color: #22c55e; font-weight: bold;", response.data);
+
 			const state = get();
 			if (state.socket !== null) {
 				state.socket.emit("join_conversation", {
@@ -210,7 +231,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 				};
 			});
 		} catch (e) {
-			console.warn(`Create conversation error:`, e);
+			console.log("%c ❌ [HTTP] Create Conversation Error:", "color: #ef4444; font-weight: bold;", e);
 		} finally {
 			set({ isLoading: false });
 		}
@@ -222,6 +243,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
 	// message actions
 	fetchMessages: async (conversationId, limit = 5) => {
+		console.log("%c 🌐 [HTTP] Fetching Messages...", "color: #eab308; font-weight: bold;", { conversationId, limit });
 		set({
 			isLoading: true,
 			loadingMessages: { ...get().loadingMessages, [conversationId]: true },
@@ -247,7 +269,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 				hasMore: boolean;
 			}> = await rawResponse.json();
 			if (!response.success) {
-				console.warn("Failed to fetch messages:", response.errorMessage);
+				console.log("%c ❌ [HTTP] Fetch Messages Failed:", "color: #ef4444; font-weight: bold;", response.errorMessage);
 				set({
 					loadingMessages: {
 						...get().loadingMessages,
@@ -256,6 +278,9 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 				});
 				return;
 			}
+			
+			console.log("%c ✅ [HTTP] Messages Fetched:", "color: #22c55e; font-weight: bold;", { count: response.data.messages.length, hasMore: response.data.hasMore });
+
 			const existingMessages = get().messages[conversationId] || [];
 
 			const newMessages = response.data.messages.filter(
@@ -282,12 +307,13 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 				};
 			});
 		} catch (e) {
-			console.warn(`Fetch messages error:`, e);
+			console.log("%c ❌ [HTTP] Fetch Messages Error:", "color: #ef4444; font-weight: bold;", e);
 		} finally {
 			set({ isLoading: false });
 		}
 	},
 	sendMessage: async (conversationId, content) => {
+		console.log("%c 🌐 [HTTP] Sending Message...", "color: #eab308; font-weight: bold;", { conversationId, content });
 		set({ isLoading: true });
 		try {
 			const rawResponse = await fetch(
@@ -307,11 +333,12 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 			);
 			const response: HttpResponse<Message> = await rawResponse.json();
 			if (!response.success) {
-				console.warn("Failed to send message:", response.errorMessage);
+				console.log("%c ❌ [HTTP] Send Message Failed:", "color: #ef4444; font-weight: bold;", response.errorMessage);
 				return;
 			}
+			console.log("%c ✅ [HTTP] Message Sent:", "color: #22c55e; font-weight: bold;", response.data);
 		} catch (e) {
-			console.warn(`Send message error:`, e);
+			console.log("%c ❌ [HTTP] Send Message Error:", "color: #ef4444; font-weight: bold;", e);
 		} finally {
 			set({ isLoading: false });
 		}
@@ -325,6 +352,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 		throw new Error(`Method not implemented. ${messageId}`);
 	},
 	markAsRead: async (conversationId) => {
+		console.log("%c 🌐 [HTTP] Marking as Read...", "color: #eab308; font-weight: bold;", { conversationId });
 		set({ isLoading: true });
 		try {
 			const rawResponse = await fetch(
@@ -352,11 +380,12 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 				};
 			}> = await rawResponse.json();
 			if (!response.success) {
-				console.warn("Failed to mark messages as read:", response.errorMessage);
+				console.log("%c ❌ [HTTP] Mark as Read Failed:", "color: #ef4444; font-weight: bold;", response.errorMessage);
 				return;
 			}
+			console.log("%c ✅ [HTTP] Marked as Read:", "color: #22c55e; font-weight: bold;", response.data);
 		} catch (e) {
-			console.warn(`Mark messages as read error:`, e);
+			console.log("%c ❌ [HTTP] Mark as Read Error:", "color: #ef4444; font-weight: bold;", e);
 		} finally {
 			set({ isLoading: false });
 		}
@@ -388,6 +417,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
 	// friendship actions
 	getAllFriends: async () => {
+		console.log("%c 🌐 [HTTP] Fetching Friends...", "color: #eab308; font-weight: bold;");
 		set({ isLoading: true });
 		try {
 			const response = await fetch(`${API_BASE_URL}/friendship/friends`, {
@@ -400,23 +430,21 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
 			const result: HttpResponse<User[]> = await response.json();
 			if (!result.success) {
-				console.warn(
-					"Failed to fetch friends for online status:",
-					result.errorMessage,
-				);
+				console.log("%c ❌ [HTTP] Fetch Friends Failed:", "color: #ef4444; font-weight: bold;", result.errorMessage);
 				return;
 			}
-			console.log("All firends :", result.data);
+			console.log("%c ✅ [HTTP] Friends Fetched:", "color: #22c55e; font-weight: bold;", result.data);
 
 			set({ friends: result.data });
 		} catch (e) {
-			console.warn(`Fetch online friends error:`, e);
+			console.log("%c ❌ [HTTP] Fetch Friends Error:", "color: #ef4444; font-weight: bold;", e);
 		} finally {
 			set({ isLoading: false });
 		}
 	},
 
 	searchForPotentialFriends: async (query: string) => {
+		console.log("%c 🌐 [HTTP] Searching Potential Friends...", "color: #eab308; font-weight: bold;", { query });
 		set({ isLoading: true });
 
 		try {
@@ -434,21 +462,20 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 			const response: HttpResponse<PotentialFriend[]> =
 				await rawResponse.json();
 			if (!response.success) {
-				console.warn(
-					"Failed to search for potential friends:",
-					response.errorMessage,
-				);
+				console.log("%c ❌ [HTTP] Search Potential Friends Failed:", "color: #ef4444; font-weight: bold;", response.errorMessage);
 				return;
 			}
+			console.log("%c ✅ [HTTP] Potential Friends Found:", "color: #22c55e; font-weight: bold;", response.data);
 			set({ potentialFriends: response.data });
 		} catch (e) {
-			console.warn(`Search for potential friends error:`, e);
+			console.log("%c ❌ [HTTP] Search Potential Friends Error:", "color: #ef4444; font-weight: bold;", e);
 		} finally {
 			set({ isLoading: false });
 		}
 	},
 
 	getAllFriendshipRequests: async () => {
+		console.log("%c 🌐 [HTTP] Fetching Friendship Requests...", "color: #eab308; font-weight: bold;");
 		set({ isLoading: true });
 		try {
 			const rawResponse = await fetch(`${API_BASE_URL}/user/pending-requests`, {
@@ -461,21 +488,20 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 			const response: HttpResponse<FriendShipRequest[]> =
 				await rawResponse.json();
 			if (!response.success) {
-				console.warn(
-					"Failed to fetch friendship requests:",
-					response.errorMessage,
-				);
+				console.log("%c ❌ [HTTP] Fetch Friendship Requests Failed:", "color: #ef4444; font-weight: bold;", response.errorMessage);
 				return;
 			}
+			console.log("%c ✅ [HTTP] Friendship Requests Fetched:", "color: #22c55e; font-weight: bold;", response.data);
 			set({ friendshipRequests: response.data });
 		} catch (e) {
-			console.warn(`Fetch friendship requests error:`, e);
+			console.log("%c ❌ [HTTP] Fetch Friendship Requests Error:", "color: #ef4444; font-weight: bold;", e);
 		} finally {
 			set({ isLoading: false });
 		}
 	},
 
 	sendFriendshipRequest: async (receiverId: string) => {
+		console.log("%c 🌐 [HTTP] Sending Friendship Request...", "color: #eab308; font-weight: bold;", { receiverId });
 		set({ isLoading: true });
 		try {
 			const rawResponse = await fetch(`${API_BASE_URL}/user/send-request`, {
@@ -490,12 +516,10 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 			const response: HttpResponse<FriendShipRequest> =
 				await rawResponse.json();
 			if (!response.success) {
-				console.warn(
-					"Failed to send friendship request:",
-					response.errorMessage,
-				);
+				console.log("%c ❌ [HTTP] Send Friendship Request Failed:", "color: #ef4444; font-weight: bold;", response.errorMessage);
 				return;
 			}
+			console.log("%c ✅ [HTTP] Friendship Request Sent:", "color: #22c55e; font-weight: bold;", response.data);
 			const updatedPotentialFriends = get().potentialFriends.map((pf) => {
 				if (pf._id === receiverId) {
 					return {
@@ -507,13 +531,14 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 			});
 			set({ potentialFriends: updatedPotentialFriends });
 		} catch (e) {
-			console.warn(`Send friendship request error:`, e);
+			console.log("%c ❌ [HTTP] Send Friendship Request Error:", "color: #ef4444; font-weight: bold;", e);
 		} finally {
 			set({ isLoading: false });
 		}
 	},
 
 	acceptFriendshipRequest: async (FriendshipId: string) => {
+		console.log("%c 🌐 [HTTP] Accepting Friendship Request...", "color: #eab308; font-weight: bold;", { FriendshipId });
 		set({ isLoading: true });
 		try {
 			const rawResponse = await fetch(`${API_BASE_URL}/user/accept-request`, {
@@ -527,13 +552,10 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 			const response: HttpResponse<FriendShipRequest> =
 				await rawResponse.json();
 			if (!response.success) {
-				console.warn(
-					"Failed to accept friendship request:",
-					response.errorMessage,
-				);
+				console.log("%c ❌ [HTTP] Accept Friendship Request Failed:", "color: #ef4444; font-weight: bold;", response.errorMessage);
 				return;
 			}
-			console.log("result", response.data);
+			console.log("%c ✅ [HTTP] Friendship Request Accepted:", "color: #22c55e; font-weight: bold;", response.data);
 
 			set({
 				friendshipRequests: get().friendshipRequests.map((request) => {
@@ -541,15 +563,16 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 					return request;
 				}),
 			});
-			get().getOnlineFriends();
+			get().getAllFriends();
 		} catch (e) {
-			console.warn(`Accept friendship request error:`, e);
+			console.log("%c ❌ [HTTP] Accept Friendship Request Error:", "color: #ef4444; font-weight: bold;", e);
 		} finally {
 			set({ isLoading: false });
 		}
 	},
 
 	declineFriendshipRequest: async (FriendshipId: string) => {
+		console.log("%c 🌐 [HTTP] Declining Friendship Request...", "color: #eab308; font-weight: bold;", { FriendshipId });
 		set({ isLoading: true });
 		try {
 			const rawResponse = await fetch(`${API_BASE_URL}/user/decline-request`, {
@@ -563,13 +586,10 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 			const response: HttpResponse<FriendShipRequest> =
 				await rawResponse.json();
 			if (!response.success) {
-				console.warn(
-					"Failed to decline friendship request:",
-					response.errorMessage,
-				);
+				console.log("%c ❌ [HTTP] Decline Friendship Request Failed:", "color: #ef4444; font-weight: bold;", response.errorMessage);
 				return;
 			}
-			console.log("result", response.data);
+			console.log("%c ✅ [HTTP] Friendship Request Declined:", "color: #22c55e; font-weight: bold;", response.data);
 
 			set({
 				friendshipRequests: get().friendshipRequests.filter((request) => {
@@ -577,13 +597,14 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 				}),
 			});
 		} catch (e) {
-			console.warn(`Decline friendship request error:`, e);
+			console.log("%c ❌ [HTTP] Decline Friendship Request Error:", "color: #ef4444; font-weight: bold;", e);
 		} finally {
 			set({ isLoading: false });
 		}
 	},
 
 	unfriendUser: async (userId) => {
+		console.log("%c 🌐 [HTTP] Unfriending User...", "color: #eab308; font-weight: bold;", { userId });
 		set({
 			isLoading: true,
 		});
@@ -603,15 +624,14 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
 			const response: HttpResponse<FriendShipRequest> =
 				await rawResponse.json();
-			console.log("the fucking response : ", response);
-
+			
 			if (!response.success) {
-				console.warn(`remove friend error:`, response.errorMessage);
+				console.log("%c ❌ [HTTP] Unfriend User Failed:", "color: #ef4444; font-weight: bold;", response.errorMessage);
 				return;
 			}
-			console.log("unfriend userResponse : ", response.data);
+			console.log("%c ✅ [HTTP] User Unfriended:", "color: #22c55e; font-weight: bold;", response.data);
 		} catch (err) {
-			console.warn(`remove friend error hhh:`, err);
+			console.log("%c ❌ [HTTP] Unfriend User Error:", "color: #ef4444; font-weight: bold;", err);
 		} finally {
 			set({
 				isLoading: false,
