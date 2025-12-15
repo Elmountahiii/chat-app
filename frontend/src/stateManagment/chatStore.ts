@@ -76,7 +76,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 			set({ status: "disconnected", socket: null });
 		});
 
-		// firends actions
+		// User status events
 		socket.on(
 			"user:statusChanged",
 			(data: { userId: string; status: "online" | "offline" | "away" }) => {
@@ -90,6 +90,51 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 				}));
 			},
 		);
+
+		// Conversation events
+		socket.on(
+			"conversation_created",
+			(data: { conversation: Conversation }) => {},
+		);
+
+		socket.on(
+			"conversation_typing",
+			(data: {
+				conversationId: string;
+				userId: string;
+				isTyping: boolean;
+			}) => {},
+		);
+
+		// Message events
+		socket.on("new_message", (message: Message) => {});
+
+		socket.on(
+			"messages_read",
+			(data: { conversationId: string; userId: string }) => {},
+		);
+
+		// Friendship events
+		socket.on(
+			"friendship_request_received",
+			(data: { friendship: FriendShipRequest }) => {},
+		);
+
+		socket.on(
+			"friendship_request_accepted",
+			(data: { friendship: FriendShipRequest }) => {},
+		);
+
+		socket.on(
+			"friendship_request_declined",
+			(data: { friendshipId: string }) => {},
+		);
+
+		// Error handling
+		socket.on("error", (error: { event: string; message: string }) => {
+			console.error(`Socket error in ${error.event}:`, error.message);
+			// You can add toast notifications here
+		});
 	},
 
 	disconnectSocket: () => {
@@ -321,7 +366,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 	sendTyping: (conversationId, isTyping) => {
 		const socket = get().socket;
 		if (socket && get().status === "connected") {
-			socket.emit("typing", {
+			socket.emit("typing_conversation", {
 				conversationId,
 				isTyping,
 			});
