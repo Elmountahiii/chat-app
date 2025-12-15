@@ -41,19 +41,20 @@ export const useAuthStore = create<AuthStore>((set) => ({
 				body: JSON.stringify({ email, password }),
 			});
 
-			const data: HttpResponse<User> = await response.json();
-			if (!data.success) {
+			const result: HttpResponse<User> = await response.json();
+			if (!result.success) {
 				set({
 					isLoading: false,
-					error: data.errorMessage,
+					error: result.errorMessage,
 				});
 				return;
 			}
+
 			set({
 				isLoading: false,
-				successMessage: data.successMessage,
+				successMessage: result.successMessage,
 				isAuthenticated: true,
-				user: data.data,
+				user: result.data,
 				error: null,
 			});
 		} catch (e) {
@@ -80,12 +81,12 @@ export const useAuthStore = create<AuthStore>((set) => ({
 				},
 				body: JSON.stringify(userData),
 			});
-			const data: HttpResponse<User> = await response.json();
+			const result: HttpResponse<User> = await response.json();
 
-			if (!data.success) {
+			if (!result.success) {
 				set({
 					isLoading: false,
-					error: data.errorMessage,
+					error: result.errorMessage,
 				});
 				return;
 			}
@@ -93,7 +94,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
 			set({
 				isLoading: false,
 				isRegistered: true,
-				successMessage: data.successMessage,
+				successMessage: result.successMessage,
 				error: null,
 			});
 
@@ -125,10 +126,11 @@ export const useAuthStore = create<AuthStore>((set) => ({
 					"Content-Type": "application/json",
 				},
 			});
-			const data: HttpResponse<null> = await response.json();
-			if (!data.success) {
-				console.warn(`Logout failed:`, data.errorMessage);
+			const result: HttpResponse<null> = await response.json();
+			if (!result.success) {
+				console.warn(`Logout failed:`, result.errorMessage);
 			}
+
 			set({
 				user: null,
 				isAuthenticated: false,
@@ -158,20 +160,22 @@ export const useAuthStore = create<AuthStore>((set) => ({
 			const response = await fetch(`${API_BASE_URL}/auth/me`, {
 				method: "GET",
 				credentials: "include",
+				headers: {
+					"Content-Type": "application/json",
+				},
 			});
-			const data: HttpResponse<User> = await response.json();
-			if (!data.success) {
+			const result: HttpResponse<User> = await response.json();
+			if (!result.success) {
 				set({
 					isLoading: false,
-					error: data.errorMessage,
 				});
 				return;
 			}
 			set({
 				isLoading: false,
 				isAuthenticated: true,
-				successMessage: data.successMessage,
-				user: data.data,
+				successMessage: result.successMessage,
+				user: result.data,
 				error: null,
 			});
 		} catch (e) {
@@ -180,7 +184,6 @@ export const useAuthStore = create<AuthStore>((set) => ({
 				user: null,
 				isAuthenticated: false,
 				isLoading: false,
-				error: "Unable to verify authentication status.",
 			});
 		}
 	},

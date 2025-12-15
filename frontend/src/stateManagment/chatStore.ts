@@ -23,6 +23,8 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 	socket: null,
 	status: "disconnected",
 
+	friends: [],
+
 	conversations: [],
 	activeConversationId: null,
 	messages: {},
@@ -30,31 +32,18 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 	loadingMessages: {},
 	isLoading: false,
 	typingUsers: {},
-	onlineFriends: [],
+
 	potentialFriends: [],
 	friendshipRequests: [],
 
 	// actions
 	initializeSocket: () => {
-		// console.log("---------------- ENV --------");
-		// console.log(
-		// 	"NEXT_PUBLIC_BACKEND_URL : ",
-		// 	process.env.NEXT_PUBLIC_BACKEND_URL,
-		// );
-		// console.log(
-		// 	"NEXT_PUBLIC_SOCKET_URL : ",
-		// 	process.env.NEXT_PUBLIC_SOCKET_URL,
-		// );
-		// console.log("----------------------------------");
-		// console.log("is Production : ", process.env.NODE_ENV);
-		// console.log("API_BASE_URL : ", API_BASE_URL);
-		// console.log("SOCKET_URL : ", SOCKET_URL);
 		if (get().status === "connected" || get().status === "connecting") {
 			console.log("Socket is already connected or connecting");
 			return;
 		}
 		set({ status: "connecting" });
-		// console.log("socketIO url : ", SOCKET_URL);
+
 		const socket = io(SOCKET_URL, {
 			reconnectionAttempts: 5,
 			reconnectionDelay: 1000,
@@ -64,14 +53,14 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 		});
 
 		socket.on("connect_error", (err) => {
-			// console.error("Socket connection error:", err);
+			console.error("Socket connection error:", err);
 			set({ status: "disconnected", socket: null });
 		});
 
 		socket.on("connect", async () => {
 			set({ status: "connected", socket });
-			console.log("Connected to socket with ID:", socket.id);
-			await get().fetchConversations();
+			await get().getAllFriends();
+			// await get().fetchConversations();
 			const state = get();
 			state.conversations.forEach((conversation) => {
 				if (state.socket !== null) {
@@ -80,198 +69,27 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 					});
 				}
 			});
-			await state.getOnlineFriends();
 		});
-
-		// handle conversation creation
-		socket.on(
-			"conversation_created",
-			(data: { conversation: Conversation }) => {
-				const { conversation } = data;
-				console.log("New conversation created:", conversation);
-				const state = get();
-				if (state.socket !== null) {
-					state.socket.emit("join_conversation", {
-						conversationId: conversation._id,
-					});
-
-					set({
-						conversations: [conversation, ...state.conversations],
-					});
-				}
-			},
-		);
-
-		// Handle incoming messages
-		socket.on(
-			"new_message",
-			(data: { userId: string; message: Message; conversationId: string }) => {
-				const { userId, message, conversationId } = data;
-				console.log("Received new message via socket:", data);
-				const state = get();
-				const conversationMessages = state.messages[conversationId] || [];
-				set({
-					messages: {
-						...state.messages,
-						[conversationId]: [...conversationMessages, message],
-					},
-				});
-
-				const conversation = state.conversations.find(
-					(c) => c._id === conversationId,
-				);
-				if (!conversation) return;
-				const updatedConversation = {
-					...conversation,
-
-					lastMessage: {
-						content: message.content,
-						sender: message.sender,
-						timeStamp: message.createdAt,
-						messageType: message.messageType,
-					},
-					readStatus: conversation.readStatus.map((status) => {
-						if (status.userId !== userId) {
-							return {
-								...status,
-								unreadCount:
-									get().activeConversationId === conversationId
-										? 0
-										: status.unreadCount + 1,
-							};
-						}
-						return status;
-					}),
-				};
-				const updatedConversations = [...state.conversations];
-				updatedConversations.splice(
-					state.conversations.indexOf(conversation),
-					1,
-				);
-				updatedConversations.unshift(updatedConversation);
-				set({ conversations: updatedConversations });
-				if (get().activeConversationId === conversationId)
-					get().markAsRead(conversationId);
-			},
-		);
-
-		// Handle message read receipts
-		socket.on(
-			"message_read",
-			(data: {
-				conversationId: string;
-				messageId: string;
-				totalUnreadMessagesCleared: number;
-				user: User;
-				lastReadAt: Date;
-			}) => {
-				const { conversationId, messageId, user } = data;
-
-				const state = get();
-				const conversation = state.conversations.map((convo) => {
-					if (convo._id === conversationId) {
-						return {
-							...convo,
-							readStatus: convo.readStatus.map((status) => {
-								if (status.userId === user._id) {
-									return {
-										...status,
-										lastReadMessage: { _id: messageId } as Message,
-										unreadCount: 0,
-									};
-								}
-								return status;
-							}),
-						};
-					}
-					return convo;
-				});
-
-				set({ conversations: conversation });
-			},
-		);
-
-		// Handle message editing
-		socket.on(
-			"message_edited",
-			(data: {
-				conversationId: string;
-				messageId: string;
-				newContent: string;
-				editedAt: Date;
-			}) => {
-				console.log("Message edited event received:", data);
-			},
-		);
-
-		// Handle message deletion
-		socket.on(
-			"message_deleted",
-			(data: {
-				conversationId: string;
-				messageId: string;
-				deletedAt: Date;
-			}) => {
-				console.log("Message deleted event received:", data);
-			},
-		);
-
-		// Handle typing indicators
-		socket.on(
-			"user_typing",
-			(data: { conversationId: string; userId: string; isTyping: boolean }) => {
-				const { conversationId, isTyping } = data;
-				const state = get();
-				const conversations = state.conversations.map((convo) => {
-					if (convo._id === conversationId) {
-						return { ...convo, isTyping: isTyping };
-					}
-					return convo;
-				});
-				set({ conversations });
-			},
-		);
-
-		// Handle connectivity status changes
-		socket.on(
-			"user:statusChanged",
-			(data: { status: "online" | "offline" | "away"; user: User }) => {
-				console.log("Received status change via socket:", data);
-				const { status, user } = data;
-				const state = get();
-				const found = state.onlineFriends.find((f) => f._id === user._id);
-				if (!found) {
-					const updatedOnlineFriends = [...state.onlineFriends, user];
-					set({ onlineFriends: updatedOnlineFriends });
-				} else {
-					const updatedOnlineFriends = state.onlineFriends.map((friend) => {
-						if (friend._id === user._id) {
-							return { ...friend, status };
-						}
-						return friend;
-					});
-					set({ onlineFriends: updatedOnlineFriends });
-				}
-			},
-		);
-
-		// Handle new friendship requests
-		socket.on(
-			"friend:requestReceived",
-			(data: { senderId: string; friendship: FriendShipRequest }) => {
-				const { friendship } = data;
-				console.log("Received new friendship request via socket:", data);
-				const state = get();
-				set({
-					friendshipRequests: [friendship, ...state.friendshipRequests],
-				});
-			},
-		);
 
 		socket.on("disconnect", () => {
 			console.log("Disconnected from socket");
 			set({ status: "disconnected", socket: null });
 		});
+
+		// firends actions
+		socket.on(
+			"user:statusChanged",
+			(data: { userId: string; status: "online" | "offline" | "away" }) => {
+				set((state) => ({
+					friends: state.friends.map((friend) => {
+						if (friend._id === data.userId) {
+							return { ...friend, status: data.status };
+						}
+						return friend;
+					}),
+				}));
+			},
+		);
 	},
 
 	disconnectSocket: () => {
@@ -292,16 +110,13 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 	fetchConversations: async () => {
 		set({ isLoading: true });
 		try {
-			const rawResponse = await fetch(
-				`${API_BASE_URL}/messages/conversations`,
-				{
-					method: "GET",
-					credentials: "include",
-					headers: {
-						"Content-Type": "application/json",
-					},
+			const rawResponse = await fetch(`${API_BASE_URL}/api/conversations`, {
+				method: "GET",
+				credentials: "include",
+				headers: {
+					"Content-Type": "application/json",
 				},
-			);
+			});
 			const response: HttpResponse<Conversation[]> = await rawResponse.json();
 			if (!response.success) {
 				console.warn("Failed to fetch conversations:", response.errorMessage);
@@ -525,10 +340,10 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 		}),
 
 	// friendship actions
-	getOnlineFriends: async () => {
+	getAllFriends: async () => {
 		set({ isLoading: true });
 		try {
-			const rawResponse = await fetch(`${API_BASE_URL}/user/all-friends`, {
+			const response = await fetch(`${API_BASE_URL}/friendship/friends`, {
 				method: "GET",
 				credentials: "include",
 				headers: {
@@ -536,15 +351,17 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 				},
 			});
 
-			const response: HttpResponse<User[]> = await rawResponse.json();
-			if (!response.success) {
+			const result: HttpResponse<User[]> = await response.json();
+			if (!result.success) {
 				console.warn(
 					"Failed to fetch friends for online status:",
-					response.errorMessage,
+					result.errorMessage,
 				);
 				return;
 			}
-			set({ onlineFriends: response.data });
+			console.log("All firends :", result.data);
+
+			set({ friends: result.data });
 		} catch (e) {
 			console.warn(`Fetch online friends error:`, e);
 		} finally {

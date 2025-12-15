@@ -7,8 +7,10 @@ export type ChatActions = {
 	setConnectivityStatus: (status: "online" | "offline" | "away") => void;
 
 	// user actions
-	getOnlineFriends: () => Promise<void>;
 	searchForPotentialFriends: (query: string) => Promise<void>;
+
+	// friendship actions
+	getAllFriends: () => Promise<void>;
 	getAllFriendshipRequests: () => Promise<void>;
 	sendFriendshipRequest: (receiverId: string) => Promise<void>;
 	acceptFriendshipRequest: (FriendshipId: string) => Promise<void>;

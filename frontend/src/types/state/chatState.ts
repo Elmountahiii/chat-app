@@ -8,16 +8,16 @@ import { FriendShipRequest } from "../friendShipRequest";
 export type ConnectivityStatus = "connected" | "disconnected" | "connecting";
 
 export type chatState = {
-  socket: Socket | null;
-  status: ConnectivityStatus;
-  conversations: Conversation[];
-  activeConversationId: string | null;
-  messages: Record<string, Message[]>;
-  hasMessages: Record<string, boolean>;
-  loadingMessages: Record<string, boolean>;
-  isLoading: boolean;
-  typingUsers: Record<string, string[]>;
-  onlineFriends: User[];
-  potentialFriends: PotentialFriend[];
-  friendshipRequests: FriendShipRequest[];
+	socket: Socket | null;
+	status: ConnectivityStatus;
+	friends: User[];
+	conversations: Conversation[];
+	activeConversationId: string | null;
+	messages: Record<string, Message[]>;
+	hasMessages: Record<string, boolean>;
+	loadingMessages: Record<string, boolean>;
+	isLoading: boolean;
+	typingUsers: Record<string, string[]>;
+	potentialFriends: PotentialFriend[];
+	friendshipRequests: FriendShipRequest[];
 };

@@ -11,194 +11,195 @@ import { MessageCircle } from "lucide-react";
 import { useChatStore } from "@/stateManagment/chatStore";
 
 const getStatusColor = (status: User["status"]) => {
-  switch (status) {
-    case "online":
-      return "bg-green-500";
-    case "away":
-      return "bg-yellow-500";
-    default:
-      return "bg-gray-500";
-  }
+	switch (status) {
+		case "online":
+			return "bg-green-500";
+		case "away":
+			return "bg-yellow-500";
+		default:
+			return "bg-gray-500";
+	}
 };
 
 type OnlineFriendsProps = {
-  changeDialogOpen: (open: boolean) => void;
+	changeDialogOpen: (open: boolean) => void;
 };
 
 const OnlineFriends = ({ changeDialogOpen }: OnlineFriendsProps) => {
-  const {
-    onlineFriends,
-    setActiveConversation,
-    conversations,
-    createConversation,
-  } = useChatStore();
+	const [searchQuery, setSearchQuery] = useState("");
+	const { friends, setActiveConversation, conversations, createConversation } =
+		useChatStore();
 
-  const online = onlineFriends.filter((friend) => friend.status === "online");
-  const otherFriends = onlineFriends.filter(
-    (friend) => friend.status !== "online"
-  );
-  const [searchQuery, setSearchQuery] = useState("");
+	const online = friends.filter((friend) => friend.status === "online");
+	const otherFriends = friends.filter((friend) => friend.status !== "online");
+	const filteredFriends = friends.filter((friend) =>
+		friend.username.toLowerCase().includes(searchQuery.toLowerCase()),
+	);
 
-  const filteredFriends = onlineFriends.filter((friend) =>
-    friend.username.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+	const handleStartChat = (friend: User) => {
+		const selectedConversation = conversations.find((conversation) =>
+			conversation.participants.some(
+				(participant) => participant._id === friend._id,
+			),
+		);
 
-  const handleStartChat = (friend: User) => {
-    const selectedConversation = conversations.find((conversation) =>
-      conversation.participants.some(
-        (participant) => participant._id === friend._id
-      )
-    );
+		if (selectedConversation) {
+			console.log(
+				"Starting chat with conversation ID:",
+				selectedConversation._id,
+			);
+			setActiveConversation(selectedConversation._id);
+		} else {
+			createConversation([friend._id], "individual");
+		}
+		changeDialogOpen(false);
+	};
 
-    if (selectedConversation) {
-      console.log(
-        "Starting chat with conversation ID:",
-        selectedConversation._id
-      );
-      setActiveConversation(selectedConversation._id);
-    } else {
-      createConversation([friend._id], "individual");
-    }
-    changeDialogOpen(false);
-  };
+	return (
+		<TabsContent value="online" className="space-y-4 mt-4">
+			<div className="relative">
+				<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+				<Input
+					placeholder="Search friends..."
+					value={searchQuery}
+					onChange={(e) => setSearchQuery(e.target.value)}
+					className="pl-10"
+				/>
+			</div>
 
-  return (
-    <TabsContent value="online" className="space-y-4 mt-4">
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-        <Input
-          placeholder="Search friends..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-10"
-        />
-      </div>
+			<div className="max-h-96 overflow-y-auto space-y-2">
+				{online.length > 0 && (
+					<div className="space-y-2">
+						<h3 className="text-sm font-medium text-green-600 flex items-center gap-2">
+							<div className="w-2 h-2 bg-green-500 rounded-full"></div>
+							Online ({online.length})
+						</h3>
+						{online.map((friend) => (
+							<div
+								key={friend._id}
+								className="flex items-center justify-between p-3 rounded-lg border hover:bg-gray-50 transition-colors"
+							>
+								<div className="flex items-center gap-3">
+									<div className="relative">
+										<Avatar className="h-10 w-10">
+											<AvatarImage
+												src={friend.profilePicture || "/placeholder.svg"}
+												alt={friend.username}
+											/>
+											<AvatarFallback>
+												{friend.username
+													.split(" ")
+													.map((n) => n[0])
+													.join("")}
+											</AvatarFallback>
+										</Avatar>
+										<div
+											className={`absolute -bottom-1 -right-1 w-4 h-4 ${getStatusColor(
+												friend.status,
+											)} rounded-full border-2 border-white`}
+										></div>
+									</div>
+									<div>
+										<p className="font-medium text-sm">
+											{friend.firstName} {friend.lastName}
+										</p>
+										<Badge
+											variant="secondary"
+											className="text-xs bg-green-100 text-green-700"
+										>
+											Online
+										</Badge>
+									</div>
+								</div>
 
-      <div className="max-h-96 overflow-y-auto space-y-2">
-        {online.length > 0 && (
-          <div className="space-y-2">
-            <h3 className="text-sm font-medium text-green-600 flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              Online ({online.length})
-            </h3>
-            {online.map((friend) => (
-              <div
-                key={friend._id}
-                className="flex items-center justify-between p-3 rounded-lg border hover:bg-gray-50 transition-colors">
-                <div className="flex items-center gap-3">
-                  <div className="relative">
-                    <Avatar className="h-10 w-10">
-                      <AvatarImage
-                        src={friend.profilePicture || "/placeholder.svg"}
-                        alt={friend.username}
-                      />
-                      <AvatarFallback>
-                        {friend.username
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div
-                      className={`absolute -bottom-1 -right-1 w-4 h-4 ${getStatusColor(
-                        friend.status
-                      )} rounded-full border-2 border-white`}></div>
-                  </div>
-                  <div>
-                    <p className="font-medium text-sm">
-                      {friend.firstName} {friend.lastName}
-                    </p>
-                    <Badge
-                      variant="secondary"
-                      className="text-xs bg-green-100 text-green-700">
-                      Online
-                    </Badge>
-                  </div>
-                </div>
+								<div className="flex items-center gap-1">
+									<Button
+										size="sm"
+										variant="ghost"
+										onClick={() => handleStartChat(friend)}
+										className="h-8 w-8 p-0 cursor-pointer"
+									>
+										<MessageCircle className="h-4 w-4 cursor-pointer" />
+									</Button>
+								</div>
+							</div>
+						))}
+					</div>
+				)}
 
-                <div className="flex items-center gap-1">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => handleStartChat(friend)}
-                    className="h-8 w-8 p-0 cursor-pointer">
-                    <MessageCircle className="h-4 w-4 cursor-pointer" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+				{/* Other Friends (Away/Busy) */}
+				{otherFriends.length > 0 && (
+					<div className="space-y-2">
+						<h3 className="text-sm font-medium text-gray-500 flex items-center gap-2 mt-4">
+							<div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+							Other ({otherFriends.length})
+						</h3>
+						{otherFriends.map((friend) => (
+							<div
+								key={friend._id}
+								className="flex items-center justify-between p-3 rounded-lg border hover:bg-gray-50 transition-colors opacity-75"
+							>
+								<div className="flex items-center gap-3">
+									<div className="relative">
+										<Avatar className="h-10 w-10">
+											<AvatarImage
+												src={friend.profilePicture || "/placeholder.svg"}
+												alt={friend.username}
+											/>
+											<AvatarFallback>
+												{friend.username
+													.split(" ")
+													.map((n) => n[0])
+													.join("")}
+											</AvatarFallback>
+										</Avatar>
+										<div
+											className={`absolute -bottom-1 -right-1 w-4 h-4 ${getStatusColor(
+												friend.status,
+											)} rounded-full border-2 border-white`}
+										></div>
+									</div>
+									<div>
+										<p className="font-medium text-sm">
+											{friend.firstName} {friend.lastName}
+										</p>
 
-        {/* Other Friends (Away/Busy) */}
-        {otherFriends.length > 0 && (
-          <div className="space-y-2">
-            <h3 className="text-sm font-medium text-gray-500 flex items-center gap-2 mt-4">
-              <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-              Other ({otherFriends.length})
-            </h3>
-            {otherFriends.map((friend) => (
-              <div
-                key={friend._id}
-                className="flex items-center justify-between p-3 rounded-lg border hover:bg-gray-50 transition-colors opacity-75">
-                <div className="flex items-center gap-3">
-                  <div className="relative">
-                    <Avatar className="h-10 w-10">
-                      <AvatarImage
-                        src={friend.profilePicture || "/placeholder.svg"}
-                        alt={friend.username}
-                      />
-                      <AvatarFallback>
-                        {friend.username
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div
-                      className={`absolute -bottom-1 -right-1 w-4 h-4 ${getStatusColor(
-                        friend.status
-                      )} rounded-full border-2 border-white`}></div>
-                  </div>
-                  <div>
-                    <p className="font-medium text-sm">
-                      {friend.firstName} {friend.lastName}
-                    </p>
+										<Badge
+											variant="secondary"
+											className={`text-xs ${
+												friend.status === "away"
+													? "bg-yellow-100 text-yellow-700"
+													: "bg-red-100 text-red-700"
+											}`}
+										>
+											{friend.status === "away" ? "Away" : "Offline"}
+										</Badge>
+									</div>
+								</div>
 
-                    <Badge
-                      variant="secondary"
-                      className={`text-xs ${
-                        friend.status === "away"
-                          ? "bg-yellow-100 text-yellow-700"
-                          : "bg-red-100 text-red-700"
-                      }`}>
-                      {friend.status === "away" ? "Away" : "Offline"}
-                    </Badge>
-                  </div>
-                </div>
+								<div className="flex items-center gap-1">
+									<Button
+										size="sm"
+										variant="ghost"
+										onClick={() => handleStartChat(friend)}
+										className="h-8 w-8 p-0"
+									>
+										<MessageCircle className="h-4 w-4" />
+									</Button>
+								</div>
+							</div>
+						))}
+					</div>
+				)}
 
-                <div className="flex items-center gap-1">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => handleStartChat(friend)}
-                    className="h-8 w-8 p-0">
-                    <MessageCircle className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {filteredFriends.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
-            <p>No friends found</p>
-          </div>
-        )}
-      </div>
-    </TabsContent>
-  );
+				{filteredFriends.length === 0 && (
+					<div className="text-center py-8 text-gray-500">
+						<p>No friends found</p>
+					</div>
+				)}
+			</div>
+		</TabsContent>
+	);
 };
 
 export default OnlineFriends;

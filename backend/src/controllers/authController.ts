@@ -41,20 +41,20 @@ export class AuthController {
 				validData.password,
 			);
 			const token = await JwtService.signToken(user._id.toString());
-
-			res
-				.status(200)
-				.json(createSuccessResponse({ user, token }, "Login successful"));
+			res.cookie("authToken", token, {
+				httpOnly: true,
+				secure: true,
+				sameSite: "strict",
+				maxAge: 7 * 24 * 60 * 60 * 1000,
+			});
+			res.status(200).json(createSuccessResponse(user, "Login successful"));
 		} catch (e) {
 			HandleError(e, res, "Error during login", body);
 		}
 	};
 
 	me = async (req: Request, res: Response) => {
-		const authHeader = req.headers.authorization;
-		const token = authHeader?.startsWith("Bearer ")
-			? authHeader.substring(7)
-			: null;
+		const token = req.cookies.authToken;
 
 		if (!token) {
 			res.status(401).json(createErrorResponse("No token provided"));

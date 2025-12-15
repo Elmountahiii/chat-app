@@ -29,16 +29,21 @@ export class SocketService {
 	}
 
 	private authenticateSocket(socket: Socket, next: (err?: Error) => void) {
-		const authHeader = socket.handshake.headers.authorization;
-		if (!authHeader) {
-			return next(new Error("Unauthorized"));
+		const cookies = socket.handshake.headers.cookie;
+		if (!cookies) {
+			return next(new Error("Unauthorized - No cookies provided"));
 		}
-		const token = authHeader.startsWith("Bearer ")
-			? authHeader.substring(7)
-			: authHeader;
+
+		// Parse cookies manually to extract authToken
+		const token = cookies
+			.split(";")
+			.find((cookie) => cookie.trim().startsWith("authToken="))
+			?.split("=")[1];
+
 		if (!token) {
-			return next(new Error("Unauthorized"));
+			return next(new Error("Unauthorized - No auth token in cookies"));
 		}
+
 		JwtService.verifyToken(token)
 			.then((payload) => {
 				socket.data.userId = payload;

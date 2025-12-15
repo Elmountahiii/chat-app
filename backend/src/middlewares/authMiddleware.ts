@@ -7,20 +7,14 @@ export const authMiddleware = async (
 	res: Response,
 	next: NextFunction,
 ) => {
-	const authHeader = req.headers.authorization;
+	const token = req.cookies.authToken;
 
-	if (!authHeader || !authHeader.startsWith("Bearer ")) {
+	if (!token) {
 		res
 			.status(401)
-			.json(
-				createErrorResponse(
-					"Unauthorized access - Missing or invalid Authorization header",
-				),
-			);
+			.json(createErrorResponse("Unauthorized access - No token provided"));
 		return;
 	}
-
-	const token = authHeader.substring(7);
 
 	try {
 		const userId = await JwtService.verifyToken(token);
