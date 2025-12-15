@@ -60,7 +60,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 		socket.on("connect", async () => {
 			set({ status: "connected", socket });
 			await get().getAllFriends();
-			// await get().fetchConversations();
+			await get().fetchConversations();
 			const state = get();
 			state.conversations.forEach((conversation) => {
 				if (state.socket !== null) {
@@ -110,20 +110,22 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 	fetchConversations: async () => {
 		set({ isLoading: true });
 		try {
-			const rawResponse = await fetch(`${API_BASE_URL}/api/conversations`, {
+			const response = await fetch(`${API_BASE_URL}/conversations`, {
 				method: "GET",
 				credentials: "include",
 				headers: {
 					"Content-Type": "application/json",
 				},
 			});
-			const response: HttpResponse<Conversation[]> = await rawResponse.json();
-			if (!response.success) {
-				console.warn("Failed to fetch conversations:", response.errorMessage);
+			const result: HttpResponse<Conversation[]> = await response.json();
+			if (!result.success) {
+				console.warn("Failed to fetch conversations:", result.errorMessage);
 				return;
 			}
 
-			set({ conversations: response.data, isLoading: false });
+			console.log("conversation List : ", result.data);
+
+			set({ conversations: result.data, isLoading: false });
 		} catch (e) {
 			console.warn(`Fetch conversations error:`, e);
 		} finally {

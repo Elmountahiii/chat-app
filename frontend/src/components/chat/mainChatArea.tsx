@@ -31,7 +31,7 @@ import UnfriendUserDialog from "./unfriendUserDialog";
 
 type MainChatAreaProps = {
 	setShowFriendsList: (show: boolean) => void;
-	handleUserProfileClick: (conversation: Conversation) => void;
+	handleUserProfileClick: (user: User) => void;
 };
 
 const formatLastSeen = (lastSeen: string | Date | undefined) => {
@@ -55,7 +55,7 @@ function MainChatArea({
 	const {
 		messages,
 		sendMessage,
-		onlineFriends,
+		friends,
 		activeConversationId,
 		fetchMessages,
 		conversations,
@@ -83,62 +83,61 @@ function MainChatArea({
 	const oldScrollHeightRef = useRef<number>(0);
 	const [dropdownOpen, setDropdownOpen] = useState(false);
 
-	const otherParticipant: User | null =
-		conversation?.participants.find((p) => p._id !== user?._id) || null;
+	const otherParticipant =
+		conversation?.participantOne._id === user?._id
+			? conversation?.participantTwo
+			: conversation?.participantOne;
 
-	const otherReadStatus = conversation?.readStatus.find(
-		(status) => status.userId === otherParticipant?._id,
-	)?.lastReadMessage;
 	const conversationMessages = messages[conversation?._id || ""] || [];
 
-	const hasMoreMessages = hasMessages[conversation?._id || ""] || false;
-	const isFetchingMore = loadingMessages[conversation?._id || ""] || false;
+	// const hasMoreMessages = hasMessages[conversation?._id || ""] || false;
+	// const isFetchingMore = loadingMessages[conversation?._id || ""] || false;
 
-	useEffect(() => {
-		if (activeConversationId !== null) {
-			markAsRead(activeConversationId);
-			let limit = 20;
-			const unreadCount =
-				conversation?.readStatus.find((status) => {
-					return status.userId === user?._id;
-				})?.unreadCount || 0;
-			if (unreadCount > 0) {
-				limit = Math.max(unreadCount + 10, 20);
-			}
-			fetchMessages(activeConversationId, limit);
-		}
-	}, [activeConversationId, user, fetchMessages, markAsRead]);
+	// useEffect(() => {
+	// 	if (activeConversationId !== null) {
+	// 		markAsRead(activeConversationId);
+	// 		let limit = 20;
+	// 		const unreadCount =
+	// 			conversation?.readStatus.find((status) => {
+	// 				return status.userId === user?._id;
+	// 			})?.unreadCount || 0;
+	// 		if (unreadCount > 0) {
+	// 			limit = Math.max(unreadCount + 10, 20);
+	// 		}
+	// 		fetchMessages(activeConversationId, limit);
+	// 	}
+	// }, [activeConversationId, user, fetchMessages, markAsRead]);
 
-	useEffect(() => {
-		if (messageUpdateType === "new") {
-			if (messagesEndRef.current) {
-				messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-			}
-		} else if (messageUpdateType === "old" && scrollAreaRef.current) {
-			const newScrollHeight = scrollAreaRef.current.scrollHeight;
-			const heightDifference = newScrollHeight - oldScrollHeightRef.current;
+	// useEffect(() => {
+	// 	if (messageUpdateType === "new") {
+	// 		if (messagesEndRef.current) {
+	// 			messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+	// 		}
+	// 	} else if (messageUpdateType === "old" && scrollAreaRef.current) {
+	// 		const newScrollHeight = scrollAreaRef.current.scrollHeight;
+	// 		const heightDifference = newScrollHeight - oldScrollHeightRef.current;
 
-			scrollAreaRef.current.scrollTop = heightDifference;
-		}
-	}, [conversationMessages, messageUpdateType]);
+	// 		scrollAreaRef.current.scrollTop = heightDifference;
+	// 	}
+	// }, [conversationMessages, messageUpdateType]);
 
-	const handleScroll = () => {
-		if (!scrollAreaRef.current) return;
+	// const handleScroll = () => {
+	// 	if (!scrollAreaRef.current) return;
 
-		const currentScrollTop = scrollAreaRef.current.scrollTop;
-		const scrollingUp = currentScrollTop < scrollPositionRef.current;
+	// 	const currentScrollTop = scrollAreaRef.current.scrollTop;
+	// 	const scrollingUp = currentScrollTop < scrollPositionRef.current;
 
-		scrollPositionRef.current = currentScrollTop;
+	// 	scrollPositionRef.current = currentScrollTop;
 
-		if (scrollingUp && currentScrollTop < 100) {
-			console.log("Reached the top while scrolling up!");
-			if (!isFetchingMore && activeConversationId && hasMoreMessages) {
-				oldScrollHeightRef.current = scrollAreaRef.current.scrollHeight;
-				setMessageUpdateType("old");
-				fetchMessages(activeConversationId, 5);
-			}
-		}
-	};
+	// 	if (scrollingUp && currentScrollTop < 100) {
+	// 		console.log("Reached the top while scrolling up!");
+	// 		if (!isFetchingMore && activeConversationId && hasMoreMessages) {
+	// 			oldScrollHeightRef.current = scrollAreaRef.current.scrollHeight;
+	// 			setMessageUpdateType("old");
+	// 			fetchMessages(activeConversationId, 5);
+	// 		}
+	// 	}
+	// };
 
 	const handleEmojiSelect = (emoji: string) => {
 		setNewMessage((prev) => prev + emoji);
@@ -181,7 +180,11 @@ function MainChatArea({
 	const handleViewProfile = () => {
 		setDropdownOpen(false);
 		if (conversation) {
-			handleUserProfileClick(conversation);
+			const otherParticipant =
+				conversation.participantOne._id === user?._id
+					? conversation.participantTwo
+					: conversation.participantOne;
+			handleUserProfileClick(otherParticipant);
 		}
 	};
 
@@ -201,8 +204,8 @@ function MainChatArea({
 								<ChevronLeft className="h-5 w-5" />
 							</Button>
 							<div
-								className="relative flex-shrink-0 cursor-pointer"
-								onClick={() => handleUserProfileClick(conversation)}
+								className="relative shrink-0 cursor-pointer"
+								onClick={() => handleViewProfile()}
 							>
 								<Avatar className="h-12 w-12 lg:h-14 lg:w-14">
 									<AvatarImage
@@ -216,11 +219,11 @@ function MainChatArea({
 								</Avatar>
 								<div
 									className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white dark:border-gray-900 ${
-										onlineFriends.find(
+										friends.find(
 											(friend) => friend._id === otherParticipant?._id,
 										)?.status === "online"
 											? "bg-green-500"
-											: onlineFriends.find(
+											: friends.find(
 														(friend) => friend._id === otherParticipant?._id,
 												  )?.status === "away"
 												? "bg-yellow-500"
@@ -231,16 +234,16 @@ function MainChatArea({
 							<div className="ml-4 min-w-0">
 								<h2
 									className="font-semibold text-lg text-gray-900 dark:text-white truncate cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-									onClick={() => handleUserProfileClick(conversation)}
+									onClick={() => handleViewProfile()}
 								>
 									{otherParticipant?.firstName} {otherParticipant?.lastName}
 								</h2>
 								<p className="text-sm text-gray-500 dark:text-gray-400 truncate flex items-center">
-									{onlineFriends.find(
+									{friends.find(
 										(friend) => friend._id === otherParticipant?._id,
 									)?.status === "online"
 										? "Active now"
-										: onlineFriends.find(
+										: friends.find(
 													(friend) => friend._id === otherParticipant?._id,
 											  )?.status === "away"
 											? "Away"
@@ -291,20 +294,20 @@ function MainChatArea({
 					<div
 						className="flex-1 p-4 lg:p-6 bg-gray-50 dark:bg-gray-800 overflow-y-auto"
 						ref={scrollAreaRef}
-						onScroll={handleScroll}
+						// onScroll={handleScroll}
 					>
 						<div
 							ref={messagesContainerRef}
 							className="space-y-4 max-w-4xl mx-auto"
 						>
-							{isFetchingMore && (
+							{/*{isFetchingMore && (
 								<div className="flex justify-center py-2">
 									<div className="animate-spin h-5 w-5 border-2 border-blue-600 rounded-full border-t-transparent dark:border-blue-400 dark:border-t-transparent"></div>
 									<span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
 										Loading older messages...
 									</span>
 								</div>
-							)}
+							)}*/}
 
 							{/* Date separator */}
 							<div className="flex items-center justify-center">
@@ -340,9 +343,7 @@ function MainChatArea({
 													{showAvatar ? (
 														<Avatar
 															className="h-8 w-8 cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all"
-															onClick={() =>
-																handleUserProfileClick(conversation)
-															}
+															onClick={() => handleViewProfile()}
 														>
 															<AvatarImage
 																src={otherParticipant?.profilePicture || ""}
@@ -386,12 +387,6 @@ function MainChatArea({
 																minute: "2-digit",
 															},
 														)}
-														{isMe &&
-															index === conversationMessages.length - 1 &&
-															otherReadStatus &&
-															otherReadStatus._id === message._id && (
-																<CheckCheck className="h-4 w-4 text-blue-500" />
-															)}
 													</span>
 												</div>
 											</div>

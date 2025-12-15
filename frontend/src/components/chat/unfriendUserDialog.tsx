@@ -15,7 +15,7 @@ import {
 type UnfriendUserDialogPropos = {
 	isOpen: boolean;
 	setIsopen: (open: boolean) => void;
-	user: User | null;
+	user: User | undefined;
 	onConfirm: () => void;
 };
 
