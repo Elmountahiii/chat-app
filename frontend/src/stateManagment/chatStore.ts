@@ -7,6 +7,7 @@ import { Conversation } from "@/types/conversation";
 import { Message } from "@/types/message";
 import { FriendShipRequest } from "@/types/friendShipRequest";
 import { useFriendshipStore } from "./friendshipStore";
+import { User } from "@/types/user";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL
 	? process.env.NEXT_PUBLIC_BACKEND_URL
@@ -206,7 +207,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
 					data,
 				);
 				set((state) => {
-					const conversationMessages = state.messages[data.conversationId] || [];
+					const conversationMessages =
+						state.messages[data.conversationId] || [];
 					const updatedMessages = conversationMessages.map((msg) => {
 						if (msg.readBy.some((reader) => reader.user._id === data.userId)) {
 							return msg;
@@ -216,7 +218,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 							readBy: [
 								...msg.readBy,
 								{
-									user: { _id: data.userId } as any,
+									user: { _id: data.userId } as User,
 									readAt: new Date().toISOString(),
 								},
 							],

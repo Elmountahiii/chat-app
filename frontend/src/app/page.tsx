@@ -7,7 +7,7 @@ import TechStack from "@/components/landingPage/TechStack";
 
 export default function Home() {
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 overflow-x-hidden">
+		<div className="min-h-screen bg-linear-to-br from-gray-50 via-white to-gray-100 overflow-x-hidden">
 			<Header />
 			<main>
 				<Hero />

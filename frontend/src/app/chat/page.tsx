@@ -12,12 +12,9 @@ import { ConversationsList } from "@/components/chat/conversationsList";
 import { Conversation } from "@/types/conversation";
 import { useChatStore } from "@/stateManagment/chatStore";
 import MainChatArea from "@/components/chat/mainChatArea";
-import { useAuthStore } from "@/stateManagment/authStore";
 
 export default function ChatPage() {
-	const { setActiveConversation, fetchConversations, conversations } =
-		useChatStore();
-	const { user } = useAuthStore();
+	const { setActiveConversation, fetchConversations } = useChatStore();
 	const [searchQuery, setSearchQuery] = useState("");
 	const [showFriendsList, setShowFriendsList] = useState(false);
 	const [selectedUserProfile, setSelectedUserProfile] = useState<User | null>(
@@ -37,18 +34,6 @@ export default function ChatPage() {
 		setShowUserProfile(true);
 
 		setSelectedUserProfile(user);
-	};
-
-	const handleProfileStartChat = (user: User) => {
-		setShowFriendsList(false);
-		const conversation = conversations.find(
-			(conv) =>
-				conv.participantOne._id === user._id ||
-				conv.participantTwo._id === user._id,
-		);
-		if (conversation) {
-			setActiveConversation(conversation._id);
-		}
 	};
 
 	return (

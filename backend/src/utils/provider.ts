@@ -12,7 +12,6 @@ import { MessageRepository } from "../repository/messageRepository";
 import { MessageService } from "../services/messageService";
 import { MessageController } from "../controllers/messageController";
 import { MessageValidator } from "../validators/messageValidator";
-import { TypedEventEmitter } from "../validators/events";
 import { ConversationService } from "../services/conversatioService";
 import { ConversationRepository } from "../repository/conversationRepository";
 import { FriendshipRepository } from "../repository/friendshipRepository";
@@ -224,11 +223,5 @@ export class Provider {
 			ObjectsName.MessageValidator,
 			() => new MessageValidator(),
 		);
-	}
-
-	getMessageEventEmitter() {
-		return this.getOrCreate(ObjectsName.MessageEventEmitter, () => {
-			return new TypedEventEmitter();
-		});
 	}
 }

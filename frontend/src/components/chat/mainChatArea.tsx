@@ -289,7 +289,7 @@ function MainChatArea({
 												}`}
 											>
 												{!isMe && (
-													<div className="flex-shrink-0 mr-3">
+													<div className="shrink-0 mr-3">
 														{showAvatar ? (
 															<Avatar
 																className="h-8 w-8 cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all"
@@ -320,7 +320,7 @@ function MainChatArea({
 																: "bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-600"
 														}`}
 													>
-														<p className="text-sm break-words">
+														<p className="text-sm wrap-break-word">
 															{message.content}
 														</p>
 													</div>

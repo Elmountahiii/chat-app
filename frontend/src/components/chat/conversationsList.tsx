@@ -46,7 +46,7 @@ export const ConversationsList = ({
 								onClick={() => handleStartChat(conversation)}
 							>
 								<div
-									className="relative flex-shrink-0 cursor-pointer"
+									className="relative shrink-0 cursor-pointer"
 									onClick={(e) => {
 										e.stopPropagation();
 										handleUserProfileClick(otherParticipant);
@@ -88,7 +88,7 @@ export const ConversationsList = ({
 												@{otherParticipant.username}
 											</p>
 										</div>
-										<div className="flex flex-col items-end flex-shrink-0">
+										<div className="flex flex-col items-end shrink-0">
 											<span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
 												{new Date(
 													conversation.lastMessage?.createdAt || Date.now(),

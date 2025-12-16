@@ -11,7 +11,7 @@ function Hero() {
 				</div>
 				<h2 className="text-5xl md:text-7xl font-black text-gray-900 leading-tight mb-6 tracking-tight">
 					Connect Instantly. <br />
-					<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
+					<span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-indigo-600">
 						Chat Seamlessly.
 					</span>
 				</h2>
@@ -40,7 +40,7 @@ function Hero() {
 
 				{/* Mock UI */}
 				<div className="mt-20 max-w-5xl mx-auto relative">
-					<div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl blur opacity-20"></div>
+					<div className="absolute -inset-1 bg-linear-to-r from-blue-600 to-indigo-600 rounded-2xl blur opacity-20"></div>
 					<div className="relative bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden">
 						<div className="bg-gray-50 border-b border-gray-200 px-4 py-3 flex items-center space-x-2">
 							<div className="w-3 h-3 rounded-full bg-red-500"></div>
@@ -68,28 +68,28 @@ function Hero() {
 								<div className="flex-1 p-6 space-y-6 overflow-hidden relative">
 									{/* Messages */}
 									<div className="flex items-end space-x-2">
-										<div className="w-8 h-8 rounded-full bg-blue-100 flex-shrink-0"></div>
+										<div className="w-8 h-8 rounded-full bg-blue-100 shrink-0"></div>
 										<div className="bg-gray-100 p-3 rounded-2xl rounded-bl-none max-w-xs text-sm text-gray-700">
 											Hey! Have you checked out the new chat app? 🚀
 										</div>
 									</div>
 									<div className="flex items-end space-x-2 flex-row-reverse space-x-reverse">
-										<div className="w-8 h-8 rounded-full bg-indigo-100 flex-shrink-0"></div>
+										<div className="w-8 h-8 rounded-full bg-indigo-100 shrink-0"></div>
 										<div className="bg-blue-600 p-3 rounded-2xl rounded-br-none max-w-xs text-sm text-white shadow-md shadow-blue-500/20">
 											Yeah! The real-time features are amazing. Socket.io works
 											perfectly.
 										</div>
 									</div>
 									<div className="flex items-end space-x-2">
-										<div className="w-8 h-8 rounded-full bg-blue-100 flex-shrink-0"></div>
+										<div className="w-8 h-8 rounded-full bg-blue-100 shrink-0"></div>
 										<div className="bg-gray-100 p-3 rounded-2xl rounded-bl-none max-w-xs text-sm text-gray-700">
 											And the UI is so clean! Tailwind CSS?
 										</div>
 									</div>
 									<div className="flex items-end space-x-2 flex-row-reverse space-x-reverse">
-										<div className="w-8 h-8 rounded-full bg-indigo-100 flex-shrink-0"></div>
+										<div className="w-8 h-8 rounded-full bg-indigo-100 shrink-0"></div>
 										<div className="bg-blue-600 p-3 rounded-2xl rounded-br-none max-w-xs text-sm text-white shadow-md shadow-blue-500/20">
-											Absolutely. Plus it's fully dockerized! 🐳
+											Absolutely. Plus it&apos;s fully dockerized! 🐳
 										</div>
 									</div>
 								</div>

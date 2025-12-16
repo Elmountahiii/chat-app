@@ -1,13 +1,13 @@
 "use client";
 import React from "react";
-import { PotentialFriend } from "@/types/potentialFriend";
 import { UserPlus, UserMinus, UserCheck, X } from "lucide-react";
 import { Button } from "../ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { useFriendshipStore } from "@/stateManagment/friendshipStore";
+import { User } from "@/types/user";
 
 type Props = {
-	potentialFriends: PotentialFriend[];
+	potentialFriends: User[];
 };
 
 const PotentialFriendsList = ({ potentialFriends }: Props) => {
@@ -77,7 +77,9 @@ const PotentialFriendsList = ({ potentialFriends }: Props) => {
 								<p className="font-medium text-sm">
 									{potentialFriend.firstName} {potentialFriend.lastName}
 								</p>
-								<p className="text-xs text-gray-500">@{potentialFriend.username}</p>
+								<p className="text-xs text-gray-500">
+									@{potentialFriend.username}
+								</p>
 							</div>
 						</div>
 

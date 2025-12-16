@@ -4,20 +4,14 @@ import { TabsContent } from "../ui/tabs";
 import { Search } from "lucide-react";
 import { Input } from "../ui/input";
 import PotentialFriendsList from "./potentialFriendsList";
-import { PotentialFriend } from "@/types/potentialFriend";
 import { useFriendshipStore } from "@/stateManagment/friendshipStore";
 
 function FindFriends() {
 	const [newFriendSearch, setNewFriendSearch] = useState("");
 
-	const { potentialFriends, searchForPotentialFriends, sendFriendshipRequest } =
-		useFriendshipStore();
-	const sendFriendRequest = (potentialFriend: PotentialFriend) => {
-		sendFriendshipRequest(potentialFriend._id);
-	};
+	const { potentialFriends, searchForPotentialFriends } = useFriendshipStore();
 
 	const search = async (query: string) => {
-		console.log("searching for : ", query);
 		setNewFriendSearch(query);
 		searchForPotentialFriends(query);
 	};

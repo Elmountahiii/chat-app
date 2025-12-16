@@ -1,11 +1,7 @@
 import type { Request, Response } from "express";
 import { MessageService } from "../services/messageService";
 import { HandleError } from "../utils/errorHandler";
-import {
-	AppError,
-	createErrorResponse,
-	createSuccessResponse,
-} from "../types/common";
+import { createErrorResponse, createSuccessResponse } from "../types/common";
 import { MessageValidator } from "../validators/messageValidator";
 
 export class MessageController {

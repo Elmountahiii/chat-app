@@ -76,7 +76,7 @@ function ProjectInfo() {
 
             <div className="space-y-6">
               <div className="flex gap-4">
-                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                <div className="shrink-0 w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
                   <Globe className="w-5 h-5 text-blue-600" />
                 </div>
                 <div>
@@ -91,7 +91,7 @@ function ProjectInfo() {
               </div>
 
               <div className="flex gap-4">
-                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
+                <div className="shrink-0 w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
                   <Server className="w-5 h-5 text-indigo-600" />
                 </div>
                 <div>
@@ -106,7 +106,7 @@ function ProjectInfo() {
               </div>
 
               <div className="flex gap-4">
-                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                <div className="shrink-0 w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
                   <Database className="w-5 h-5 text-green-600" />
                 </div>
                 <div>
