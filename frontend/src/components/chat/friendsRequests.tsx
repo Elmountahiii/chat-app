@@ -9,12 +9,12 @@ import { FriendShipRequest } from "@/types/friendShipRequest";
 
 function FriendsRequests() {
 	const {
-		friendshipRequests,
+		receivedFriendshipRequests,
 		acceptFriendshipRequest,
 		declineFriendshipRequest,
 	} = useFriendshipStore();
 
-	const requestList = friendshipRequests.filter((request) => {
+	const requestList = receivedFriendshipRequests.filter((request) => {
 		return request.status === "pending";
 	});
 
@@ -85,7 +85,7 @@ function FriendsRequests() {
 					</div>
 				))}
 
-				{friendshipRequests.length === 0 && (
+				{receivedFriendshipRequests.length === 0 && (
 					<div className="text-center py-8 text-gray-500">
 						<UserCheck className="h-8 w-8 mx-auto mb-2 opacity-50" />
 						<p>No pending friend requests</p>

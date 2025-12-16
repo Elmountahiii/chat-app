@@ -123,8 +123,8 @@ Sends a friend request to another user.
 
 ---
 
-#### `accept_friendship_request`
-Accepts a pending friend request.
+#### `notify_friendship_request_accepted`
+Notifies the system that a friend request has been accepted.
 
 **Payload:**
 ```typescript
@@ -133,12 +133,12 @@ Accepts a pending friend request.
 }
 ```
 
-**Response:** Emits `friendship_request_accepted` to both requester and recipient
+**Response:** Emits `friendship_request_accepted` to the requester only (recipient handles locally)
 
 ---
 
-#### `decline_friendship_request`
-Declines a pending friend request.
+#### `notify_friendship_request_declined`
+Notifies the system that a friend request has been declined.
 
 **Payload:**
 ```typescript
@@ -147,7 +147,7 @@ Declines a pending friend request.
 }
 ```
 
-**Response:** Emits `friendship_request_declined` to the sender
+**Response:** Emits `friendship_request_declined` to the requester only (recipient handles locally)
 
 ---
 
@@ -295,7 +295,7 @@ Emitted when a friend request is accepted.
 }
 ```
 
-**Emitted to:** Both the requester and recipient
+**Emitted to:** The requester only (the recipient who accepted the request handles it locally)
 
 ---
 
@@ -305,11 +305,11 @@ Emitted when a friend request is declined.
 **Payload:**
 ```typescript
 {
-  friendshipId: string;
+  friendship: Friendship;
 }
 ```
 
-**Emitted to:** The sender who declined the request
+**Emitted to:** The requester only (the recipient who declined the request handles it locally)
 
 ---
 

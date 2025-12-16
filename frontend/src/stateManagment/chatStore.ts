@@ -47,8 +47,11 @@ interface ChatState {
 	clearError: () => void;
 	reset: () => void;
 
-	notifyFriendshipSent: (friendshipId: string) => void;
-	notifyFriendshipAccepted: (friendshipId: string) => void;
+	notifyFriendshipSent: (friendship: FriendShipRequest) => void;
+	notifyFriendshipAccepted: (friendship: FriendShipRequest) => void;
+	notifyFriendshipDeclined: (friendship: FriendShipRequest) => void;
+	notifyFriendshipCancelled: (friendship: FriendShipRequest) => void;
+	notifyUnfriend: (friendship: FriendShipRequest) => void;
 }
 
 export const useChatStore = create<ChatState>((set, get) => ({
@@ -96,6 +99,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
 			);
 			set({ status: "connected", socket });
 			await useFriendshipStore.getState().getAllFriends();
+			await useFriendshipStore.getState().getSentFriendshipRequests();
+			await useFriendshipStore.getState().getReceivedFriendshipRequests();
 			await get().fetchConversations();
 			const state = get();
 			state.conversations.forEach((conversation) => {
@@ -204,7 +209,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
 		socket.on(
 			"friendship_request_declined",
-			(data: { friendshipId: string }) => {
+			(data: { friendship: FriendShipRequest }) => {
 				console.log(
 					"%c 🤝 [Socket] Friend Request Declined:",
 					"color: #0ea5e9; font-weight: bold;",
@@ -212,7 +217,33 @@ export const useChatStore = create<ChatState>((set, get) => ({
 				);
 				useFriendshipStore
 					.getState()
-					.handleFriendshipRequestDeclined(data.friendshipId);
+					.handleFriendshipRequestDeclined(data.friendship);
+			},
+		);
+
+		socket.on(
+			"friendship_request_cancelled",
+			(data: { friendship: FriendShipRequest }) => {
+				console.log(
+					"%c 🤝 [Socket] Friend Request Cancelled:",
+					"color: #0ea5e9; font-weight: bold;",
+					data,
+				);
+				useFriendshipStore
+					.getState()
+					.handleFriendshipRequestCancelled(data.friendship);
+			},
+		);
+
+		socket.on(
+			"friendship_unfriended",
+			(data: { friendship: FriendShipRequest }) => {
+				console.log(
+					"%c 🤝 [Socket] Unfriended:",
+					"color: #0ea5e9; font-weight: bold;",
+					data,
+				);
+				useFriendshipStore.getState().handleFriendshipUnfriend();
 			},
 		);
 
@@ -560,16 +591,35 @@ export const useChatStore = create<ChatState>((set, get) => ({
 	// utility actions
 	clearError: () => {},
 
-	notifyFriendshipSent: (friendshipId: string) => {
+	notifyFriendshipSent: (friendship: FriendShipRequest) => {
 		const socket = get().socket;
 		if (socket && get().status === "connected") {
-			socket.emit("notify_friendship_request_sent", { friendshipId });
+			socket.emit("notify_friendship_request_sent", { friendship });
 		}
 	},
-	notifyFriendshipAccepted: (friendshipId: string) => {
+	notifyFriendshipAccepted: (friendship: FriendShipRequest) => {
 		const socket = get().socket;
 		if (socket && get().status === "connected") {
-			socket.emit("notify_friendship_request_accepted", { friendshipId });
+			socket.emit("notify_friendship_request_accepted", { friendship });
+		}
+	},
+
+	notifyFriendshipDeclined: (friendship: FriendShipRequest) => {
+		const socket = get().socket;
+		if (socket && get().status === "connected") {
+			socket.emit("notify_friendship_request_declined", { friendship });
+		}
+	},
+	notifyFriendshipCancelled: (friendship: FriendShipRequest) => {
+		const socket = get().socket;
+		if (socket && get().status === "connected") {
+			socket.emit("notify_friendship_request_cancelled", { friendship });
+		}
+	},
+	notifyUnfriend: (friendship: FriendShipRequest) => {
+		const socket = get().socket;
+		if (socket && get().status === "connected") {
+			socket.emit("notify_friendship_unfriended", { friendship });
 		}
 	},
 

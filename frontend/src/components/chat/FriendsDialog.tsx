@@ -18,7 +18,7 @@ import { useState } from "react";
 
 export function FriendsDialog() {
 	const [open, setOpen] = useState(false);
-	const { friendshipRequests, friends } = useFriendshipStore();
+	const { receivedFriendshipRequests, friends } = useFriendshipStore();
 
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
@@ -54,7 +54,7 @@ export function FriendsDialog() {
 							className="flex items-center gap-2 cursor-pointer"
 						>
 							<UserCheck className="h-4 w-4" />
-							Requests ({friendshipRequests.length})
+							Requests ({receivedFriendshipRequests.length})
 						</TabsTrigger>
 						<TabsTrigger
 							value="find"

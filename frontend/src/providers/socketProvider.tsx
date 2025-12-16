@@ -10,13 +10,9 @@ interface SocketProviderProps {
 	children: React.ReactNode;
 }
 const SocketProvider = ({ children }: SocketProviderProps) => {
+	const { initializeSocket, disconnectSocket } = useChatStore();
 	const {
-		initializeSocket,
-		disconnectSocket,
-	} = useChatStore();
-	const {
-		friendshipRequests,
-		getAllFriendshipRequests,
+		receivedFriendshipRequests,
 		acceptFriendshipRequest,
 		declineFriendshipRequest,
 	} = useFriendshipStore();
@@ -36,15 +32,20 @@ const SocketProvider = ({ children }: SocketProviderProps) => {
 	useEffect(() => {
 		if (user) {
 			initializeSocket();
-			getAllFriendshipRequests();
 		}
-	}, [user, initializeSocket, getAllFriendshipRequests]);
+	}, [user, initializeSocket]);
 
 	useEffect(() => {
 		if (!user) return;
 
+		if (receivedFriendshipRequests.length === 0) {
+			for (const inviteId of processedInvites.current) {
+				toast.dismiss(inviteId);
+			}
+			processedInvites.current.clear();
+		}
 
-		for (const request of friendshipRequests) {
+		for (const request of receivedFriendshipRequests) {
 			if (request.requester._id === user._id) {
 				continue;
 			}
@@ -68,14 +69,18 @@ const SocketProvider = ({ children }: SocketProviderProps) => {
 					/>
 				),
 				{
-					duration: Infinity,
-					dismissible: false,
-					closeButton: false,
+					dismissible: true,
+					closeButton: true,
 					id: request._id,
 				},
 			);
 		}
-	}, [user, friendshipRequests, acceptFriendshipRequest, declineFriendshipRequest]);
+	}, [
+		user,
+		receivedFriendshipRequests,
+		acceptFriendshipRequest,
+		declineFriendshipRequest,
+	]);
 
 	return <div>{children}</div>;
 };

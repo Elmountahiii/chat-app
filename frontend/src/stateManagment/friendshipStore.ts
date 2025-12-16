@@ -1,6 +1,5 @@
 import { create } from "zustand";
 import { User } from "@/types/user";
-import { PotentialFriend } from "@/types/potentialFriend";
 import { FriendShipRequest } from "@/types/friendShipRequest";
 import { HttpResponse } from "@/types/httpResponse";
 import { useChatStore } from "./chatStore";
@@ -12,16 +11,19 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL
 interface FriendshipState {
 	// State
 	friends: User[];
-	potentialFriends: PotentialFriend[];
-	friendshipRequests: FriendShipRequest[];
+	potentialFriends: User[];
+	receivedFriendshipRequests: FriendShipRequest[];
+	sentFriendshipRequests: FriendShipRequest[];
 	isLoading: boolean;
 	error: string | null;
 
 	// Actions
 	getAllFriends: () => Promise<void>;
 	searchForPotentialFriends: (query: string) => Promise<void>;
-	getAllFriendshipRequests: () => Promise<void>;
+	getReceivedFriendshipRequests: () => Promise<void>;
+	getSentFriendshipRequests: () => Promise<void>;
 	sendFriendshipRequest: (receiverId: string) => Promise<void>;
+	cancelFriendshipRequest: (friendshipId: string) => Promise<void>;
 	acceptFriendshipRequest: (FriendshipId: string) => Promise<void>;
 	declineFriendshipRequest: (FriendshipId: string) => Promise<void>;
 	unfriendUser: (userId: string) => Promise<void>;
@@ -33,18 +35,21 @@ interface FriendshipState {
 		userId: string,
 		status: "online" | "offline" | "away",
 	) => void;
-	
+
 	// Socket event handlers
-	addIncomingFriendshipRequest: (request: FriendShipRequest) => void;
-	handleFriendshipRequestAccepted: (request: FriendShipRequest) => void;
-	handleFriendshipRequestDeclined: (friendshipId: string) => void;
+	addIncomingFriendshipRequest: (friendship: FriendShipRequest) => void;
+	handleFriendshipRequestAccepted: (friendship: FriendShipRequest) => void;
+	handleFriendshipRequestDeclined: (friendship: FriendShipRequest) => void;
+	handleFriendshipRequestCancelled: (friendship: FriendShipRequest) => void;
+	handleFriendshipUnfriend: () => void;
 }
 
 export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 	// State
 	friends: [],
 	potentialFriends: [],
-	friendshipRequests: [],
+	receivedFriendshipRequests: [],
+	sentFriendshipRequests: [],
 	isLoading: false,
 	error: null,
 
@@ -113,8 +118,7 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 				},
 			);
 
-			const response: HttpResponse<PotentialFriend[]> =
-				await rawResponse.json();
+			const response: HttpResponse<User[]> = await rawResponse.json();
 			if (!response.success) {
 				console.log(
 					"%c ❌ [HTTP] Search Potential Friends Failed:",
@@ -142,9 +146,9 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 		}
 	},
 
-	getAllFriendshipRequests: async () => {
+	getReceivedFriendshipRequests: async () => {
 		console.log(
-			"%c 🌐 [HTTP] Fetching Friendship Requests...",
+			"%c 🌐 [HTTP] Fetching Received Friendship Requests...",
 			"color: #eab308; font-weight: bold;",
 		);
 		set({ isLoading: true, error: null });
@@ -160,7 +164,7 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 				await rawResponse.json();
 			if (!response.success) {
 				console.log(
-					"%c ❌ [HTTP] Fetch Friendship Requests Failed:",
+					"%c ❌ [HTTP] Fetch Received Friendship Requests Failed:",
 					"color: #ef4444; font-weight: bold;",
 					response.errorMessage,
 				);
@@ -168,18 +172,61 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 				return;
 			}
 			console.log(
-				"%c ✅ [HTTP] Friendship Requests Fetched:",
+				"%c ✅ [HTTP] Received Friendship Requests Fetched:",
 				"color: #22c55e; font-weight: bold;",
 				response.data,
 			);
-			set({ friendshipRequests: response.data });
+			set({ receivedFriendshipRequests: response.data });
 		} catch (e) {
 			console.log(
-				"%c ❌ [HTTP] Fetch Friendship Requests Error:",
+				"%c ❌ [HTTP] Fetch Received Friendship Requests Error:",
 				"color: #ef4444; font-weight: bold;",
 				e,
 			);
-			set({ error: "Failed to fetch friendship requests" });
+			set({ error: "Failed to fetch received friendship requests" });
+		} finally {
+			set({ isLoading: false });
+		}
+	},
+
+	getSentFriendshipRequests: async () => {
+		console.log(
+			"%c 🌐 [HTTP] Fetching Sent Friendship Requests...",
+			"color: #eab308; font-weight: bold;",
+		);
+		set({ isLoading: true, error: null });
+		try {
+			const rawResponse = await fetch(`${API_BASE_URL}/friendship/sent`, {
+				method: "GET",
+				credentials: "include",
+				headers: {
+					"Content-Type": "application/json",
+				},
+			});
+			const response: HttpResponse<FriendShipRequest[]> =
+				await rawResponse.json();
+			if (!response.success) {
+				console.log(
+					"%c ❌ [HTTP] Fetch Sent Friendship Requests Failed:",
+					"color: #ef4444; font-weight: bold;",
+					response.errorMessage,
+				);
+				set({ error: response.errorMessage });
+				return;
+			}
+			console.log(
+				"%c ✅ [HTTP] Sent Friendship Requests Fetched:",
+				"color: #22c55e; font-weight: bold;",
+				response.data,
+			);
+			set({ sentFriendshipRequests: response.data });
+		} catch (e) {
+			console.log(
+				"%c ❌ [HTTP] Fetch Sent Friendship Requests Error:",
+				"color: #ef4444; font-weight: bold;",
+				e,
+			);
+			set({ error: "Failed to fetch sent friendship requests" });
 		} finally {
 			set({ isLoading: false });
 		}
@@ -220,9 +267,9 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 				"color: #22c55e; font-weight: bold;",
 				response.data,
 			);
-			
+
 			// Notify via socket
-			useChatStore.getState().notifyFriendshipSent(response.data._id);
+			useChatStore.getState().notifyFriendshipSent(response.data);
 
 			const updatedPotentialFriends = get().potentialFriends.map((pf) => {
 				if (pf._id === receiverId) {
@@ -233,7 +280,13 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 				}
 				return pf;
 			});
-			set({ potentialFriends: updatedPotentialFriends });
+			set((state) => ({
+				potentialFriends: updatedPotentialFriends,
+				sentFriendshipRequests: [
+					...state.sentFriendshipRequests,
+					response.data,
+				],
+			}));
 		} catch (e) {
 			console.log(
 				"%c ❌ [HTTP] Send Friendship Request Error:",
@@ -241,6 +294,61 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 				e,
 			);
 			set({ error: "Failed to send friendship request" });
+		} finally {
+			set({ isLoading: false });
+		}
+	},
+
+	cancelFriendshipRequest: async (friendshipId: string) => {
+		console.log(
+			"%c 🌐 [HTTP] Canceling Friendship Request...",
+			"color: #eab308; font-weight: bold;",
+			{ friendshipId },
+		);
+		set({ isLoading: true, error: null });
+		try {
+			const rawResponse = await fetch(
+				`${API_BASE_URL}/friendship/cancel/${friendshipId}`,
+				{
+					method: "DELETE",
+					credentials: "include",
+					headers: {
+						"Content-Type": "application/json",
+					},
+				},
+			);
+
+			const response: HttpResponse<FriendShipRequest> =
+				await rawResponse.json();
+			if (!response.success) {
+				console.log(
+					"%c ❌ [HTTP] Cancel Friendship Request Failed:",
+					"color: #ef4444; font-weight: bold;",
+					response.errorMessage,
+				);
+				set({ error: response.errorMessage });
+				return;
+			}
+			console.log(
+				"%c ✅ [HTTP] Friendship Request Canceled:",
+				"color: #22c55e; font-weight: bold;",
+				response.data,
+			);
+
+			set((state) => ({
+				sentFriendshipRequests: state.sentFriendshipRequests.filter(
+					(r) => r._id !== friendshipId,
+				),
+			}));
+
+			useChatStore.getState().notifyFriendshipCancelled(response.data);
+		} catch (e) {
+			console.log(
+				"%c ❌ [HTTP] Cancel Friendship Request Error:",
+				"color: #ef4444; font-weight: bold;",
+				e,
+			);
+			set({ error: "Failed to cancel friendship request" });
 		} finally {
 			set({ isLoading: false });
 		}
@@ -282,14 +390,14 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 			);
 
 			// Notify via socket
-			useChatStore.getState().notifyFriendshipAccepted(response.data._id);
+			useChatStore.getState().notifyFriendshipAccepted(response.data);
 
 			set({
-				friendshipRequests: get().friendshipRequests.map((request) => {
-					if (response.data._id === request._id) return response.data;
-					return request;
-				}),
+				receivedFriendshipRequests: get().receivedFriendshipRequests.filter(
+					(request) => request._id !== response.data._id,
+				),
 			});
+
 			get().getAllFriends();
 		} catch (e) {
 			console.log(
@@ -339,11 +447,14 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 			);
 
 			set({
-				friendshipRequests: get().friendshipRequests.filter((request) => {
-					if (response.data._id === request._id) return false;
-					return true;
-				}),
+				receivedFriendshipRequests: get().receivedFriendshipRequests.filter(
+					(request) => {
+						if (response.data._id === request._id) return false;
+						return true;
+					},
+				),
 			});
+			useChatStore.getState().notifyFriendshipDeclined(response.data);
 		} catch (e) {
 			console.log(
 				"%c ❌ [HTTP] Decline Friendship Request Error:",
@@ -396,6 +507,21 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 				"color: #22c55e; font-weight: bold;",
 				response.data,
 			);
+			set((state) => ({
+				friends: state.friends.filter((friend) => friend._id !== userId),
+				receivedFriendshipRequests: state.receivedFriendshipRequests.filter(
+					(request) =>
+						request.requester._id !== userId &&
+						request.recipient._id !== userId,
+				),
+				sentFriendshipRequests: state.sentFriendshipRequests.filter(
+					(request) =>
+						request.requester._id !== userId &&
+						request.recipient._id !== userId,
+				),
+			}));
+
+			useChatStore.getState().notifyUnfriend(response.data);
 		} catch (err) {
 			console.log(
 				"%c ❌ [HTTP] Unfriend User Error:",
@@ -432,7 +558,8 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 				},
 			);
 
-			const response: HttpResponse<null> = await rawResponse.json();
+			const response: HttpResponse<FriendShipRequest> =
+				await rawResponse.json();
 
 			if (!response.success) {
 				console.log(
@@ -448,6 +575,21 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 				"color: #22c55e; font-weight: bold;",
 				response.data,
 			);
+			set((state) => ({
+				friends: state.friends.filter((friend) => friend._id !== userId),
+				receivedFriendshipRequests: state.receivedFriendshipRequests.filter(
+					(request) =>
+						request.requester._id !== userId &&
+						request.recipient._id !== userId,
+				),
+				sentFriendshipRequests: state.sentFriendshipRequests.filter(
+					(request) =>
+						request.requester._id !== userId &&
+						request.recipient._id !== userId,
+				),
+			}));
+
+			useChatStore.getState().notifyUnfriend(response.data);
 		} catch (err) {
 			console.log(
 				"%c ❌ [HTTP] Block User Error:",
@@ -476,28 +618,45 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 	},
 
 	addIncomingFriendshipRequest: (request) => {
-		const exists = get().friendshipRequests.some((r) => r._id === request._id);
+		const exists = get().receivedFriendshipRequests.some(
+			(r) => r._id === request._id,
+		);
 		if (!exists) {
 			set((state) => ({
-				friendshipRequests: [...state.friendshipRequests, request],
+				receivedFriendshipRequests: [
+					...state.receivedFriendshipRequests,
+					request,
+				],
 			}));
 		}
 	},
 
 	handleFriendshipRequestAccepted: (request) => {
 		set((state) => ({
-			friendshipRequests: state.friendshipRequests.filter(
+			sentFriendshipRequests: state.sentFriendshipRequests.filter(
 				(r) => r._id !== request._id,
 			),
 		}));
 		get().getAllFriends();
 	},
 
-	handleFriendshipRequestDeclined: (friendshipId) => {
+	handleFriendshipRequestDeclined: (friendship) => {
 		set((state) => ({
-			friendshipRequests: state.friendshipRequests.filter(
-				(r) => r._id !== friendshipId,
+			sentFriendshipRequests: state.sentFriendshipRequests.filter(
+				(r) => r._id !== friendship._id,
 			),
 		}));
+	},
+
+	handleFriendshipRequestCancelled: (friendship) => {
+		set((state) => ({
+			receivedFriendshipRequests: state.receivedFriendshipRequests.filter(
+				(r) => r._id !== friendship._id,
+			),
+		}));
+	},
+
+	handleFriendshipUnfriend: () => {
+		get().getAllFriends();
 	},
 }));

@@ -6,6 +6,7 @@ import { ConversationService } from "./conversatioService";
 import { UserService } from "./userService";
 import { FriendshipService } from "./friendsipService";
 import { MessageService } from "./messageService";
+import { PopulatedFriendship } from "../schema/mongodb/friendshipSchema";
 
 export class SocketService {
 	private io: Server;
@@ -218,13 +219,14 @@ export class SocketService {
 			// friendShip actions
 			socket.on(
 				"notify_friendship_request_sent",
-				async (data: { friendshipId: string }) => {
+				async (data: { friendship: PopulatedFriendship }) => {
 					try {
-						const { friendshipId } = data;
-						const friendship =
-							await this.friendshipService.getFriendshipById(friendshipId);
-						if (!friendship) {
-							throw new Error("Friendship not found");
+						const { friendship } = data;
+						if (
+							friendship.recipient._id.toString() !== userId &&
+							friendship.requester._id.toString() !== userId
+						) {
+							throw new Error("Unauthorized to send this notification");
 						}
 						const receiverId = friendship.recipient._id.toString();
 						this.io.to(receiverId).emit("friendship_request_received", {
@@ -242,18 +244,18 @@ export class SocketService {
 
 			socket.on(
 				"notify_friendship_request_accepted",
-				async (data: { friendshipId: string }) => {
+				async (data: { friendship: PopulatedFriendship }) => {
 					try {
-						const { friendshipId } = data;
-						const friendship =
-							await this.friendshipService.getFriendshipById(friendshipId);
-
-						if (!friendship) {
-							throw new Error("Friendship not found");
+						const { friendship } = data;
+						if (
+							friendship.recipient._id.toString() !== userId &&
+							friendship.requester._id.toString() !== userId
+						) {
+							throw new Error("Unauthorized to send this notification");
 						}
+						const requesterId = friendship.requester._id.toString();
 						this.io
-							.to(friendship.requester._id.toString())
-							.to(friendship.recipient._id.toString())
+							.to(requesterId)
 							.emit("friendship_request_accepted", { friendship });
 					} catch (error) {
 						console.error("Error accepting friendship request:", error);
@@ -266,20 +268,88 @@ export class SocketService {
 			);
 
 			socket.on(
-				"decline_friendship_request",
-				async (data: { friendshipId: string }) => {
+				"notify_friendship_request_declined",
+				async (data: { friendship: PopulatedFriendship }) => {
 					try {
-						const { friendshipId } = data;
-						await this.friendshipService.declineFriendshipRequest(
-							userId,
-							friendshipId,
-						);
-						socket.emit("friendship_request_declined", { friendshipId });
+						const { friendship } = data;
+						if (
+							friendship.recipient._id.toString() !== userId &&
+							friendship.requester._id.toString() !== userId
+						) {
+							throw new Error("Unauthorized to send this notification");
+						}
+
+						const otherParticipent =
+							friendship.requester._id.toString() === userId
+								? friendship.recipient._id.toString()
+								: friendship.requester._id.toString();
+
+						this.io
+							.to(otherParticipent)
+							.emit("friendship_request_declined", { friendship });
 					} catch (error) {
 						console.error("Error declining friendship request:", error);
 						socket.emit("error", {
-							event: "decline_friendship_request",
+							event: "notify_friendship_request_declined",
 							message: "Failed to decline friendship request",
+						});
+					}
+				},
+			);
+
+			socket.on(
+				"notify_friendship_request_cancelled",
+				async (data: { friendship: PopulatedFriendship }) => {
+					try {
+						const { friendship } = data;
+
+						if (
+							friendship.recipient._id.toString() !== userId &&
+							friendship.requester._id.toString() !== userId
+						) {
+							throw new Error("Unauthorized to send this notification");
+						}
+						const otherParticipent =
+							friendship.requester._id.toString() === userId
+								? friendship.recipient._id.toString()
+								: friendship.requester._id.toString();
+						this.io.to(otherParticipent).emit("friendship_request_cancelled", {
+							friendship,
+						});
+					} catch (error) {
+						console.error("Error canclling friendship request:", error);
+						socket.emit("error", {
+							event: "notify_friendship_request_cancelled",
+							message: "Failed to cancell friendship request",
+						});
+					}
+				},
+			);
+
+			socket.on(
+				"notify_friendship_unfriended",
+				async (data: { friendship: PopulatedFriendship }) => {
+					try {
+						const { friendship } = data;
+
+						if (
+							friendship.recipient._id.toString() !== userId &&
+							friendship.requester._id.toString() !== userId
+						) {
+							throw new Error("Unauthorized to send this notification");
+						}
+						const otherParticipent =
+							friendship.requester._id.toString() === userId
+								? friendship.recipient._id.toString()
+								: friendship.requester._id.toString();
+						this.io
+							.to(otherParticipent)
+							.emit("friendship_unfriended", { friendship });
+					} catch (error) {
+						console.error("Error unfriending friendship :", error);
+						socket.emit("error", {
+							event: "notify_friendship_unfriended",
+							message: "Failed to unfriend",
 						});
 					}
 				},

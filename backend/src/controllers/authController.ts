@@ -15,7 +15,7 @@ export class AuthController {
 		const body = req.body;
 		try {
 			const validateData = await this.authValidator.validateSignUpInput(body);
-			await this.authService.registerUser(
+			const user = await this.authService.registerUser(
 				validateData.firstName,
 				validateData.lastName,
 				validateData.email,
@@ -24,7 +24,7 @@ export class AuthController {
 
 			res
 				.status(201)
-				.json(createSuccessResponse(null, "Account created successfully"));
+				.json(createSuccessResponse(user, "Account created successfully"));
 		} catch (e) {
 			HandleError(e, res, "Error during sign up", {
 				body,

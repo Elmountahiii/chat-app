@@ -1,7 +1,9 @@
 "use client";
 import { FriendShipRequest } from "@/types/friendShipRequest";
-import React, { useState } from "react";
-import { Check, X } from "lucide-react";
+import React from "react";
+import { Check, X, UserPlus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 type Props = {
 	invite: FriendShipRequest;
@@ -19,48 +21,56 @@ function InviteToast({ invite, onAccept, onDecline }: Props) {
 	};
 
 	return (
-		<div className="flex items-center gap-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700 rounded-xl shadow-md border border-blue-200 dark:border-gray-600 min-w-[340px] max-w-[450px] transition-all duration-200 hover:shadow-lg">
+		<div className="w-full flex items-center gap-4 p-4 bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-200 dark:border-gray-800 transition-all duration-200 animate-in fade-in slide-in-from-top-2">
 			{/* Avatar with Badge */}
-			<div className="relative flex-shrink-0">
-				<img
-					src={invite.requester.profilePicture}
-					alt={`${invite.requester.firstName} ${invite.requester.lastName}`}
-					className="w-14 h-14 rounded-full object-cover border-3 border-white dark:border-gray-600 shadow-md transition-transform duration-200 hover:scale-105"
-				/>
-				<div className="absolute -top-1 -right-1 w-5 h-5 bg-blue-500 rounded-full border-2 border-white dark:border-gray-700 flex items-center justify-center">
-					<span className="text-white text-xs">+</span>
+			<div className="relative">
+				<Avatar className="h-12 w-12 border-2 border-white dark:border-gray-800 shadow-sm">
+					<AvatarImage
+						src={invite.requester.profilePicture}
+						alt={invite.requester.firstName}
+					/>
+					<AvatarFallback className="bg-blue-100 text-blue-600 font-medium">
+						{invite.requester.firstName.charAt(0)}
+						{invite.requester.lastName.charAt(0)}
+					</AvatarFallback>
+				</Avatar>
+				<div className="absolute -bottom-1 -right-1 bg-blue-500 rounded-full p-0.5 border-2 border-white dark:border-gray-900">
+					<UserPlus className="w-3 h-3 text-white" />
 				</div>
 			</div>
 
 			{/* Content */}
 			<div className="flex-1 min-w-0">
-				<p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
-					{invite.requester.firstName + " " + invite.requester.lastName ||
-						"Unknown User"}
-				</p>
-				<p className="text-xs text-gray-600 dark:text-gray-300 mt-0.5">
+				<h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
+					{invite.requester.firstName} {invite.requester.lastName}
+				</h4>
+				<p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
 					Sent you a friend request
 				</p>
 			</div>
 
 			{/* Actions */}
-			<div className="flex gap-2 flex-shrink-0">
-				<button
-					onClick={handleAccept}
-					className="p-2 text-white bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 shadow-sm hover:shadow-md transform hover:scale-105 active:scale-95"
-					aria-label="Accept invite"
-					title="Accept friend request"
-				>
-					<Check size={18} strokeWidth={2.5} />
-				</button>
-				<button
+			<div className="flex items-center gap-2">
+				<Button
+					type="button"
 					onClick={handleDecline}
-					className="p-2 text-gray-600 dark:text-gray-300 bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 dark:focus:ring-offset-gray-800 shadow-sm hover:shadow-md transform hover:scale-105 active:scale-95"
-					aria-label="Decline invite"
-					title="Decline friend request"
+					size="icon"
+					variant="ghost"
+					className="h-8 w-8 text-gray-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+					title="Decline"
 				>
-					<X size={18} strokeWidth={2.5} />
-				</button>
+					<X className="h-4 w-4" />
+				</Button>
+				<Button
+					type="button"
+					onClick={handleAccept}
+					size="sm"
+					className="h-8 px-4 bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-all"
+					title="Accept"
+				>
+					<Check className="h-4 w-4 mr-1.5" />
+					Accept
+				</Button>
 			</div>
 		</div>
 	);

@@ -53,8 +53,8 @@ export class FriendshipRepository {
 				{ requester: userTwoId, recipient: userOneId },
 			],
 		})
-			.populate("requester", "-password")
-			.populate("recipient", "-password")
+			.populate("requester")
+			.populate("recipient")
 			.lean()) as PopulatedFriendship | null;
 		return friendship;
 	}
@@ -64,9 +64,9 @@ export class FriendshipRepository {
 			recipient: userId,
 			status: "pending",
 		})
-			.populate("requester", "-password")
-			.populate("recipient", "-password")
-			.populate("blockedBy", "-password")
+			.populate("requester")
+			.populate("recipient")
+			.populate("blockedBy")
 			.sort({ createdAt: -1 })
 			.lean()) as unknown as PopulatedFriendship[];
 	}
@@ -76,9 +76,9 @@ export class FriendshipRepository {
 			requester: userId,
 			status: "pending",
 		})
-			.populate("requester", "-password")
-			.populate("recipient", "-password")
-			.populate("blockedBy", "-password")
+			.populate("requester")
+			.populate("recipient")
+			.populate("blockedBy")
 			.sort({ createdAt: -1 })
 			.lean()) as unknown as PopulatedFriendship[];
 	}
@@ -107,9 +107,9 @@ export class FriendshipRepository {
 
 		await friendship.save();
 		await friendship.populate([
-			{ path: "requester", select: "-password" },
-			{ path: "recipient", select: "-password" },
-			{ path: "blockedBy", select: "-password" },
+			{ path: "requester" },
+			{ path: "recipient" },
+			{ path: "blockedBy" },
 		]);
 
 		return friendship.toObject() as unknown as PopulatedFriendship;
@@ -130,20 +130,22 @@ export class FriendshipRepository {
 		friendship.status = "accepted";
 		await friendship.save();
 		await friendship.populate([
-			{ path: "requester", select: "-password" },
-			{ path: "recipient", select: "-password" },
-			{ path: "blockedBy", select: "-password" },
+			{ path: "requester" },
+			{ path: "recipient" },
+			{ path: "blockedBy" },
 		]);
 
 		return friendship.toObject() as unknown as PopulatedFriendship;
 	}
 
 	async declineFriendShipRequest(userId: string, friendshipId: string) {
-		const friendship = await FriendshipModel.findById(friendshipId);
+		const friendship = (await FriendshipModel.findById(friendshipId)
+			.populate(["requester", "recipient", "blockedBy"])
+			.lean()) as PopulatedFriendship | null;
 		if (!friendship) {
 			throw new Error("Friendship request not found.");
 		}
-		if (friendship.recipient.toString() !== userId) {
+		if (friendship.recipient._id.toString() !== userId) {
 			throw new Error("User is not authorized to decline this request.");
 		}
 		if (friendship.status !== "pending") {
@@ -152,22 +154,26 @@ export class FriendshipRepository {
 
 		await FriendshipModel.findByIdAndDelete(friendshipId);
 
-		return;
+		return friendship;
 	}
 
 	async cancelFriendShipRequest(userId: string, friendshipId: string) {
-		const friendship = await FriendshipModel.findById(friendshipId);
+		const friendship = (await FriendshipModel.findById(friendshipId)
+			.populate(["requester", "recipient", "blockedBy"])
+			.lean()) as PopulatedFriendship | null;
 		if (!friendship) {
 			throw new Error("Friendship request not found.");
 		}
-		if (friendship.requester.toString() !== userId) {
+		if (friendship.requester._id.toString() !== userId) {
 			throw new Error("User is not authorized to cancel this request.");
 		}
 		if (friendship.status !== "pending") {
 			throw new Error("Friendship request is not pending.");
 		}
+
 		await FriendshipModel.findByIdAndDelete(friendshipId);
-		return;
+
+		return friendship;
 	}
 
 	async removeFriend(userId: string, friendId: string) {
@@ -177,13 +183,18 @@ export class FriendshipRepository {
 				{ requester: friendId, recipient: userId },
 			],
 			status: "accepted",
-		});
+		})
+			.populate("requester")
+			.populate("recipient")
+			.populate("blockedBy");
+
 		if (!friendship) {
 			throw new Error("Friendship not found.");
 		}
 
 		await FriendshipModel.findByIdAndDelete(friendship._id);
-		return;
+
+		return friendship.toObject() as unknown as PopulatedFriendship;
 	}
 
 	async blockUser(userId: string, friendId: string) {
@@ -201,9 +212,9 @@ export class FriendshipRepository {
 		friendship.blockedBy = new mongoose.Types.ObjectId(userId);
 		await friendship.save();
 		await friendship.populate([
-			{ path: "requester", select: "-password" },
-			{ path: "recipient", select: "-password" },
-			{ path: "blockedBy", select: "-password" },
+			{ path: "requester" },
+			{ path: "recipient" },
+			{ path: "blockedBy" },
 		]);
 
 		return friendship.toObject() as unknown as PopulatedFriendship;
@@ -215,8 +226,11 @@ export class FriendshipRepository {
 				{ requester: userId, recipient: friendId },
 				{ requester: friendId, recipient: userId },
 			],
-			status: "blocked",
-		});
+			status: "accepted",
+		})
+			.populate("requester")
+			.populate("recipient")
+			.populate("blockedBy");
 		if (!friendship) {
 			throw new Error("Friendship not found.");
 		}
@@ -224,6 +238,7 @@ export class FriendshipRepository {
 			throw new Error("User is not authorized to unblock this user.");
 		}
 		await FriendshipModel.findByIdAndDelete(friendship._id);
-		return;
+
+		return friendship.toObject() as unknown as PopulatedFriendship;
 	}
 }
