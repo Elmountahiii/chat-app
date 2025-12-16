@@ -1,10 +1,8 @@
 "use client";
 import { useAuthStore } from "@/stateManagment/authStore";
 import { useChatStore } from "@/stateManagment/chatStore";
-import { Conversation } from "@/types/conversation";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState, useEffect, useMemo } from "react";
 import { Button } from "../ui/button";
-import { CheckCheck } from "lucide-react";
 import {
 	ChevronLeft,
 	MessageCircle,
@@ -13,6 +11,7 @@ import {
 	Send,
 	UserX,
 	UserRound,
+	Loader2,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { User } from "@/types/user";
@@ -56,32 +55,23 @@ function MainChatArea({
 	const {
 		messages,
 		sendMessage,
-
 		activeConversationId,
-		fetchMessages,
 		conversations,
-		hasMessages,
-		loadingMessages,
-		sendTyping,
-		markAsRead,
+		loadMessages,
+		notifyTyping,
+		notifyMessageRead,
+		isLoading,
 	} = useChatStore();
 	const { user } = useAuthStore();
 	const { friends, unfriendUser } = useFriendshipStore();
 	const [blockUserDialogOpen, setBlockUserDialogOpen] = useState(false);
 	const [unfriendUserDialogOpen, setUnfriendUserDialogOpen] = useState(false);
+	const messagesEndRef = useRef<HTMLDivElement>(null);
 
 	const conversation =
 		conversations.find((conv) => conv._id === activeConversationId) || null;
 	const [newMessage, setNewMessage] = useState("");
-	const [messageUpdateType, setMessageUpdateType] = useState<"new" | "old">(
-		"new",
-	);
 
-	const scrollAreaRef = useRef<HTMLDivElement>(null);
-	const messagesEndRef = useRef<HTMLDivElement>(null);
-	const messagesContainerRef = useRef<HTMLDivElement>(null);
-	const scrollPositionRef = useRef<number>(0);
-	const oldScrollHeightRef = useRef<number>(0);
 	const [dropdownOpen, setDropdownOpen] = useState(false);
 
 	const otherParticipant =
@@ -89,56 +79,23 @@ function MainChatArea({
 			? conversation?.participantTwo
 			: conversation?.participantOne;
 
-	const conversationMessages = messages[conversation?._id || ""] || [];
+	const conversationMessages = useMemo(
+		() => messages[conversation?._id || ""] || [],
+		[messages, conversation?._id],
+	);
 
-	// const hasMoreMessages = hasMessages[conversation?._id || ""] || false;
-	// const isFetchingMore = loadingMessages[conversation?._id || ""] || false;
+	useEffect(() => {
+		if (conversation?._id) {
+			loadMessages(conversation._id);
+			notifyMessageRead(conversation._id);
+		}
+	}, [conversation?._id, loadMessages, notifyMessageRead]);
 
-	// useEffect(() => {
-	// 	if (activeConversationId !== null) {
-	// 		markAsRead(activeConversationId);
-	// 		let limit = 20;
-	// 		const unreadCount =
-	// 			conversation?.readStatus.find((status) => {
-	// 				return status.userId === user?._id;
-	// 			})?.unreadCount || 0;
-	// 		if (unreadCount > 0) {
-	// 			limit = Math.max(unreadCount + 10, 20);
-	// 		}
-	// 		fetchMessages(activeConversationId, limit);
-	// 	}
-	// }, [activeConversationId, user, fetchMessages, markAsRead]);
-
-	// useEffect(() => {
-	// 	if (messageUpdateType === "new") {
-	// 		if (messagesEndRef.current) {
-	// 			messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-	// 		}
-	// 	} else if (messageUpdateType === "old" && scrollAreaRef.current) {
-	// 		const newScrollHeight = scrollAreaRef.current.scrollHeight;
-	// 		const heightDifference = newScrollHeight - oldScrollHeightRef.current;
-
-	// 		scrollAreaRef.current.scrollTop = heightDifference;
-	// 	}
-	// }, [conversationMessages, messageUpdateType]);
-
-	// const handleScroll = () => {
-	// 	if (!scrollAreaRef.current) return;
-
-	// 	const currentScrollTop = scrollAreaRef.current.scrollTop;
-	// 	const scrollingUp = currentScrollTop < scrollPositionRef.current;
-
-	// 	scrollPositionRef.current = currentScrollTop;
-
-	// 	if (scrollingUp && currentScrollTop < 100) {
-	// 		console.log("Reached the top while scrolling up!");
-	// 		if (!isFetchingMore && activeConversationId && hasMoreMessages) {
-	// 			oldScrollHeightRef.current = scrollAreaRef.current.scrollHeight;
-	// 			setMessageUpdateType("old");
-	// 			fetchMessages(activeConversationId, 5);
-	// 		}
-	// 	}
-	// };
+	useEffect(() => {
+		if (conversationMessages) {
+			messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+		}
+	}, [conversationMessages]);
 
 	const handleEmojiSelect = (emoji: string) => {
 		setNewMessage((prev) => prev + emoji);
@@ -161,9 +118,8 @@ function MainChatArea({
 			console.log("message is empty");
 			return;
 		}
-		sendTyping(conversation._id, false);
+		notifyTyping(conversation._id, false);
 		sendMessage(conversation._id, newMessage);
-		setMessageUpdateType("new");
 		setNewMessage("");
 	};
 
@@ -204,8 +160,9 @@ function MainChatArea({
 							>
 								<ChevronLeft className="h-5 w-5" />
 							</Button>
-							<div
-								className="relative shrink-0 cursor-pointer"
+							<button
+								type="button"
+								className="relative shrink-0 cursor-pointer bg-transparent border-none p-0"
 								onClick={() => handleViewProfile()}
 							>
 								<Avatar className="h-12 w-12 lg:h-14 lg:w-14">
@@ -231,14 +188,15 @@ function MainChatArea({
 												: "bg-gray-400"
 									}`}
 								></div>
-							</div>
+							</button>
 							<div className="ml-4 min-w-0">
-								<h2
-									className="font-semibold text-lg text-gray-900 dark:text-white truncate cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+								<button
+									type="button"
+									className="font-semibold text-lg text-gray-900 dark:text-white truncate cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors bg-transparent border-none p-0"
 									onClick={() => handleViewProfile()}
 								>
 									{otherParticipant?.firstName} {otherParticipant?.lastName}
-								</h2>
+								</button>
 								<p className="text-sm text-gray-500 dark:text-gray-400 truncate flex items-center">
 									{friends.find(
 										(friend) => friend._id === otherParticipant?._id,
@@ -292,111 +250,101 @@ function MainChatArea({
 					</div>
 
 					{/* Messages area */}
-					<div
-						className="flex-1 p-4 lg:p-6 bg-gray-50 dark:bg-gray-800 overflow-y-auto"
-						ref={scrollAreaRef}
-						// onScroll={handleScroll}
-					>
-						<div
-							ref={messagesContainerRef}
-							className="space-y-4 max-w-4xl mx-auto"
-						>
-							{/*{isFetchingMore && (
-								<div className="flex justify-center py-2">
-									<div className="animate-spin h-5 w-5 border-2 border-blue-600 rounded-full border-t-transparent dark:border-blue-400 dark:border-t-transparent"></div>
-									<span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
-										Loading older messages...
-									</span>
-								</div>
-							)}*/}
-
-							{/* Date separator */}
-							<div className="flex items-center justify-center">
-								<div className="bg-white dark:bg-gray-700 px-3 py-1 rounded-full shadow-sm border border-gray-200 dark:border-gray-600">
-									<span className="text-xs font-medium text-gray-500 dark:text-gray-400">
-										Today
-									</span>
-								</div>
+					<div className="flex-1 p-4 lg:p-6 bg-gray-50 dark:bg-gray-800 overflow-y-auto">
+						{isLoading && conversationMessages.length === 0 ? (
+							<div className="h-full flex items-center justify-center">
+								<Loader2 className="h-8 w-8 animate-spin text-blue-500" />
 							</div>
+						) : (
+							<div className="space-y-4 max-w-4xl mx-auto">
+								{/* Date separator */}
+								<div className="flex items-center justify-center">
+									<div className="bg-white dark:bg-gray-700 px-3 py-1 rounded-full shadow-sm border border-gray-200 dark:border-gray-600">
+										<span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+											Today
+										</span>
+									</div>
+								</div>
 
-							{conversationMessages.map((message, index) => {
-								const isMe = message.sender._id === user?._id;
-								const showAvatar =
-									!isMe &&
-									(index === 0 ||
-										conversationMessages[index - 1]?.sender._id !==
-											message.sender._id);
+								{conversationMessages.map((message, index) => {
+									const isMe = message.sender._id === user?._id;
+									const showAvatar =
+										!isMe &&
+										(index === 0 ||
+											conversationMessages[index - 1]?.sender._id !==
+												message.sender._id);
 
-								return (
-									<div
-										key={message._id}
-										className={`flex ${
-											isMe ? "justify-end" : "justify-start"
-										} mb-3`}
-									>
+									return (
 										<div
-											className={`flex max-w-[80%] md:max-w-[60%] ${
-												isMe ? "flex-row-reverse" : "flex-row"
-											}`}
+											key={message._id}
+											className={`flex ${
+												isMe ? "justify-end" : "justify-start"
+											} mb-3`}
 										>
-											{!isMe && (
-												<div className="flex-shrink-0 mr-3">
-													{showAvatar ? (
-														<Avatar
-															className="h-8 w-8 cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all"
-															onClick={() => handleViewProfile()}
-														>
-															<AvatarImage
-																src={otherParticipant?.profilePicture || ""}
-																alt={otherParticipant?.username}
-															/>
-															<AvatarFallback className="bg-blue-600 text-white text-xs font-medium">
-																{otherParticipant?.firstName?.charAt(0)}
-															</AvatarFallback>
-														</Avatar>
-													) : (
-														<div className="w-8 h-8"></div>
-													)}
-												</div>
-											)}
 											<div
-												className={`flex flex-col ${
-													isMe ? "items-end" : "items-start"
+												className={`flex max-w-[80%] md:max-w-[60%] ${
+													isMe ? "flex-row-reverse" : "flex-row"
 												}`}
 											>
+												{!isMe && (
+													<div className="flex-shrink-0 mr-3">
+														{showAvatar ? (
+															<Avatar
+																className="h-8 w-8 cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all"
+																onClick={() => handleViewProfile()}
+															>
+																<AvatarImage
+																	src={otherParticipant?.profilePicture || ""}
+																	alt={otherParticipant?.username}
+																/>
+																<AvatarFallback className="bg-blue-600 text-white text-xs font-medium">
+																	{otherParticipant?.firstName?.charAt(0)}
+																</AvatarFallback>
+															</Avatar>
+														) : (
+															<div className="w-8 h-8"></div>
+														)}
+													</div>
+												)}
 												<div
-													className={`px-3 py-2 rounded-lg ${
-														isMe
-															? "bg-blue-600 text-white"
-															: "bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-600"
+													className={`flex flex-col ${
+														isMe ? "items-end" : "items-start"
 													}`}
 												>
-													<p className="text-sm break-words">
-														{message.content}
-													</p>
-												</div>
-												<div className="flex items-center mt-1 space-x-1">
-													<span
-														className={`text-xs ${
-															isMe ? "text-gray-500" : "text-gray-400"
+													<div
+														className={`px-3 py-2 rounded-lg ${
+															isMe
+																? "bg-blue-600 text-white"
+																: "bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-600"
 														}`}
 													>
-														{new Date(message.createdAt).toLocaleTimeString(
-															[],
-															{
-																hour: "2-digit",
-																minute: "2-digit",
-															},
-														)}
-													</span>
+														<p className="text-sm break-words">
+															{message.content}
+														</p>
+													</div>
+													<div className="flex items-center mt-1 space-x-1">
+														<span
+															className={`text-xs ${
+																isMe ? "text-gray-500" : "text-gray-400"
+															}`}
+														>
+															{new Date(message.createdAt).toLocaleTimeString(
+																[],
+																{
+																	hour: "2-digit",
+																	minute: "2-digit",
+																},
+															)}
+														</span>
+													</div>
 												</div>
 											</div>
 										</div>
-									</div>
-								);
-							})}
-							<div ref={messagesEndRef} />
-						</div>
+									);
+								})}
+								<div ref={messagesEndRef} />
+							</div>
+						)}
 					</div>
 
 					{/* Message input */}
@@ -407,7 +355,7 @@ function MainChatArea({
 									<Input
 										value={newMessage}
 										onChange={(e) => {
-											sendTyping(conversation._id, e.target.value.length > 0);
+											notifyTyping(conversation._id, e.target.value.length > 0);
 											setNewMessage(e.target.value);
 										}}
 										onKeyDown={handleKeyPress}

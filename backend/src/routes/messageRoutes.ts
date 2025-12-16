@@ -5,12 +5,12 @@ const messageRouter = express.Router();
 const messageController = Provider.getInstance().getMessageController();
 
 messageRouter.get(
-	"/conversations/:id/messages",
+	"/conversations/:conversationId/messages",
 	messageController.getConversationMessages,
 );
 
 messageRouter.patch(
-	"/conversations/:id/read",
+	"/conversations/:conversationId/read",
 	messageController.markConversationMessagesAsRead,
 );
 

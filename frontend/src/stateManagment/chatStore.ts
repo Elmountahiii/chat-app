@@ -22,8 +22,7 @@ interface ChatState {
 	conversations: Conversation[];
 	activeConversationId: string | null;
 	messages: Record<string, Message[]>;
-	hasMessages: Record<string, boolean>;
-	loadingMessages: Record<string, boolean>;
+
 	isLoading: boolean;
 	typingUsers: Record<string, string[]>;
 
@@ -34,20 +33,20 @@ interface ChatState {
 	fetchConversations: () => Promise<void>;
 	createConversation: (userId: string) => Promise<void>;
 	setActiveConversation: (conversationId: string) => void;
-	fetchMessages: (conversationId: string, limit: number) => Promise<void>;
+	loadMessages: (conversationId: string) => Promise<void>;
 	sendMessage: (conversationId: string, content: string) => Promise<void>;
-	editMessage: (messageId: string, newContent: string) => Promise<void>;
-	deleteMessage: (messageId: string) => Promise<void>;
-	markAsRead: (conversationId: string) => Promise<void>;
-	sendTyping: (conversationId: string, isTyping: boolean) => void;
 	clearError: () => void;
 	reset: () => void;
 
+	// notifecations
 	notifyFriendshipSent: (friendship: FriendShipRequest) => void;
 	notifyFriendshipAccepted: (friendship: FriendShipRequest) => void;
 	notifyFriendshipDeclined: (friendship: FriendShipRequest) => void;
 	notifyFriendshipCancelled: (friendship: FriendShipRequest) => void;
 	notifyUnfriend: (friendship: FriendShipRequest) => void;
+
+	notifyTyping: (conversationId: string, isTyping: boolean) => void;
+	notifyMessageRead: (conversationId: string) => void;
 }
 
 export const useChatStore = create<ChatState>((set, get) => ({
@@ -58,8 +57,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
 	conversations: [],
 	activeConversationId: null,
 	messages: {},
-	hasMessages: {},
-	loadingMessages: {},
 	isLoading: false,
 	typingUsers: {},
 
@@ -164,6 +161,37 @@ export const useChatStore = create<ChatState>((set, get) => ({
 				"color: #0ea5e9; font-weight: bold;",
 				message,
 			);
+			set((state) => {
+				const currentMessages = state.messages[message.conversationId] || [];
+				// Check if message already exists to prevent duplicates
+				if (currentMessages.some((m) => m._id === message._id)) {
+					return state;
+				}
+
+				return {
+					messages: {
+						...state.messages,
+						[message.conversationId]: [...currentMessages, message],
+					},
+					// Update last message in conversation list
+					conversations: state.conversations.map((conv) => {
+						if (conv._id === message.conversationId) {
+							return {
+								...conv,
+								lastMessage: message,
+								// Increment unread count if the message is not from the current user
+								// and the active conversation is not this one
+								// Note: Logic for unread count might need refinement based on user ID availability
+								unreadCount:
+									state.activeConversationId !== message.conversationId
+										? conv.unreadCount + 1
+										: conv.unreadCount,
+							};
+						}
+						return conv;
+					}),
+				};
+			});
 		});
 
 		socket.on(
@@ -376,24 +404,16 @@ export const useChatStore = create<ChatState>((set, get) => ({
 	},
 
 	// message actions
-	fetchMessages: async (conversationId, limit = 5) => {
+	loadMessages: async (conversationId) => {
 		console.log(
 			"%c 🌐 [HTTP] Fetching Messages...",
 			"color: #eab308; font-weight: bold;",
-			{ conversationId, limit },
+			{ conversationId },
 		);
-		set({
-			isLoading: true,
-			loadingMessages: { ...get().loadingMessages, [conversationId]: true },
-		});
+		set({ isLoading: true });
 		try {
-			const cursor = get().messages[conversationId]?.at(0)?._id;
-			const queryParams = new URLSearchParams({
-				limit: limit.toString(),
-				...(cursor && { cursor }),
-			});
-			const rawResponse = await fetch(
-				`${API_BASE_URL}/messages/conversations/${conversationId}/messages?${queryParams.toString()}`,
+			const response = await fetch(
+				`${API_BASE_URL}/messages/conversations/${conversationId}/messages`,
 				{
 					method: "GET",
 					credentials: "include",
@@ -402,66 +422,36 @@ export const useChatStore = create<ChatState>((set, get) => ({
 					},
 				},
 			);
-			const response: HttpResponse<{
-				messages: Message[];
-				hasMore: boolean;
-			}> = await rawResponse.json();
-			if (!response.success) {
+			const result: HttpResponse<Message[]> = await response.json();
+
+			if (!result.success) {
 				console.log(
 					"%c ❌ [HTTP] Fetch Messages Failed:",
 					"color: #ef4444; font-weight: bold;",
-					response.errorMessage,
+					result.errorMessage,
 				);
-				set({
-					loadingMessages: {
-						...get().loadingMessages,
-						[conversationId]: false,
-					},
-				});
 				return;
 			}
 
 			console.log(
 				"%c ✅ [HTTP] Messages Fetched:",
 				"color: #22c55e; font-weight: bold;",
-				{
-					count: response.data.messages.length,
-					hasMore: response.data.hasMore,
+				{ count: result.data.length, messages: result.data },
+			);
+
+			set((state) => ({
+				messages: {
+					...state.messages,
+					[conversationId]: result.data,
 				},
-			);
-
-			const existingMessages = get().messages[conversationId] || [];
-
-			const newMessages = response.data.messages.filter(
-				(newM) =>
-					!existingMessages.find((existingM) => existingM._id === newM._id),
-			);
-			const hasMore = response.data.hasMore;
-
-			set((state) => {
-				const existingMessages = state.messages[conversationId] || [];
-				return {
-					messages: {
-						...state.messages,
-						[conversationId]: [...newMessages, ...existingMessages],
-					},
-					hasMessages: {
-						...state.hasMessages,
-						[conversationId]: hasMore,
-					},
-					loadingMessages: {
-						...state.loadingMessages,
-						[conversationId]: false,
-					},
-				};
-			});
+				isLoading: false,
+			}));
 		} catch (e) {
 			console.log(
 				"%c ❌ [HTTP] Fetch Messages Error:",
 				"color: #ef4444; font-weight: bold;",
 				e,
 			);
-		} finally {
 			set({ isLoading: false });
 		}
 	},
@@ -479,81 +469,26 @@ export const useChatStore = create<ChatState>((set, get) => ({
 			});
 		}
 	},
-	editMessage: async (messageId, newContent) => {
-		// todo : implement edit message later
-		throw new Error(`Method not implemented. ${messageId} - ${newContent}`);
-	},
-	deleteMessage: async (messageId) => {
-		// todo : implement delete message later
-		throw new Error(`Method not implemented. ${messageId}`);
-	},
-	markAsRead: async (conversationId) => {
+
+	notifyMessageRead: async (conversationId) => {
 		console.log(
 			"%c 🌐 [HTTP] Marking as Read...",
 			"color: #eab308; font-weight: bold;",
 			{ conversationId },
 		);
-		set({ isLoading: true });
-		try {
-			const rawResponse = await fetch(
-				`${API_BASE_URL}/messages/conversations/${conversationId}/read`,
-				{
-					method: "PATCH",
-					credentials: "include",
-					headers: {
-						"Content-Type": "application/json",
-					},
-				},
-			);
-
-			const response: HttpResponse<{
-				conversationId: string;
-				lastReadMessageId: string;
-				messagesMarkedAsRead: number;
-				totalUnreadMessagesCleared: number;
-				lastReadAt: string;
-				targetMessage: {
-					id: string;
-					content: string;
-					createdAt: string;
-					sender: string;
-				};
-			}> = await rawResponse.json();
-			if (!response.success) {
-				console.log(
-					"%c ❌ [HTTP] Mark as Read Failed:",
-					"color: #ef4444; font-weight: bold;",
-					response.errorMessage,
-				);
-				return;
-			}
-			console.log(
-				"%c ✅ [HTTP] Marked as Read:",
-				"color: #22c55e; font-weight: bold;",
-				response.data,
-			);
-		} catch (e) {
-			console.log(
-				"%c ❌ [HTTP] Mark as Read Error:",
-				"color: #ef4444; font-weight: bold;",
-				e,
-			);
-		}
 	},
 
 	// real-time actions
-	sendTyping: (conversationId, isTyping) => {
-		// const socket = get().socket;
-		// if (socket && get().status === "connected") {
-		// 	socket.emit("typing_conversation", {
-		// 		conversationId,
-		// 		isTyping,
-		// 	});
-		// }
-	},
-	// utility actions
-	clearError: () => {},
 
+	notifyTyping: (conversationId, isTyping) => {
+		const socket = get().socket;
+		if (socket && get().status === "connected") {
+			socket.emit("notify_conversation_typing", {
+				conversationId,
+				isTyping,
+			});
+		}
+	},
 	notifyFriendshipSent: (friendship: FriendShipRequest) => {
 		const socket = get().socket;
 		if (socket && get().status === "connected") {
@@ -596,4 +531,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
 			isLoading: false,
 			typingUsers: {},
 		}),
+	// utility actions
+	clearError: () => {},
 }));

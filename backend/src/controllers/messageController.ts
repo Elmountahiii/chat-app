@@ -17,7 +17,6 @@ export class MessageController {
 	getConversationMessages = async (req: Request, res: Response) => {
 		const userId = req.userId;
 		const conversationId = req.params.conversationId;
-		const { cursor, limit } = req.query;
 
 		if (!userId) {
 			res.status(401).json(createErrorResponse("Unauthorized access"));
@@ -25,21 +24,9 @@ export class MessageController {
 		}
 
 		try {
-			const limitNum = parseInt(limit as string, 10);
-			if (isNaN(limitNum) || limitNum < 1) {
-				throw new AppError("Invalid limit: must be a positive integer", 400);
-			}
-			const fetchMessagesData =
-				this.messageValidator.validateConversationMessagesFetchParams({
-					conversationId,
-					cursor: cursor,
-					limit: limitNum,
-				});
 			const messages = await this.messageService.getConversationMessages(
-				fetchMessagesData.conversationId,
+				conversationId,
 				userId,
-				fetchMessagesData.cursor,
-				fetchMessagesData.limit,
 			);
 			res.status(200).send(createSuccessResponse(messages));
 		} catch (error) {

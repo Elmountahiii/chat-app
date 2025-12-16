@@ -42,8 +42,10 @@ export class MessageService {
 		conversationId: string,
 		userId: string,
 		cursor?: string,
-		limit: number = 20,
+		limit: number = 50,
 	) {
+		console.log("conversationId : ", conversationId);
+
 		const conversation = await this.conversationService.getConversationById(
 			conversationId,
 			userId,

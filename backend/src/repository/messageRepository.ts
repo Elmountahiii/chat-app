@@ -38,14 +38,8 @@ export class MessageRepository {
 			.sort({ createdAt: -1 })
 			.populate("sender", "-password")
 			.populate("readBy.user", "-password");
-		const hasMore = messages.length > limit;
-		if (hasMore) {
-			messages.pop();
-		}
-		return {
-			messages: messages.reverse(),
-			hasMore,
-		};
+
+		return messages.reverse();
 	}
 
 	async sendMessage(input: CreateMessageInput): Promise<PopulatedMessage> {

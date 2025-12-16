@@ -150,9 +150,11 @@ export class SocketService {
 					});
 				}
 			});
+			
+			
 
 			socket.on(
-				"typing_conversation",
+				"notify_conversation_typing",
 				(data: { conversationId: string; isTyping: boolean }) => {
 					try {
 						const { conversationId, isTyping } = data;
