@@ -150,8 +150,6 @@ export class SocketService {
 					});
 				}
 			});
-			
-			
 
 			socket.on(
 				"notify_conversation_typing",
@@ -197,7 +195,7 @@ export class SocketService {
 			);
 
 			socket.on(
-				"read_all_messages",
+				"notify_messages_read",
 				async (data: { conversationId: string }) => {
 					try {
 						const { conversationId } = data;
@@ -212,7 +210,7 @@ export class SocketService {
 					} catch (error) {
 						console.error("Error marking messages as read:", error);
 						socket.emit("error", {
-							event: "read_all_messages",
+							event: "notify_messages_read",
 							message: "Failed to mark messages as read",
 						});
 					}

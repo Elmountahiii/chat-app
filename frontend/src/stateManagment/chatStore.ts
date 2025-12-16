@@ -167,6 +167,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
 				if (currentMessages.some((m) => m._id === message._id)) {
 					return state;
 				}
+				if (get().activeConversationId === message.conversationId) {
+					get().notifyMessageRead(message.conversationId);
+				}
 
 				return {
 					messages: {
@@ -202,6 +205,31 @@ export const useChatStore = create<ChatState>((set, get) => ({
 					"color: #0ea5e9; font-weight: bold;",
 					data,
 				);
+				set((state) => {
+					const conversationMessages = state.messages[data.conversationId] || [];
+					const updatedMessages = conversationMessages.map((msg) => {
+						if (msg.readBy.some((reader) => reader.user._id === data.userId)) {
+							return msg;
+						}
+						return {
+							...msg,
+							readBy: [
+								...msg.readBy,
+								{
+									user: { _id: data.userId } as any,
+									readAt: new Date().toISOString(),
+								},
+							],
+						};
+					});
+
+					return {
+						messages: {
+							...state.messages,
+							[data.conversationId]: updatedMessages,
+						},
+					};
+				});
 			},
 		);
 
@@ -446,6 +474,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 				},
 				isLoading: false,
 			}));
+			get().notifyMessageRead(conversationId);
 		} catch (e) {
 			console.log(
 				"%c ❌ [HTTP] Fetch Messages Error:",
@@ -476,6 +505,23 @@ export const useChatStore = create<ChatState>((set, get) => ({
 			"color: #eab308; font-weight: bold;",
 			{ conversationId },
 		);
+		const socket = get().socket;
+		if (socket) {
+			socket.emit("notify_messages_read", {
+				conversationId,
+			});
+			set((state) => ({
+				conversations: state.conversations.map((conv) => {
+					if (conv._id === conversationId) {
+						return {
+							...conv,
+							unreadCount: 0,
+						};
+					}
+					return conv;
+				}),
+			}));
+		}
 	},
 
 	// real-time actions

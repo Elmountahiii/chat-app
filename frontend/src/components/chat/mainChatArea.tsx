@@ -12,6 +12,8 @@ import {
 	UserX,
 	UserRound,
 	Loader2,
+	Check,
+	CheckCheck,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { User } from "@/types/user";
@@ -336,6 +338,18 @@ function MainChatArea({
 																},
 															)}
 														</span>
+														{isMe && (
+															<span>
+																{message.readBy.some(
+																	(entry) =>
+																		entry.user._id === otherParticipant?._id,
+																) ? (
+																	<CheckCheck className="h-3 w-3 text-blue-500" />
+																) : (
+																	<Check className="h-3 w-3 text-gray-400" />
+																)}
+															</span>
+														)}
 													</div>
 												</div>
 											</div>
