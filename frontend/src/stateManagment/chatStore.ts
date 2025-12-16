@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { io } from "socket.io-client";
-import type { Socket } from "socket.io-client";
+import { Socket } from "socket.io-client";
 
 import { HttpResponse } from "@/types/httpResponse";
 import { Conversation } from "@/types/conversation";
@@ -32,11 +32,7 @@ interface ChatState {
 	disconnectSocket: () => void;
 	setConnectivityStatus: (status: "online" | "offline" | "away") => void;
 	fetchConversations: () => Promise<void>;
-	createConversation: (
-		participants: string[],
-		type: "individual" | "group",
-		groupName?: string,
-	) => Promise<void>;
+	createConversation: (userId: string) => Promise<void>;
 	setActiveConversation: (conversationId: string) => void;
 	fetchMessages: (conversationId: string, limit: number) => Promise<void>;
 	sendMessage: (conversationId: string, content: string) => Promise<void>;
@@ -144,6 +140,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
 					"color: #0ea5e9; font-weight: bold;",
 					data,
 				);
+				set((state) => ({
+					conversations: [data.conversation, ...state.conversations],
+				}));
 			},
 		);
 
@@ -315,23 +314,22 @@ export const useChatStore = create<ChatState>((set, get) => ({
 		}
 	},
 
-	createConversation: async (participants, type, groupName) => {
+	createConversation: async (userId) => {
 		console.log(
 			"%c 🌐 [HTTP] Creating Conversation...",
 			"color: #eab308; font-weight: bold;",
-			{ participants, type, groupName },
+			{ userId },
 		);
 		set({ isLoading: true });
 		try {
 			const rawResponse = await fetch(
-				`${API_BASE_URL}/messages/conversations`,
+				`${API_BASE_URL}/conversations/${userId}`,
 				{
 					method: "POST",
 					credentials: "include",
 					headers: {
 						"Content-Type": "application/json",
 					},
-					body: JSON.stringify({ participants, type, groupName }),
 				},
 			);
 			const response: HttpResponse<Conversation> = await rawResponse.json();
@@ -350,10 +348,10 @@ export const useChatStore = create<ChatState>((set, get) => ({
 				response.data,
 			);
 
-			const state = get();
-			if (state.socket !== null) {
-				state.socket.emit("join_conversation", {
-					conversationId: response.data._id,
+			const socket = get().socket;
+			if (socket) {
+				socket.emit("notify_conversation_created", {
+					conversation: response.data,
 				});
 			}
 			set((state) => {

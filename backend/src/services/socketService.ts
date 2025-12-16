@@ -7,6 +7,7 @@ import { UserService } from "./userService";
 import { FriendshipService } from "./friendsipService";
 import { MessageService } from "./messageService";
 import { PopulatedFriendship } from "../schema/mongodb/friendshipSchema";
+import { PopulatedConversation } from "../schema/mongodb/conversationSchema";
 
 export class SocketService {
 	private io: Server;
@@ -99,39 +100,39 @@ export class SocketService {
 
 			// conversation actions
 			socket.on(
-				"create_conversation",
-				async (data: {
-					participantOneId: string;
-					participantTwoId: string;
-				}) => {
+				"notify_conversation_created",
+				async (data: { conversation: PopulatedConversation }) => {
 					try {
-						const { participantOneId, participantTwoId } = data;
-						const conversation =
-							await this.conversationService.createConversation(
-								participantOneId,
-								participantTwoId,
-							);
-
+						const { conversation } = data;
+						if (
+							conversation.participantOne._id.toString() !== userId &&
+							conversation.participantTwo._id.toString() !== userId
+						) {
+							throw new Error("Unauthorized to send this notification");
+						}
 						const conversationRoomId = `conversation_${conversation._id.toString()}`;
 						const participantOneSockets = await this.io
-							.in(participantOneId)
+							.in(conversation.participantOne._id.toString())
 							.fetchSockets();
 						const participantTwoSockets = await this.io
-							.in(participantTwoId)
+							.in(conversation.participantTwo._id.toString())
 							.fetchSockets();
 
 						participantOneSockets.forEach((s) => s.join(conversationRoomId));
 						participantTwoSockets.forEach((s) => s.join(conversationRoomId));
 
+						const otherParticipantId =
+							conversation.participantOne._id.toString() === userId
+								? conversation.participantTwo._id
+								: conversation.participantOne._id;
 						this.io
-							.to(participantOneId)
-							.to(participantTwoId)
+							.to(otherParticipantId.toString())
 							.emit("conversation_created", { conversation });
 					} catch (error) {
 						console.error("Error creating conversation:", error);
 						socket.emit("error", {
-							event: "create_conversation",
-							message: "Failed to create conversation",
+							event: "notify_conversation_created",
+							message: "Failed to notify created conversation",
 						});
 					}
 				},

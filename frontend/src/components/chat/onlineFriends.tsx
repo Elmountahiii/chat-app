@@ -39,21 +39,22 @@ const OnlineFriends = ({ changeDialogOpen }: OnlineFriendsProps) => {
 	);
 
 	const handleStartChat = (friend: User) => {
-		const selectedConversation = conversations.find((conversation) =>
-			conversation.participants.some(
-				(participant) => participant._id === friend._id,
-			),
-		);
+		createConversation(friend._id);
+		// const selectedConversation = conversations.find((conversation) =>
+		// 	conversation.participants.some(
+		// 		(participant) => participant._id === friend._id,
+		// 	),
+		// );
 
-		if (selectedConversation) {
-			console.log(
-				"Starting chat with conversation ID:",
-				selectedConversation._id,
-			);
-			setActiveConversation(selectedConversation._id);
-		} else {
-			createConversation([friend._id], "individual");
-		}
+		// if (selectedConversation) {
+		// 	console.log(
+		// 		"Starting chat with conversation ID:",
+		// 		selectedConversation._id,
+		// 	);
+		// 	setActiveConversation(selectedConversation._id);
+		// } else {
+		// 	createConversation([friend._id], "individual");
+		// }
 		changeDialogOpen(false);
 	};
 

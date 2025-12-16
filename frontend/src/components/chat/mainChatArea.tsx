@@ -28,6 +28,7 @@ import {
 } from "../ui/dropdown-menu";
 import BlockUserDailog from "./blockUserDailog";
 import UnfriendUserDialog from "./unfriendUserDialog";
+import { useFriendshipStore } from "@/stateManagment/friendshipStore";
 
 type MainChatAreaProps = {
 	setShowFriendsList: (show: boolean) => void;
@@ -55,7 +56,7 @@ function MainChatArea({
 	const {
 		messages,
 		sendMessage,
-		friends,
+
 		activeConversationId,
 		fetchMessages,
 		conversations,
@@ -63,9 +64,9 @@ function MainChatArea({
 		loadingMessages,
 		sendTyping,
 		markAsRead,
-		unfriendUser,
 	} = useChatStore();
 	const { user } = useAuthStore();
+	const { friends, unfriendUser } = useFriendshipStore();
 	const [blockUserDialogOpen, setBlockUserDialogOpen] = useState(false);
 	const [unfriendUserDialogOpen, setUnfriendUserDialogOpen] = useState(false);
 
