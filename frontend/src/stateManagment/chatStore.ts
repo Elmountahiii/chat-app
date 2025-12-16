@@ -471,45 +471,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
 			"color: #eab308; font-weight: bold;",
 			{ conversationId, content },
 		);
-		set({ isLoading: true });
-		try {
-			const rawResponse = await fetch(
-				`${API_BASE_URL}/messages/conversations/${conversationId}/messages`,
-				{
-					method: "POST",
-					credentials: "include",
-					headers: {
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify({
-						conversationId: conversationId,
-						content: content,
-						messageType: "text",
-					}),
-				},
-			);
-			const response: HttpResponse<Message> = await rawResponse.json();
-			if (!response.success) {
-				console.log(
-					"%c ❌ [HTTP] Send Message Failed:",
-					"color: #ef4444; font-weight: bold;",
-					response.errorMessage,
-				);
-				return;
-			}
-			console.log(
-				"%c ✅ [HTTP] Message Sent:",
-				"color: #22c55e; font-weight: bold;",
-				response.data,
-			);
-		} catch (e) {
-			console.log(
-				"%c ❌ [HTTP] Send Message Error:",
-				"color: #ef4444; font-weight: bold;",
-				e,
-			);
-		} finally {
-			set({ isLoading: false });
+		const socket = get().socket;
+		if (socket) {
+			socket.emit("send_message", {
+				conversationId,
+				content,
+			});
 		}
 	},
 	editMessage: async (messageId, newContent) => {
@@ -571,20 +538,18 @@ export const useChatStore = create<ChatState>((set, get) => ({
 				"color: #ef4444; font-weight: bold;",
 				e,
 			);
-		} finally {
-			set({ isLoading: false });
 		}
 	},
 
 	// real-time actions
 	sendTyping: (conversationId, isTyping) => {
-		const socket = get().socket;
-		if (socket && get().status === "connected") {
-			socket.emit("typing_conversation", {
-				conversationId,
-				isTyping,
-			});
-		}
+		// const socket = get().socket;
+		// if (socket && get().status === "connected") {
+		// 	socket.emit("typing_conversation", {
+		// 		conversationId,
+		// 		isTyping,
+		// 	});
+		// }
 	},
 	// utility actions
 	clearError: () => {},

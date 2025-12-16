@@ -19,7 +19,7 @@ export class ConversationService {
 		return conversations;
 	}
 
-	async getConversationById( id: string,userId: string,) {
+	async getConversationById(id: string, userId: string) {
 		const conversation = await this.conversationRepo.getConversationById(
 			id,
 			userId,

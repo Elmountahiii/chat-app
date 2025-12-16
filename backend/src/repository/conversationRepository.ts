@@ -40,76 +40,18 @@ export class ConversationRepository {
 					},
 				},
 			},
-			{
-				$lookup: {
-					from: "users",
-					let: { participantId: "$participantOne" },
-					pipeline: [
-						{ $match: { $expr: { $eq: ["$_id", "$$participantId"] } } },
-						{
-							$project: {
-								password: 0,
-							},
-						},
-					],
-					as: "participantOne",
-				},
-			},
-			{
-				$lookup: {
-					from: "users",
-					let: { participantId: "$participantTwo" },
-					pipeline: [
-						{ $match: { $expr: { $eq: ["$_id", "$$participantId"] } } },
-						{
-							$project: {
-								password: 0,
-							},
-						},
-					],
-					as: "participantTwo",
-				},
-			},
-			{
-				$lookup: {
-					from: "messages",
-					let: { lastMsgId: "$lastMessage" },
-					pipeline: [
-						{ $match: { $expr: { $eq: ["$_id", "$$lastMsgId"] } } },
-						{
-							$lookup: {
-								from: "users",
-								let: { senderId: "$sender" },
-								pipeline: [
-									{ $match: { $expr: { $eq: ["$_id", "$$senderId"] } } },
-									{
-										$project: {
-											password: 0,
-										},
-									},
-								],
-								as: "sender",
-							},
-						},
-						{ $unwind: { path: "$sender", preserveNullAndEmptyArrays: true } },
-					],
-					as: "lastMessage",
-				},
-			},
-			{
-				$unwind: { path: "$participantOne", preserveNullAndEmptyArrays: true },
-			},
-			{
-				$unwind: { path: "$participantTwo", preserveNullAndEmptyArrays: true },
-			},
-			{
-				$unwind: { path: "$lastMessage", preserveNullAndEmptyArrays: true },
-			},
 			{ $sort: { updatedAt: -1 } },
 			{ $project: { unreadMessages: 0 } },
 		]);
 
-		return conversations as PopulatedConversation[];
+		return (await ConversationModel.populate(conversations, [
+			{ path: "participantOne", select: "-password" },
+			{ path: "participantTwo", select: "-password" },
+			{
+				path: "lastMessage",
+				populate: { path: "sender", select: "-password" },
+			},
+		])) as unknown as PopulatedConversation[];
 	}
 
 	async getConversationById(
@@ -145,77 +87,24 @@ export class ConversationRepository {
 					},
 				},
 			},
-			{
-				$lookup: {
-					from: "users",
-					let: { participantId: "$participantOne" },
-					pipeline: [
-						{ $match: { $expr: { $eq: ["$_id", "$$participantId"] } } },
-						{
-							$project: {
-								password: 0,
-							},
-						},
-					],
-					as: "participantOne",
-				},
-			},
-			{
-				$lookup: {
-					from: "users",
-					let: { participantId: "$participantTwo" },
-					pipeline: [
-						{ $match: { $expr: { $eq: ["$_id", "$$participantId"] } } },
-						{
-							$project: {
-								password: 0,
-							},
-						},
-					],
-					as: "participantTwo",
-				},
-			},
-			{
-				$lookup: {
-					from: "messages",
-					let: { lastMsgId: "$lastMessage" },
-					pipeline: [
-						{ $match: { $expr: { $eq: ["$_id", "$$lastMsgId"] } } },
-						{
-							$lookup: {
-								from: "users",
-								let: { senderId: "$sender" },
-								pipeline: [
-									{ $match: { $expr: { $eq: ["$_id", "$$senderId"] } } },
-									{
-										$project: {
-											password: 0,
-										},
-									},
-								],
-								as: "sender",
-							},
-						},
-						{ $unwind: { path: "$sender", preserveNullAndEmptyArrays: true } },
-					],
-					as: "lastMessage",
-				},
-			},
-			{
-				$unwind: { path: "$participantOne", preserveNullAndEmptyArrays: true },
-			},
-			{
-				$unwind: { path: "$participantTwo", preserveNullAndEmptyArrays: true },
-			},
-			{
-				$unwind: { path: "$lastMessage", preserveNullAndEmptyArrays: true },
-			},
 			{ $project: { unreadMessages: 0 } },
 		]);
 
-		return conversations.length > 0
-			? (conversations[0] as PopulatedConversation)
-			: null;
+		if (conversations.length === 0) return null;
+
+		const populatedConversations = await ConversationModel.populate(
+			conversations,
+			[
+				{ path: "participantOne", select: "-password" },
+				{ path: "participantTwo", select: "-password" },
+				{
+					path: "lastMessage",
+					populate: { path: "sender", select: "-password" },
+				},
+			],
+		);
+
+		return populatedConversations[0] as unknown as PopulatedConversation;
 	}
 
 	async getUserConversationWithAnotherUser(
@@ -260,77 +149,24 @@ export class ConversationRepository {
 					},
 				},
 			},
-			{
-				$lookup: {
-					from: "users",
-					let: { participantId: "$participantOne" },
-					pipeline: [
-						{ $match: { $expr: { $eq: ["$_id", "$$participantId"] } } },
-						{
-							$project: {
-								password: 0,
-							},
-						},
-					],
-					as: "participantOne",
-				},
-			},
-			{
-				$lookup: {
-					from: "users",
-					let: { participantId: "$participantTwo" },
-					pipeline: [
-						{ $match: { $expr: { $eq: ["$_id", "$$participantId"] } } },
-						{
-							$project: {
-								password: 0,
-							},
-						},
-					],
-					as: "participantTwo",
-				},
-			},
-			{
-				$lookup: {
-					from: "messages",
-					let: { lastMsgId: "$lastMessage" },
-					pipeline: [
-						{ $match: { $expr: { $eq: ["$_id", "$$lastMsgId"] } } },
-						{
-							$lookup: {
-								from: "users",
-								let: { senderId: "$sender" },
-								pipeline: [
-									{ $match: { $expr: { $eq: ["$_id", "$$senderId"] } } },
-									{
-										$project: {
-											password: 0,
-										},
-									},
-								],
-								as: "sender",
-							},
-						},
-						{ $unwind: { path: "$sender", preserveNullAndEmptyArrays: true } },
-					],
-					as: "lastMessage",
-				},
-			},
-			{
-				$unwind: { path: "$participantOne", preserveNullAndEmptyArrays: true },
-			},
-			{
-				$unwind: { path: "$participantTwo", preserveNullAndEmptyArrays: true },
-			},
-			{
-				$unwind: { path: "$lastMessage", preserveNullAndEmptyArrays: true },
-			},
 			{ $project: { unreadMessages: 0 } },
 		]);
 
-		return conversations.length > 0
-			? (conversations[0] as PopulatedConversation)
-			: null;
+		if (conversations.length === 0) return null;
+
+		const populatedConversations = await ConversationModel.populate(
+			conversations,
+			[
+				{ path: "participantOne", select: "-password" },
+				{ path: "participantTwo", select: "-password" },
+				{
+					path: "lastMessage",
+					populate: { path: "sender", select: "-password" },
+				},
+			],
+		);
+
+		return populatedConversations[0] as unknown as PopulatedConversation;
 	}
 
 	async createConversation(
@@ -340,59 +176,20 @@ export class ConversationRepository {
 		const conversation = new ConversationModel({
 			participantOne: participantOneId,
 			participantTwo: participantTwoId,
+			lastMessage: null,
 		});
 		await conversation.save();
 
-		const conversations = await ConversationModel.aggregate([
-			{
-				$match: {
-					_id: conversation._id,
-				},
-			},
-			{
-				$addFields: {
-					unreadCount: 0,
-				},
-			},
-			{
-				$lookup: {
-					from: "users",
-					let: { participantId: "$participantOne" },
-					pipeline: [
-						{ $match: { $expr: { $eq: ["$_id", "$$participantId"] } } },
-						{
-							$project: {
-								password: 0,
-							},
-						},
-					],
-					as: "participantOne",
-				},
-			},
-			{
-				$lookup: {
-					from: "users",
-					let: { participantId: "$participantTwo" },
-					pipeline: [
-						{ $match: { $expr: { $eq: ["$_id", "$$participantId"] } } },
-						{
-							$project: {
-								password: 0,
-							},
-						},
-					],
-					as: "participantTwo",
-				},
-			},
-			{
-				$unwind: { path: "$participantOne", preserveNullAndEmptyArrays: true },
-			},
-			{
-				$unwind: { path: "$participantTwo", preserveNullAndEmptyArrays: true },
-			},
+		const populatedConversation = await conversation.populate([
+			{ path: "participantOne", select: "-password" },
+			{ path: "participantTwo", select: "-password" },
 		]);
 
-		return conversations[0] as PopulatedConversation;
+		const result =
+			populatedConversation.toObject() as unknown as PopulatedConversation;
+		result.unreadCount = 0;
+
+		return result;
 	}
 
 	async getUserConversationsWithUnreadCounts(
@@ -430,76 +227,18 @@ export class ConversationRepository {
 					},
 				},
 			},
-			{
-				$lookup: {
-					from: "users",
-					let: { participantId: "$participantOne" },
-					pipeline: [
-						{ $match: { $expr: { $eq: ["$_id", "$$participantId"] } } },
-						{
-							$project: {
-								password: 0,
-							},
-						},
-					],
-					as: "participantOne",
-				},
-			},
-			{
-				$lookup: {
-					from: "users",
-					let: { participantId: "$participantTwo" },
-					pipeline: [
-						{ $match: { $expr: { $eq: ["$_id", "$$participantId"] } } },
-						{
-							$project: {
-								password: 0,
-							},
-						},
-					],
-					as: "participantTwo",
-				},
-			},
-			{
-				$lookup: {
-					from: "messages",
-					let: { lastMsgId: "$lastMessage" },
-					pipeline: [
-						{ $match: { $expr: { $eq: ["$_id", "$$lastMsgId"] } } },
-						{
-							$lookup: {
-								from: "users",
-								let: { senderId: "$sender" },
-								pipeline: [
-									{ $match: { $expr: { $eq: ["$_id", "$$senderId"] } } },
-									{
-										$project: {
-											password: 0,
-										},
-									},
-								],
-								as: "sender",
-							},
-						},
-						{ $unwind: { path: "$sender", preserveNullAndEmptyArrays: true } },
-					],
-					as: "lastMessage",
-				},
-			},
-			{
-				$unwind: { path: "$participantOne", preserveNullAndEmptyArrays: true },
-			},
-			{
-				$unwind: { path: "$participantTwo", preserveNullAndEmptyArrays: true },
-			},
-			{
-				$unwind: { path: "$lastMessage", preserveNullAndEmptyArrays: true },
-			},
 			{ $sort: { updatedAt: -1 } },
 			{ $project: { unreadMessages: 0 } },
 		]);
 
-		return conversations as PopulatedConversation[];
+		return (await ConversationModel.populate(conversations, [
+			{ path: "participantOne", select: "-password" },
+			{ path: "participantTwo", select: "-password" },
+			{
+				path: "lastMessage",
+				populate: { path: "sender", select: "-password" },
+			},
+		])) as unknown as PopulatedConversation[];
 	}
 
 	async deleteConversation(id: string): Promise<boolean> {

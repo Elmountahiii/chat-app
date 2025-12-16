@@ -3,6 +3,7 @@ import {
 	MessageModel,
 	PopulatedMessage,
 } from "../schema/mongodb/messageSchema";
+import { ConversationModel } from "../schema/mongodb/conversationSchema";
 import { AppError } from "../types/common";
 import { CreateMessageInput } from "../types/inputs/messagingInputs";
 
@@ -63,6 +64,11 @@ export class MessageRepository {
 		});
 
 		await message.save();
+
+		await ConversationModel.findByIdAndUpdate(conversationId, {
+			lastMessage: message._id,
+			updatedAt: new Date(),
+		});
 
 		return await message.populate([
 			{ path: "sender" },
