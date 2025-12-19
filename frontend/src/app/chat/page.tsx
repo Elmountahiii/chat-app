@@ -12,6 +12,7 @@ import { ConversationsList } from "@/components/chat/conversationsList";
 import { Conversation } from "@/types/conversation";
 import { useChatStore } from "@/stateManagment/chatStore";
 import MainChatArea from "@/components/chat/mainChatArea";
+import { ActiveUsersList } from "@/components/chat/ActiveUsersList";
 
 export default function ChatPage() {
 	const { setActiveConversation, fetchConversations } = useChatStore();
@@ -62,7 +63,7 @@ export default function ChatPage() {
 				</div>
 
 				{/* Header */}
-				<div className="p-6 border-b border-gray-200 dark:border-gray-700">
+				<div className="p-4 border-b border-gray-200 dark:border-gray-700">
 					<div className="flex items-center justify-between mb-6">
 						<div>
 							<h1 className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -92,6 +93,7 @@ export default function ChatPage() {
 							className="pl-10 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus-visible:ring-2 focus-visible:ring-blue-500"
 						/>
 					</div>
+					<ActiveUsersList />
 				</div>
 
 				{/* Conversations List */}
