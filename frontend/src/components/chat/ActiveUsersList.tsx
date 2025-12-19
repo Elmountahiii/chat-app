@@ -19,7 +19,8 @@ const getStatusColor = (status: User["status"]) => {
 };
 
 export const ActiveUsersList = () => {
-	const { createConversation } = useChatStore();
+	const { createConversation, conversations, setActiveConversation } =
+		useChatStore();
 	const { friends } = useFriendshipStore();
 
 	const sortedFriends = [...friends].sort((a, b) => {
@@ -28,6 +29,16 @@ export const ActiveUsersList = () => {
 	});
 
 	const handleUserClick = (friend: User) => {
+		const existingConversation = conversations.find((conversation) => {
+			return (
+				conversation.participantOne._id === friend._id ||
+				conversation.participantTwo._id === friend._id
+			);
+		});
+		if (existingConversation) {
+			setActiveConversation(existingConversation._id);
+			return;
+		}
 		createConversation(friend._id);
 	};
 
