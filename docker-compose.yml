@@ -1,9 +1,9 @@
-version: '3.8'
+version: "3.8"
 
 services:
   database:
     build:
-      context: ../mongodb
+      context: ./mongodb
       dockerfile: Dockerfile
     container_name: chatapp-mongodb
     restart: unless-stopped
@@ -21,7 +21,7 @@ services:
 
   backend:
     build:
-      context: ../backend
+      context: ./backend
       dockerfile: Dockerfile
     container_name: chatapp-backend
     restart: unless-stopped
@@ -46,12 +46,12 @@ services:
 
   frontend:
     build:
-      context: ../frontend
+      context: ./frontend
       dockerfile: Dockerfile
       args:
-      - NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL}
-      - NEXT_PUBLIC_SOCKET_URL=${NEXT_PUBLIC_SOCKET_URL}
-      - BACKEND_ENDPOINT=${BACKEND_ENDPOINT}
+        - NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL}
+        - NEXT_PUBLIC_SOCKET_URL=${NEXT_PUBLIC_SOCKET_URL}
+        - BACKEND_ENDPOINT=${BACKEND_ENDPOINT}
     container_name: chatapp-frontend
     environment:
       - NODE_ENV=production
