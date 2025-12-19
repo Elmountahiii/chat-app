@@ -18,14 +18,13 @@ services:
       - MONGO_INITDB_DATABASE=${MONGO_DB:-chatapp}
     networks:
       - chatapp-network
+
   backend:
     build:
       context: ../backend
       dockerfile: Dockerfile
     container_name: chatapp-backend
     restart: unless-stopped
-    ports:
-      - 3001:3001
     volumes:
       - backend-logs:/app/logs
     environment:
@@ -38,6 +37,13 @@ services:
       - database
     networks:
       - chatapp-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=Host(`chat.elmountahi.dev`) && (PathPrefix(`/api`) || PathPrefix(`/socket.io`))"
+      - "traefik.http.routers.backend.entrypoints=websecure"
+      - "traefik.http.routers.backend.tls.certresolver=myresolver"
+      - "traefik.http.services.backend.loadbalancer.server.port=3001"
+
   frontend:
     build:
       context: ../frontend
@@ -47,8 +53,6 @@ services:
       - NEXT_PUBLIC_SOCKET_URL=${NEXT_PUBLIC_SOCKET_URL}
       - BACKEND_ENDPOINT=${BACKEND_ENDPOINT}
     container_name: chatapp-frontend
-    ports:
-      - 3000:3000
     environment:
       - NODE_ENV=production
       - BACKEND_ENDPOINT=${BACKEND_ENDPOINT}
@@ -60,40 +64,45 @@ services:
       - backend
     networks:
       - chatapp-network
-  nginx:
-    build:
-      context: ../nginx
-      dockerfile: Dockerfile
-    container_name: chatapp-nginx
-    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`chat.elmountahi.dev`)"
+      - "traefik.http.routers.frontend.entrypoints=websecure"
+      - "traefik.http.routers.frontend.tls.certresolver=myresolver"
+      - "traefik.http.services.frontend.loadbalancer.server.port=3000"
+
+  traefik:
+    image: traefik:v3.0
+    container_name: chatapp-traefik
+    command:
+      - "--log.level=INFO"
+      - "--api.insecure=true" # Enable Dashboard on 8080 (optional, good for debugging)
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+      - "--certificatesresolvers.myresolver.acme.email=name@email.com"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
     ports:
       - "80:80"
       - "443:443"
-    depends_on:
-      - frontend
+      - "8080:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./letsencrypt:/letsencrypt"
+    restart: unless-stopped
     networks:
       - chatapp-network
-    volumes:
-      - certbot-data:/etc/letsencrypt
-      - certbot-www:/var/www/certbot
-  certbot:
-    image: certbot/certbot
-    container_name: chatapp-certbot
-    volumes:
-      - certbot-data:/etc/letsencrypt
-      - certbot-www:/var/www/certbot
 
 volumes:
   mongo-data:
     driver: local
   backend-logs:
     driver: local
-  certbot-data:
-    driver: local
-  certbot-www:
-    driver: local
 
 networks:
   chatapp-network:
     driver: bridge
-
