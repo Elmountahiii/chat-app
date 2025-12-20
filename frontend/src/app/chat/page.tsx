@@ -4,17 +4,24 @@ import { useEffect, useState } from "react";
 
 import { User } from "@/types/user";
 import { Button } from "@/components/ui/button";
-import { Search, MoreVertical, ChevronLeft } from "lucide-react";
+import { Search, ChevronLeft } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { FriendsDialog } from "@/components/chat/FriendsDialog";
 import { UserProfileDialog } from "@/components/chat/UserProfileDialog";
 import { ConversationsList } from "@/components/chat/conversationsList";
 import { Conversation } from "@/types/conversation";
 import { useChatStore } from "@/stateManagment/chatStore";
+import { useAuthStore } from "@/stateManagment/authStore";
 import MainChatArea from "@/components/chat/mainChatArea";
 import { ActiveUsersList } from "@/components/chat/ActiveUsersList";
+import { Dialog, DialogContent, DialogTrigger, DialogTitle } from "@/components/ui/dialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import ProfileSettings from "@/components/profile/profileSettings";
+import { ProfileSettingsDataType } from "@/schema/profile/profileSettingsSchema";
 
 export default function ChatPage() {
+	const { user } = useAuthStore();
 	const { setActiveConversation, fetchConversations } = useChatStore();
 	const [searchQuery, setSearchQuery] = useState("");
 	const [showFriendsList, setShowFriendsList] = useState(false);
@@ -22,6 +29,7 @@ export default function ChatPage() {
 		null,
 	);
 	const [showUserProfile, setShowUserProfile] = useState(false);
+	const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
 	useEffect(() => {
 		fetchConversations();
@@ -33,8 +41,13 @@ export default function ChatPage() {
 
 	const handleUserProfileClick = (user: User) => {
 		setShowUserProfile(true);
-
 		setSelectedUserProfile(user);
+	};
+
+	const handleSaveProfile = (data: ProfileSettingsDataType) => {
+		console.log("Saving profile data:", data);
+		// Implement API call here later
+		setIsSettingsOpen(false);
 	};
 
 	return (
@@ -75,13 +88,35 @@ export default function ChatPage() {
 						</div>
 						<div className="flex items-center space-x-2">
 							<FriendsDialog />
-							<Button
-								variant="ghost"
-								size="icon"
-								className="hover:bg-gray-100 dark:hover:bg-gray-800"
-							>
-								<MoreVertical className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-							</Button>
+
+							<Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+								<DialogTrigger asChild>
+									<Button
+										variant="ghost"
+										className="relative h-10 w-10 rounded-full p-0 overflow-hidden hover:opacity-90 transition-opacity"
+									>
+										<Avatar className="h-10 w-10">
+											<AvatarImage
+												src={user?.profilePicture}
+												alt={user?.username || "User"}
+												className="object-cover"
+											/>
+											<AvatarFallback className="bg-primary/10 text-primary">
+												{user?.firstName?.[0]?.toUpperCase() ||
+													user?.username?.[0]?.toUpperCase() ||
+													"U"}
+											</AvatarFallback>
+										</Avatar>
+									</Button>
+								</DialogTrigger>
+
+								<DialogContent className="sm:max-w-[425px] md:max-w-[900px] h-[80vh] p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-gray-950">
+									<VisuallyHidden>
+										<DialogTitle>Profile Settings</DialogTitle>
+									</VisuallyHidden>
+									<ProfileSettings onSave={handleSaveProfile} />
+								</DialogContent>
+							</Dialog>
 						</div>
 					</div>
 					<div className="relative">

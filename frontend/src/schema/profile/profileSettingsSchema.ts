@@ -13,10 +13,28 @@ export const profileSettingsSchema = z.object({
     .max(50, "Last name must not exceed 50 characters")
     .regex(/^[a-zA-Z\s]+$/, "Last name can only contain letters and spaces"),
 
-  profilePicture: z
-    .string()
-    .min(1, "Please select a profile picture")
-    .url("Profile picture must be a valid URL"),
-});
+	profilePicture: z
+		.string()
+		.min(1, "Please select a profile picture")
+		.url("Profile picture must be a valid URL"),
+
+	password: z
+		.string()
+		.min(8, "Password must be at least 8 characters")
+		.optional()
+		.or(z.literal("")),
+	confirmPassword: z.string().optional().or(z.literal("")),
+}).refine(
+	(data) => {
+		if (data.password && data.password !== data.confirmPassword) {
+			return false;
+		}
+		return true;
+	},
+	{
+		message: "Passwords do not match",
+		path: ["confirmPassword"],
+	},
+);
 
 export type ProfileSettingsDataType = z.infer<typeof profileSettingsSchema>;
