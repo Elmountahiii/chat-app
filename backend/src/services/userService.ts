@@ -1,5 +1,5 @@
 import { UserRepository } from "../repository/userRepository";
-import { UserDataUpdates } from "../schema/user/updateUserInfoSchema";
+import bcrypt from "bcrypt";
 
 export class UserService {
 	constructor(private userRepository: UserRepository) {}
@@ -20,12 +20,26 @@ export class UserService {
 		return await this.userRepository.findByUserName(username);
 	}
 
-	async updateUser(userId: string, updateData: UserDataUpdates) {
-		return await this.userRepository.updateUser(userId, updateData);
-	}
-
-	async updateLastSeen(userId: string) {
-		return await this.userRepository.updateLastSeen(userId);
+	async updateUserInformation(
+		userId: string,
+		updates: {
+			firstName: string;
+			lastName: string;
+			profilePicture: string;
+			password?: string;
+			confirmPassword?: string;
+		},
+	) {
+		if (updates.password != undefined && updates.password !== "") {
+			const salt = await bcrypt.genSalt(10);
+			const hashedPassword = await bcrypt.hash(updates.password, salt);
+			await this.userRepository.updateUserPassword(userId, hashedPassword);
+		}
+		return this.userRepository.updateUserInformation(userId, {
+			firstName: updates.firstName,
+			lastName: updates.lastName,
+			profilePicture: updates.profilePicture,
+		});
 	}
 
 	async updateUserStatus(

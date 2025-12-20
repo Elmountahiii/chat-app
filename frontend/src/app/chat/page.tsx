@@ -14,14 +14,19 @@ import { useChatStore } from "@/stateManagment/chatStore";
 import { useAuthStore } from "@/stateManagment/authStore";
 import MainChatArea from "@/components/chat/mainChatArea";
 import { ActiveUsersList } from "@/components/chat/ActiveUsersList";
-import { Dialog, DialogContent, DialogTrigger, DialogTitle } from "@/components/ui/dialog";
+import {
+	Dialog,
+	DialogContent,
+	DialogTrigger,
+	DialogTitle,
+} from "@/components/ui/dialog";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import ProfileSettings from "@/components/profile/profileSettings";
 import { ProfileSettingsDataType } from "@/schema/profile/profileSettingsSchema";
 
 export default function ChatPage() {
-	const { user } = useAuthStore();
+	const { user, updateUserInfo } = useAuthStore();
 	const { setActiveConversation, fetchConversations } = useChatStore();
 	const [searchQuery, setSearchQuery] = useState("");
 	const [showFriendsList, setShowFriendsList] = useState(false);
@@ -45,8 +50,7 @@ export default function ChatPage() {
 	};
 
 	const handleSaveProfile = (data: ProfileSettingsDataType) => {
-		console.log("Saving profile data:", data);
-		// Implement API call here later
+		updateUserInfo(data);
 		setIsSettingsOpen(false);
 	};
 

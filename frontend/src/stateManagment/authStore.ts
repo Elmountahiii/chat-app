@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { HttpResponse } from "@/types/httpResponse";
 import { User } from "@/types/user";
 import { SignUpDataType } from "@/schema/auth/signUpSchema";
+import { ProfileSettingsDataType } from "@/schema/profile/profileSettingsSchema";
 
 interface AuthenticationState {
 	// state
@@ -15,6 +16,7 @@ interface AuthenticationState {
 	// actions
 	login: (email: string, password: string) => Promise<void>;
 	signUp: (userData: SignUpDataType) => Promise<void>;
+	updateUserInfo: (userData: ProfileSettingsDataType) => Promise<void>;
 	logout: () => Promise<void>;
 	resetPassword: (email: string) => Promise<void>;
 	checkAuthStatus: () => Promise<void>;
@@ -161,6 +163,68 @@ export const useAuthStore = create<AuthenticationState>((set) => ({
 				isLoading: false,
 				error:
 					"Unable to create account. Please check your connection and try again.",
+			});
+		}
+	},
+
+	updateUserInfo: async (userData: ProfileSettingsDataType) => {
+		console.log(
+			"%c 🌐 [HTTP] Updating User Info...",
+			"color: #eab308; font-weight: bold;",
+			userData,
+		);
+		try {
+			set({
+				isLoading: true,
+				error: null,
+			});
+			if (userData.password != "") {
+				console.log("Need to update also the password");
+			}
+			const response = await fetch(`${API_BASE_URL}/user/me`, {
+				method: "PUT",
+				credentials: "include",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify(userData),
+			});
+			const result: HttpResponse<User> = await response.json();
+
+			if (!result.success) {
+				console.log(
+					"%c ❌ [HTTP] Update Info Failed:",
+					"color: #ef4444; font-weight: bold;",
+					result.errorMessage,
+				);
+				set({
+					isLoading: false,
+					error: result.errorMessage,
+				});
+				return;
+			}
+
+			console.log(
+				"%c ✅ [HTTP] Update Info Success:",
+				"color: #22c55e; font-weight: bold;",
+				result.data,
+			);
+
+			set({
+				isLoading: false,
+				user: result.data,
+				successMessage: result.successMessage,
+				error: null,
+			});
+		} catch (e) {
+			console.log(
+				"%c ❌ [HTTP] Update Info Error:",
+				"color: #ef4444; font-weight: bold;",
+				e,
+			);
+			set({
+				isLoading: false,
+				error: "Something went wrong. Please try again later.",
 			});
 		}
 	},

@@ -1,16 +1,25 @@
 import * as z from "zod";
-export const UserSchema = z.object({
-  username: z
-    .string()
-    .min(1, "Username must be at least 1 characters long")
-    .max(15, "Username must be at most 15 characters long"),
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  email: z.email("Invalid email address"),
-  profilePicture: z.url("Invalid URL for profile picture").optional(),
-  status: z.enum(["online", "offline", "away"]),
+
+export const UpdateUserSchema = z.object({
+	firstName: z
+		.string()
+		.min(2, "First name must be at least 2 characters")
+		.max(50, "First name must not exceed 50 characters")
+		.regex(/^[a-zA-Z\s]+$/, "First name can only contain letters and spaces"),
+
+	lastName: z
+		.string()
+		.min(2, "Last name must be at least 2 characters")
+		.max(50, "Last name must not exceed 50 characters")
+		.regex(/^[a-zA-Z\s]+$/, "Last name can only contain letters and spaces"),
+
+	profilePicture: z.url("Profile picture must be a valid URL"),
+	password: z
+		.string()
+		.min(8, "Password must be at least 8 characters")
+		.optional()
+		.or(z.literal("")),
+	confirmPassword: z.string().optional().or(z.literal("")),
 });
 
-export const UpdateUserSchema = UserSchema.partial();
-
-export type UserDataUpdates = z.infer<typeof UpdateUserSchema>;
+export type userBasicInformation = z.infer<typeof UpdateUserSchema>;

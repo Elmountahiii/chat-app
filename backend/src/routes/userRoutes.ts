@@ -5,9 +5,8 @@ const userRouter = express.Router();
 const userController = Provider.getInstance().getUserController();
 
 userRouter.get("/me", userController.getUserProfile);
-userRouter.put("/me", userController.updateUserProfile);
+userRouter.put("/me", userController.updateUserInformation);
 
-// search friends
 userRouter.get("/search", userController.searchUsers);
 
 export default userRouter;

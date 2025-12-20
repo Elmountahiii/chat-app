@@ -1,5 +1,4 @@
 import { User, UserModel } from "../schema/mongodb/userSchema";
-import type { UserDataUpdates } from "../schema/user/updateUserInfoSchema";
 
 export class UserRepository {
 	constructor() {}
@@ -20,20 +19,6 @@ export class UserRepository {
 		return await UserModel.findOne({ username }).select("-password").lean();
 	}
 
-	async updateUser(
-		userId: string,
-		updateData: UserDataUpdates,
-	): Promise<User | null> {
-		return await UserModel.findByIdAndUpdate(userId, updateData, {
-			new: true,
-		}).lean();
-	}
-	async updateLastSeen(userId: string): Promise<void> {
-		await UserModel.findByIdAndUpdate(userId, {
-			lastSeen: new Date(),
-		});
-	}
-
 	async updateUserStatus(
 		userId: string,
 		status: "online" | "offline" | "away",
@@ -52,6 +37,36 @@ export class UserRepository {
 			userId,
 			{ profilePicture: profilePictureUrl },
 			{ new: true },
+		)
+			.select("-password")
+			.lean();
+	}
+
+	async updateUserInformation(
+		userId: string,
+		updates: {
+			firstName: string;
+			lastName: string;
+			profilePicture: string;
+		},
+	): Promise<User | null> {
+		return await UserModel.findByIdAndUpdate(userId, updates, {
+			new: true,
+		})
+			.select("-password")
+			.lean();
+	}
+
+	async updateUserPassword(
+		userId: string,
+		hashedPassword: string,
+	): Promise<User | null> {
+		return await UserModel.findByIdAndUpdate(
+			userId,
+			{ password: hashedPassword },
+			{
+				new: true,
+			},
 		)
 			.select("-password")
 			.lean();

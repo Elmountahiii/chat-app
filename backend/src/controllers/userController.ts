@@ -29,7 +29,7 @@ export class UserController {
 		}
 	};
 
-	updateUserProfile = async (req: Request, res: Response) => {
+	updateUserInformation = async (req: Request, res: Response) => {
 		const userId = req.userId;
 		const body = req.body;
 		if (!userId) {
@@ -38,8 +38,7 @@ export class UserController {
 		}
 		try {
 			const validatedData = this.userValidator.validateUserData(body);
-			console.log("Validated Data:", validatedData);
-			const updatedUser = await this.userService.updateUser(
+			const updatedUser = await this.userService.updateUserInformation(
 				userId,
 				validatedData,
 			);
