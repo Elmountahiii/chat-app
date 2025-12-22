@@ -1,7 +1,7 @@
 "use client";
 import { useAuthStore } from "@/stateManagment/authStore";
 import { useChatStore } from "@/stateManagment/chatStore";
-import React, { useRef, useState, useEffect, useMemo } from "react";
+import React, { useRef, useState, useEffect, useMemo, useCallback } from "react";
 import { Button } from "../ui/button";
 import {
 	ChevronLeft,
@@ -60,6 +60,8 @@ function MainChatArea({
 		activeConversationId,
 		conversations,
 		loadMessages,
+		loadMoreMessages,
+		messagesPagination,
 		notifyTyping,
 		notifyMessageRead,
 		isLoading,
@@ -69,6 +71,9 @@ function MainChatArea({
 	const [blockUserDialogOpen, setBlockUserDialogOpen] = useState(false);
 	const [unfriendUserDialogOpen, setUnfriendUserDialogOpen] = useState(false);
 	const messagesEndRef = useRef<HTMLDivElement>(null);
+	const messagesContainerRef = useRef<HTMLDivElement>(null);
+	const prevMessagesLengthRef = useRef<number>(0);
+	const isLoadingMoreRef = useRef<boolean>(false);
 
 	const conversation =
 		conversations.find((conv) => conv._id === activeConversationId) || null;
@@ -86,6 +91,12 @@ function MainChatArea({
 		[messages, conversation?._id],
 	);
 
+	// Get pagination state for current conversation
+	const pagination = useMemo(
+		() => messagesPagination[conversation?._id || ""],
+		[messagesPagination, conversation?._id],
+	);
+
 	useEffect(() => {
 		if (conversation?._id) {
 			loadMessages(conversation._id);
@@ -93,11 +104,53 @@ function MainChatArea({
 		}
 	}, [conversation?._id, loadMessages, notifyMessageRead]);
 
+	// Scroll to bottom on initial load or new messages, preserve position when loading older messages
 	useEffect(() => {
-		if (conversationMessages) {
+		if (!conversationMessages.length) return;
+
+		const container = messagesContainerRef.current;
+		const prevLength = prevMessagesLengthRef.current;
+		const currentLength = conversationMessages.length;
+
+		// If we loaded more messages (prepended), preserve scroll position
+		if (isLoadingMoreRef.current && currentLength > prevLength && container) {
+			const addedCount = currentLength - prevLength;
+			// Find the message element that was previously at the top
+			const messageElements = container.querySelectorAll("[data-message-id]");
+			if (messageElements[addedCount]) {
+				messageElements[addedCount].scrollIntoView({ block: "start" });
+			}
+			isLoadingMoreRef.current = false;
+		} else if (currentLength > prevLength || prevLength === 0) {
+			// New messages added at the end or initial load - scroll to bottom
 			messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
 		}
+
+		prevMessagesLengthRef.current = currentLength;
 	}, [conversationMessages]);
+
+	// Scroll event handler for loading more messages
+	const handleScroll = useCallback(() => {
+		const container = messagesContainerRef.current;
+		if (!container || !conversation?._id) return;
+
+		const { scrollTop } = container;
+
+		// Load more when scrolled within 100px of the top
+		if (scrollTop < 100 && pagination?.hasMore && !pagination?.isLoadingMore) {
+			isLoadingMoreRef.current = true;
+			loadMoreMessages(conversation._id);
+		}
+	}, [conversation?._id, pagination?.hasMore, pagination?.isLoadingMore, loadMoreMessages]);
+
+	// Attach scroll event listener
+	useEffect(() => {
+		const container = messagesContainerRef.current;
+		if (!container) return;
+
+		container.addEventListener("scroll", handleScroll);
+		return () => container.removeEventListener("scroll", handleScroll);
+	}, [handleScroll]);
 
 	const handleEmojiSelect = (emoji: string) => {
 		setNewMessage((prev) => prev + emoji);
@@ -252,13 +305,23 @@ function MainChatArea({
 					</div>
 
 					{/* Messages area */}
-					<div className="flex-1 p-4 lg:p-6 bg-gray-50 dark:bg-gray-800 overflow-y-auto">
+					<div
+						ref={messagesContainerRef}
+						className="flex-1 p-4 lg:p-6 bg-gray-50 dark:bg-gray-800 overflow-y-auto"
+					>
 						{isLoading && conversationMessages.length === 0 ? (
 							<div className="h-full flex items-center justify-center">
 								<Loader2 className="h-8 w-8 animate-spin text-blue-500" />
 							</div>
 						) : (
 							<div className="space-y-4 max-w-4xl mx-auto">
+								{/* Loading more spinner */}
+								{pagination?.isLoadingMore && (
+									<div className="flex items-center justify-center py-4">
+										<Loader2 className="h-5 w-5 animate-spin text-blue-500" />
+									</div>
+								)}
+
 								{/* Date separator */}
 								<div className="flex items-center justify-center">
 									<div className="bg-white dark:bg-gray-700 px-3 py-1 rounded-full shadow-sm border border-gray-200 dark:border-gray-600">
@@ -276,13 +339,14 @@ function MainChatArea({
 											conversationMessages[index - 1]?.sender._id !==
 												message.sender._id);
 
-									return (
-										<div
-											key={message._id}
-											className={`flex ${
-												isMe ? "justify-end" : "justify-start"
-											} mb-3`}
-										>
+							return (
+								<div
+									key={message._id}
+									data-message-id={message._id}
+									className={`flex ${
+										isMe ? "justify-end" : "justify-start"
+									} mb-3`}
+								>
 											<div
 												className={`flex max-w-[80%] md:max-w-[60%] ${
 													isMe ? "flex-row-reverse" : "flex-row"

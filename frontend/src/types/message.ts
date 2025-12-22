@@ -12,3 +12,9 @@ export interface Message {
 	createdAt: string;
 	updatedAt: string;
 }
+
+export interface PaginatedMessages {
+	messages: Message[];
+	hasMore: boolean;
+	nextCursor: string | null;
+}

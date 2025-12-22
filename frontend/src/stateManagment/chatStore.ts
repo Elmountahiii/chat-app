@@ -4,7 +4,7 @@ import { Socket } from "socket.io-client";
 
 import { HttpResponse } from "@/types/httpResponse";
 import { Conversation } from "@/types/conversation";
-import { Message } from "@/types/message";
+import { Message, PaginatedMessages } from "@/types/message";
 import { FriendShipRequest } from "@/types/friendShipRequest";
 import { useFriendshipStore } from "./friendshipStore";
 import { User } from "@/types/user";
@@ -23,6 +23,10 @@ interface ChatState {
 	conversations: Conversation[];
 	activeConversationId: string | null;
 	messages: Record<string, Message[]>;
+	messagesPagination: Record<
+		string,
+		{ hasMore: boolean; nextCursor: string | null; isLoadingMore: boolean }
+	>;
 
 	isLoading: boolean;
 	typingUsers: Record<string, string[]>;
@@ -35,6 +39,7 @@ interface ChatState {
 	createConversation: (userId: string) => Promise<void>;
 	setActiveConversation: (conversationId: string) => void;
 	loadMessages: (conversationId: string) => Promise<void>;
+	loadMoreMessages: (conversationId: string) => Promise<void>;
 	sendMessage: (conversationId: string, content: string) => Promise<void>;
 	clearError: () => void;
 	reset: () => void;
@@ -58,6 +63,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 	conversations: [],
 	activeConversationId: null,
 	messages: {},
+	messagesPagination: {},
 	isLoading: false,
 	typingUsers: {},
 
@@ -443,7 +449,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 		set({ isLoading: true });
 		try {
 			const response = await fetch(
-				`${API_BASE_URL}/messages/conversations/${conversationId}/messages`,
+				`${API_BASE_URL}/messages/conversations/${conversationId}/messages?limit=30`,
 				{
 					method: "GET",
 					credentials: "include",
@@ -452,7 +458,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 					},
 				},
 			);
-			const result: HttpResponse<Message[]> = await response.json();
+			const result: HttpResponse<PaginatedMessages> = await response.json();
 
 			if (!result.success) {
 				console.log(
@@ -466,13 +472,25 @@ export const useChatStore = create<ChatState>((set, get) => ({
 			console.log(
 				"%c ✅ [HTTP] Messages Fetched:",
 				"color: #22c55e; font-weight: bold;",
-				{ count: result.data.length, messages: result.data },
+				{
+					count: result.data.messages.length,
+					hasMore: result.data.hasMore,
+					nextCursor: result.data.nextCursor,
+				},
 			);
 
 			set((state) => ({
 				messages: {
 					...state.messages,
-					[conversationId]: result.data,
+					[conversationId]: result.data.messages,
+				},
+				messagesPagination: {
+					...state.messagesPagination,
+					[conversationId]: {
+						hasMore: result.data.hasMore,
+						nextCursor: result.data.nextCursor,
+						isLoadingMore: false,
+					},
 				},
 				isLoading: false,
 			}));
@@ -484,6 +502,113 @@ export const useChatStore = create<ChatState>((set, get) => ({
 				e,
 			);
 			set({ isLoading: false });
+		}
+	},
+
+	loadMoreMessages: async (conversationId) => {
+		const pagination = get().messagesPagination[conversationId];
+
+		// Don't load if already loading or no more messages
+		if (!pagination || pagination.isLoadingMore || !pagination.hasMore) {
+			return;
+		}
+
+		console.log(
+			"%c 🌐 [HTTP] Fetching More Messages...",
+			"color: #eab308; font-weight: bold;",
+			{ conversationId, cursor: pagination.nextCursor },
+		);
+
+		// Set loading state
+		set((state) => ({
+			messagesPagination: {
+				...state.messagesPagination,
+				[conversationId]: {
+					...state.messagesPagination[conversationId],
+					isLoadingMore: true,
+				},
+			},
+		}));
+
+		try {
+			const url = new URL(
+				`${API_BASE_URL}/messages/conversations/${conversationId}/messages`,
+			);
+			url.searchParams.set("limit", "30");
+			if (pagination.nextCursor) {
+				url.searchParams.set("cursor", pagination.nextCursor);
+			}
+
+			const response = await fetch(url.toString(), {
+				method: "GET",
+				credentials: "include",
+				headers: {
+					"Content-Type": "application/json",
+				},
+			});
+			const result: HttpResponse<PaginatedMessages> = await response.json();
+
+			if (!result.success) {
+				console.log(
+					"%c ❌ [HTTP] Fetch More Messages Failed:",
+					"color: #ef4444; font-weight: bold;",
+					result.errorMessage,
+				);
+				set((state) => ({
+					messagesPagination: {
+						...state.messagesPagination,
+						[conversationId]: {
+							...state.messagesPagination[conversationId],
+							isLoadingMore: false,
+						},
+					},
+				}));
+				return;
+			}
+
+			console.log(
+				"%c ✅ [HTTP] More Messages Fetched:",
+				"color: #22c55e; font-weight: bold;",
+				{
+					count: result.data.messages.length,
+					hasMore: result.data.hasMore,
+					nextCursor: result.data.nextCursor,
+				},
+			);
+
+			set((state) => {
+				const currentMessages = state.messages[conversationId] || [];
+				return {
+					messages: {
+						...state.messages,
+						// Prepend older messages to the beginning
+						[conversationId]: [...result.data.messages, ...currentMessages],
+					},
+					messagesPagination: {
+						...state.messagesPagination,
+						[conversationId]: {
+							hasMore: result.data.hasMore,
+							nextCursor: result.data.nextCursor,
+							isLoadingMore: false,
+						},
+					},
+				};
+			});
+		} catch (e) {
+			console.log(
+				"%c ❌ [HTTP] Fetch More Messages Error:",
+				"color: #ef4444; font-weight: bold;",
+				e,
+			);
+			set((state) => ({
+				messagesPagination: {
+					...state.messagesPagination,
+					[conversationId]: {
+						...state.messagesPagination[conversationId],
+						isLoadingMore: false,
+					},
+				},
+			}));
 		}
 	},
 	sendMessage: async (conversationId, content) => {
@@ -576,6 +701,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 			conversations: [],
 			activeConversationId: null,
 			messages: {},
+			messagesPagination: {},
 			isLoading: false,
 			typingUsers: {},
 		}),

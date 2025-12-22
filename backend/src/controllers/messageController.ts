@@ -13,6 +13,8 @@ export class MessageController {
 	getConversationMessages = async (req: Request, res: Response) => {
 		const userId = req.userId;
 		const conversationId = req.params.conversationId;
+		const cursor = req.query.cursor as string | undefined;
+		const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 30;
 
 		if (!userId) {
 			res.status(401).json(createErrorResponse("Unauthorized access"));
@@ -20,11 +22,13 @@ export class MessageController {
 		}
 
 		try {
-			const messages = await this.messageService.getConversationMessages(
+			const paginatedMessages = await this.messageService.getConversationMessages(
 				conversationId,
 				userId,
+				cursor,
+				limit,
 			);
-			res.status(200).send(createSuccessResponse(messages));
+			res.status(200).send(createSuccessResponse(paginatedMessages));
 		} catch (error) {
 			HandleError(error, res, "MessageController.getConversationMessages", {
 				userId,

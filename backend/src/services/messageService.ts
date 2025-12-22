@@ -42,7 +42,7 @@ export class MessageService {
 		conversationId: string,
 		userId: string,
 		cursor?: string,
-		limit: number = 50,
+		limit: number = 30,
 	) {
 		const conversation = await this.conversationService.getConversationById(
 			conversationId,
@@ -62,7 +62,17 @@ export class MessageService {
 			cursor,
 			limit,
 		);
-		return messages;
+
+		// The repository fetches limit + 1 to check if there are more messages
+		const hasMore = messages.length > limit;
+		const paginatedMessages = hasMore ? messages.slice(1) : messages;
+		const nextCursor = hasMore ? paginatedMessages[0]?._id?.toString() : null;
+
+		return {
+			messages: paginatedMessages,
+			hasMore,
+			nextCursor,
+		};
 	}
 
 	async markConversationMessagesAsRead(conversationId: string, userId: string) {
