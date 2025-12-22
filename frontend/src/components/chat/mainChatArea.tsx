@@ -229,7 +229,10 @@ function MainChatArea({
 								variant="ghost"
 								size="icon"
 								className="md:hidden mr-2 hover:bg-gray-100 dark:hover:bg-gray-800"
-								onClick={() => setShowFriendsList(true)}
+								onClick={() => {
+									setShowFriendsList(true);
+									window.history.back();
+								}}
 							>
 								<ChevronLeft className="h-5 w-5" />
 							</Button>

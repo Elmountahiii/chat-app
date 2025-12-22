@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 import { User } from "@/types/user";
 import { Button } from "@/components/ui/button";
-import { Search, ChevronLeft } from "lucide-react";
+import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { FriendsDialog } from "@/components/chat/FriendsDialog";
 import { UserProfileDialog } from "@/components/chat/UserProfileDialog";
@@ -29,7 +29,7 @@ export default function ChatPage() {
 	const { user, updateUserInfo } = useAuthStore();
 	const { setActiveConversation, fetchConversations } = useChatStore();
 	const [searchQuery, setSearchQuery] = useState("");
-	const [showFriendsList, setShowFriendsList] = useState(false);
+	const [showFriendsList, setShowFriendsList] = useState(true);
 	const [selectedUserProfile, setSelectedUserProfile] = useState<User | null>(
 		null,
 	);
@@ -42,7 +42,25 @@ export default function ChatPage() {
 
 	const handleStartChat = (conversation: Conversation) => {
 		setActiveConversation(conversation._id);
+		// On mobile, hide the list so the chat area becomes visible and push history state
+		if (window.innerWidth < 768) {
+			setShowFriendsList(false);
+			window.history.pushState({ view: "chat" }, "");
+		}
 	};
+
+	useEffect(() => {
+		const handlePopState = (event: PopStateEvent) => {
+			if (event.state?.view === "chat") {
+				setShowFriendsList(false);
+			} else {
+				setShowFriendsList(true);
+			}
+		};
+		window.addEventListener("popstate", handlePopState);
+		return () => window.removeEventListener("popstate", handlePopState);
+	}, []);
+
 
 	const handleUserProfileClick = (user: User) => {
 		setShowUserProfile(true);
@@ -59,20 +77,12 @@ export default function ChatPage() {
 			{/* Friends list sidebar - hidden on mobile by default */}
 			<div
 				className={`${
-					showFriendsList ? "absolute inset-0 z-50 md:relative" : "hidden"
-				} md:flex flex-col w-full md:w-80 lg:w-96 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900`}
+					showFriendsList ? "flex w-full" : "hidden"
+				} md:flex flex-col md:w-80 lg:w-96 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 transition-all duration-300 ease-in-out`}
 			>
 				{/* Mobile header with back button */}
 				<div className="md:hidden p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
 					<div className="flex items-center">
-						<Button
-							variant="ghost"
-							size="icon"
-							onClick={() => setShowFriendsList(false)}
-							className="hover:bg-gray-100 dark:hover:bg-gray-800"
-						>
-							<ChevronLeft className="h-5 w-5" />
-						</Button>
 						<h1 className="text-xl font-bold text-gray-900 dark:text-white ml-2">
 							Messages
 						</h1>
@@ -143,10 +153,12 @@ export default function ChatPage() {
 			</div>
 
 			{/* Main chat area */}
-			<MainChatArea
-				handleUserProfileClick={handleUserProfileClick}
-				setShowFriendsList={setShowFriendsList}
-			/>
+			<div className={`${!showFriendsList ? "flex" : "hidden md:flex"} flex-1`}>
+				<MainChatArea
+					handleUserProfileClick={handleUserProfileClick}
+					setShowFriendsList={setShowFriendsList}
+				/>
+			</div>
 
 			{/* User Profile Dialog */}
 			<UserProfileDialog
