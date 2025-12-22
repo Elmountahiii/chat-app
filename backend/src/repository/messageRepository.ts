@@ -42,6 +42,72 @@ export class MessageRepository {
 		return messages.reverse();
 	}
 
+	async loadInitialMessages(
+		userId: string,
+		conversationId: string,
+		minMessages: number = 20,
+	): Promise<PopulatedMessage[]> {
+		// Count unread messages for this user
+		const unreadCount = await MessageModel.countDocuments({
+			conversationId: conversationId,
+			"readBy.user": { $ne: userId },
+		});
+
+		// If no unread messages, load the last minMessages
+		if (unreadCount === 0) {
+			const messages = (await MessageModel.find({ conversationId })
+				.sort({ createdAt: -1 })
+				.limit(minMessages)
+				.populate("sender", "-password")
+				.populate("readBy.user", "-password")) as unknown as PopulatedMessage[];
+			return messages.reverse();
+		}
+
+		// Find the oldest unread message to use as anchor
+		const oldestUnread = await MessageModel.findOne({
+			conversationId: conversationId,
+			"readBy.user": { $ne: userId },
+		}).sort({ createdAt: 1 });
+
+		if (!oldestUnread) {
+			// Fallback (shouldn't happen since unreadCount > 0)
+			const messages = (await MessageModel.find({ conversationId })
+				.sort({ createdAt: -1 })
+				.limit(minMessages)
+				.populate("sender", "-password")
+				.populate("readBy.user", "-password")) as unknown as PopulatedMessage[];
+			return messages.reverse();
+		}
+
+		// Calculate how many context messages we need before the first unread
+		const contextNeeded = Math.max(0, minMessages - unreadCount);
+
+		// Get context messages (messages before the oldest unread)
+		let contextMessages: PopulatedMessage[] = [];
+		if (contextNeeded > 0) {
+			contextMessages = (await MessageModel.find({
+				conversationId: conversationId,
+				createdAt: { $lt: oldestUnread.createdAt },
+			})
+				.sort({ createdAt: -1 })
+				.limit(contextNeeded)
+				.populate("sender", "-password")
+				.populate("readBy.user", "-password")) as unknown as PopulatedMessage[];
+			contextMessages = contextMessages.reverse();
+		}
+
+		// Get all unread messages
+		const unreadMessages = (await MessageModel.find({
+			conversationId: conversationId,
+			"readBy.user": { $ne: userId },
+		})
+			.sort({ createdAt: 1 })
+			.populate("sender", "-password")
+			.populate("readBy.user", "-password")) as unknown as PopulatedMessage[];
+
+		return [...contextMessages, ...unreadMessages];
+	}
+
 	async sendMessage(input: CreateMessageInput): Promise<PopulatedMessage> {
 		const { conversationId, senderId, content } = input;
 

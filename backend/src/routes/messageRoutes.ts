@@ -9,6 +9,11 @@ messageRouter.get(
 	messageController.getConversationMessages,
 );
 
+messageRouter.get(
+	"/conversations/:conversationId/initaialMessages",
+	messageController.loadInitialMessages,
+);
+
 messageRouter.patch(
 	"/conversations/:conversationId/read",
 	messageController.markConversationMessagesAsRead,

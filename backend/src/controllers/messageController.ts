@@ -14,7 +14,9 @@ export class MessageController {
 		const userId = req.userId;
 		const conversationId = req.params.conversationId;
 		const cursor = req.query.cursor as string | undefined;
-		const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 30;
+		const limit = req.query.limit
+			? parseInt(req.query.limit as string, 10)
+			: 30;
 
 		if (!userId) {
 			res.status(401).json(createErrorResponse("Unauthorized access"));
@@ -22,15 +24,38 @@ export class MessageController {
 		}
 
 		try {
-			const paginatedMessages = await this.messageService.getConversationMessages(
-				conversationId,
-				userId,
-				cursor,
-				limit,
-			);
+			const paginatedMessages =
+				await this.messageService.getConversationMessages(
+					conversationId,
+					userId,
+					cursor,
+					limit,
+				);
 			res.status(200).send(createSuccessResponse(paginatedMessages));
 		} catch (error) {
 			HandleError(error, res, "MessageController.getConversationMessages", {
+				userId,
+				conversationId,
+			});
+		}
+	};
+
+	loadInitialMessages = async (req: Request, res: Response) => {
+		const userId = req.userId;
+		const conversationId = req.params.conversationId;
+		if (!userId) {
+			res.status(401).json(createErrorResponse("Unauthorized access"));
+			return;
+		}
+
+		try {
+			const messages = await this.messageService.loadInitialMessages(
+				conversationId,
+				userId,
+			);
+			res.status(200).send(createSuccessResponse(messages));
+		} catch (error) {
+			HandleError(error, res, "MessageController.loadInitialMessages", {
 				userId,
 				conversationId,
 			});

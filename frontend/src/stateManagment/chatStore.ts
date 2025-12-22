@@ -25,7 +25,12 @@ interface ChatState {
 	messages: Record<string, Message[]>;
 	messagesPagination: Record<
 		string,
-		{ hasMore: boolean; nextCursor: string | null; isLoadingMore: boolean }
+		{
+			hasMore: boolean;
+			nextCursor: string | null;
+			isLoadingMore: boolean;
+			isInitial: boolean;
+		}
 	>;
 
 	isLoading: boolean;
@@ -39,6 +44,7 @@ interface ChatState {
 	createConversation: (userId: string) => Promise<void>;
 	setActiveConversation: (conversationId: string) => void;
 	loadMessages: (conversationId: string) => Promise<void>;
+	loadInitialMessages: (conversationId: string) => Promise<void>;
 	loadMoreMessages: (conversationId: string) => Promise<void>;
 	sendMessage: (conversationId: string, content: string) => Promise<void>;
 	clearError: () => void;
@@ -440,6 +446,79 @@ export const useChatStore = create<ChatState>((set, get) => ({
 	},
 
 	// message actions
+	loadInitialMessages: async (conversationId) => {
+		console.log(
+			"%c 🌐 [HTTP] Fetching Initial Messages...",
+			"color: #eab308; font-weight: bold;",
+			{ conversationId },
+		);
+		set({ isLoading: true });
+		try {
+			const response = await fetch(
+				`${API_BASE_URL}/messages/conversations/${conversationId}/initaialMessages`,
+				{
+					method: "GET",
+					credentials: "include",
+					headers: {
+						"Content-Type": "application/json",
+					},
+				},
+			);
+			const result: HttpResponse<Message[]> = await response.json();
+			if (!result.success) {
+				console.log(
+					"%c ❌ [HTTP] Fetch Initial Messages Failed:",
+					"color: #ef4444; font-weight: bold;",
+					result.errorMessage,
+				);
+				return;
+			}
+
+			console.log(
+				"%c ✅ [HTTP] Initial Messages Fetched:",
+				"color: #22c55e; font-weight: bold;",
+				{ count: result.data.length },
+			);
+
+			set((state) => ({
+				messages: {
+					...state.messages,
+					[conversationId]: result.data,
+				},
+				messagesPagination: {
+					...state.messagesPagination,
+					[conversationId]: {
+						isInitial: true,
+						hasMore: true,
+						nextCursor: result.data.length > 1 ? result.data[0]._id : null,
+						isLoadingMore: false,
+					},
+				},
+				isLoading: false,
+			}));
+			setTimeout(() => {
+				set((state) => ({
+					messagesPagination: {
+						...state.messagesPagination,
+						[conversationId]: {
+							isInitial: false,
+							hasMore: true,
+							nextCursor: result.data.length > 1 ? result.data[0]._id : null,
+							isLoadingMore: false,
+						},
+					},
+					isLoading: false,
+				}));
+			}, 500);
+		} catch (e) {
+			console.log(
+				"%c ❌ [HTTP] Fetch Initail Messages Error:",
+				"color: #ef4444; font-weight: bold;",
+				e,
+			);
+			set({ isLoading: false });
+		}
+	},
 	loadMessages: async (conversationId) => {
 		console.log(
 			"%c 🌐 [HTTP] Fetching Messages...",
@@ -487,6 +566,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 				messagesPagination: {
 					...state.messagesPagination,
 					[conversationId]: {
+						isInitial: false,
 						hasMore: result.data.hasMore,
 						nextCursor: result.data.nextCursor,
 						isLoadingMore: false,
@@ -587,6 +667,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 					messagesPagination: {
 						...state.messagesPagination,
 						[conversationId]: {
+							isInitial: false,
 							hasMore: result.data.hasMore,
 							nextCursor: result.data.nextCursor,
 							isLoadingMore: false,

@@ -75,6 +75,28 @@ export class MessageService {
 		};
 	}
 
+	async loadInitialMessages(conversationId: string, userId: string) {
+		const conversation = await this.conversationService.getConversationById(
+			conversationId,
+			userId,
+		);
+		if (!conversation) {
+			throw new AppError("Conversation not found", 404);
+		}
+
+		if (
+			conversation.participantOne._id.toString() !== userId &&
+			conversation.participantTwo._id.toString() !== userId
+		) {
+			throw new AppError("User is not a participant of the conversation", 403);
+		}
+		const messages = await this.messageRepo.loadInitialMessages(
+			userId,
+			conversationId,
+		);
+		return messages;
+	}
+
 	async markConversationMessagesAsRead(conversationId: string, userId: string) {
 		const conversation = await this.conversationService.getConversationById(
 			conversationId,

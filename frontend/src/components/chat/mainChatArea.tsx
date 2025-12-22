@@ -1,7 +1,13 @@
 "use client";
 import { useAuthStore } from "@/stateManagment/authStore";
 import { useChatStore } from "@/stateManagment/chatStore";
-import React, { useRef, useState, useEffect, useMemo, useCallback } from "react";
+import React, {
+	useRef,
+	useState,
+	useEffect,
+	useMemo,
+	useCallback,
+} from "react";
 import { Button } from "../ui/button";
 import {
 	ChevronLeft,
@@ -60,6 +66,7 @@ function MainChatArea({
 		activeConversationId,
 		conversations,
 		loadMessages,
+		loadInitialMessages,
 		loadMoreMessages,
 		messagesPagination,
 		notifyTyping,
@@ -99,10 +106,10 @@ function MainChatArea({
 
 	useEffect(() => {
 		if (conversation?._id) {
-			loadMessages(conversation._id);
+			loadInitialMessages(conversation._id);
 			notifyMessageRead(conversation._id);
 		}
-	}, [conversation?._id, loadMessages, notifyMessageRead]);
+	}, [conversation?._id, loadInitialMessages, notifyMessageRead]);
 
 	// Scroll to bottom on initial load or new messages, preserve position when loading older messages
 	useEffect(() => {
@@ -137,11 +144,22 @@ function MainChatArea({
 		const { scrollTop } = container;
 
 		// Load more when scrolled within 100px of the top
-		if (scrollTop < 100 && pagination?.hasMore && !pagination?.isLoadingMore) {
+		if (
+			scrollTop < 100 &&
+			pagination?.hasMore &&
+			!pagination?.isLoadingMore &&
+			!pagination.isInitial
+		) {
 			isLoadingMoreRef.current = true;
 			loadMoreMessages(conversation._id);
 		}
-	}, [conversation?._id, pagination?.hasMore, pagination?.isLoadingMore, loadMoreMessages]);
+	}, [
+		conversation?._id,
+		pagination?.hasMore,
+		pagination?.isLoadingMore,
+		pagination?.isInitial,
+		loadMoreMessages,
+	]);
 
 	// Attach scroll event listener
 	useEffect(() => {
@@ -339,14 +357,14 @@ function MainChatArea({
 											conversationMessages[index - 1]?.sender._id !==
 												message.sender._id);
 
-							return (
-								<div
-									key={message._id}
-									data-message-id={message._id}
-									className={`flex ${
-										isMe ? "justify-end" : "justify-start"
-									} mb-3`}
-								>
+									return (
+										<div
+											key={message._id}
+											data-message-id={message._id}
+											className={`flex ${
+												isMe ? "justify-end" : "justify-start"
+											} mb-3`}
+										>
 											<div
 												className={`flex max-w-[80%] md:max-w-[60%] ${
 													isMe ? "flex-row-reverse" : "flex-row"
