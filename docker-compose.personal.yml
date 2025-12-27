@@ -1,24 +1,13 @@
+# ============================================================
+# PERSONAL USE ONLY
+# This compose file is configured for personal VPS deployment
+# with shared Traefik and external MongoDB (Atlas).
+#
+# For other deployments, please use: docker-compose.yml
+# ============================================================
+#
+version: "3.8"
 services:
-  database:
-    image: mongo:7
-    container_name: chatapp-mongodb
-    restart: unless-stopped
-    volumes:
-      - mongo-data:/data/db
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USER:-admin}
-      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD:-password}
-      - MONGO_INITDB_DATABASE=${MONGO_DB:-chatapp}
-    command: ["mongod", "--wiredTigerCacheSizeGB", "0.25"]
-    networks:
-      - internal
-    deploy:
-      resources:
-        limits:
-          memory: 384M
-        reservations:
-          memory: 128M
-
   backend:
     build:
       context: ./backend
@@ -30,12 +19,10 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=${BACKEND_PORT:-3001}
-      - MONGODB_URI=mongodb://${MONGO_ROOT_USER:-admin}:${MONGO_ROOT_PASSWORD:-password}@database:27017/${MONGO_DB:-chatapp}?authSource=admin
+      - MONGODB_URI=${MONGODB_URI}
       - JWT_SECRET=${JWT_SECRET:-your_jwt_secret}
       - NEXT_PUBLIC_FRONTEND_URL=${NEXT_PUBLIC_FRONTEND_URL}
       - NODE_OPTIONS=--max-old-space-size=192
-    depends_on:
-      - database
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.chatapp-backend.rule=Host(`chat.elmountahi.dev`) && (PathPrefix(`/api`) || PathPrefix(`/socket.io`))"
@@ -44,7 +31,6 @@ services:
       - "traefik.http.services.chatapp-backend.loadbalancer.server.port=3001"
     networks:
       - web
-      - internal
     deploy:
       resources:
         limits:
@@ -79,7 +65,6 @@ services:
       - "traefik.http.services.chatapp-frontend.loadbalancer.server.port=3000"
     networks:
       - web
-      - internal
     deploy:
       resources:
         limits:
@@ -88,13 +73,9 @@ services:
           memory: 96M
 
 volumes:
-  mongo-data:
-    driver: local
   backend-logs:
     driver: local
 
 networks:
   web:
     external: true
-  internal:
-    driver: bridge
