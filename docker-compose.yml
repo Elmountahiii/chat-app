@@ -76,7 +76,7 @@ services:
     container_name: chatapp-traefik
     command:
       - "--log.level=INFO"
-      - "--api.insecure=true" # Enable Dashboard on 8080 (optional, good for debugging)
+      - "--api.insecure=true"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
