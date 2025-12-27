@@ -7,6 +7,7 @@ import { Conversation } from "@/types/conversation";
 import { Message, PaginatedMessages } from "@/types/message";
 import { FriendShipRequest } from "@/types/friendShipRequest";
 import { useFriendshipStore } from "./friendshipStore";
+import { useAuthStore } from "./authStore";
 import { User } from "@/types/user";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL
@@ -176,10 +177,41 @@ export const useChatStore = create<ChatState>((set, get) => ({
 			);
 			set((state) => {
 				const currentMessages = state.messages[message.conversationId] || [];
+
+				// Check if this is a confirmation for our optimistic message (has tempId)
+				if (message.tempId) {
+					const hasPendingMessage = currentMessages.some(
+						(m) => m.tempId === message.tempId,
+					);
+
+					if (hasPendingMessage) {
+						// Replace the pending message with the confirmed one
+						const updatedMessages = currentMessages.map((m) =>
+							m.tempId === message.tempId
+								? { ...message, status: "sent" as const }
+								: m,
+						);
+
+						return {
+							messages: {
+								...state.messages,
+								[message.conversationId]: updatedMessages,
+							},
+							conversations: state.conversations.map((conv) =>
+								conv._id === message.conversationId
+									? { ...conv, lastMessage: message }
+									: conv,
+							),
+						};
+					}
+				}
+
 				// Check if message already exists to prevent duplicates
 				if (currentMessages.some((m) => m._id === message._id)) {
 					return state;
 				}
+
+				// Mark as read if active conversation
 				if (get().activeConversationId === message.conversationId) {
 					get().notifyMessageRead(message.conversationId);
 				}
@@ -187,7 +219,10 @@ export const useChatStore = create<ChatState>((set, get) => ({
 				return {
 					messages: {
 						...state.messages,
-						[message.conversationId]: [...currentMessages, message],
+						[message.conversationId]: [
+							...currentMessages,
+							{ ...message, status: "sent" as const },
+						],
 					},
 					// Update last message in conversation list
 					conversations: state.conversations.map((conv) => {
@@ -325,6 +360,33 @@ export const useChatStore = create<ChatState>((set, get) => ({
 			);
 			// You can add toast notifications here
 		});
+
+		// Message send error handling - marks optimistic message as failed
+		socket.on(
+			"send_message_error",
+			(data: { tempId: string; conversationId: string; message: string }) => {
+				console.log(
+					"%c ❌ [Socket] Message Send Failed:",
+					"color: #ef4444; font-weight: bold;",
+					data,
+				);
+
+				// Mark the pending message as failed
+				set((state) => {
+					const currentMessages = state.messages[data.conversationId] || [];
+					return {
+						messages: {
+							...state.messages,
+							[data.conversationId]: currentMessages.map((m) =>
+								m.tempId === data.tempId
+									? { ...m, status: "failed" as const }
+									: m,
+							),
+						},
+					};
+				});
+			},
+		);
 	},
 
 	disconnectSocket: () => {
@@ -694,17 +756,54 @@ export const useChatStore = create<ChatState>((set, get) => ({
 	},
 	sendMessage: async (conversationId, content) => {
 		console.log(
-			"%c 🌐 [HTTP] Sending Message...",
+			"%c 📤 [Socket] Sending Message...",
 			"color: #eab308; font-weight: bold;",
 			{ conversationId, content },
 		);
 		const socket = get().socket;
-		if (socket) {
-			socket.emit("send_message", {
-				conversationId,
-				content,
-			});
+		const user = useAuthStore.getState().user;
+
+		if (!socket || !user) {
+			console.log(
+				"%c ❌ [Socket] Cannot send message - no socket or user",
+				"color: #ef4444; font-weight: bold;",
+			);
+			return;
 		}
+
+		// Generate temporary ID for tracking
+		const tempId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+		// Create optimistic message
+		const optimisticMessage: Message = {
+			_id: tempId,
+			conversationId,
+			sender: user,
+			content,
+			readBy: [{ user, readAt: new Date().toISOString() }],
+			createdAt: new Date().toISOString(),
+			updatedAt: new Date().toISOString(),
+			tempId,
+			status: "pending",
+		};
+
+		// Add message to state immediately (optimistic update)
+		set((state) => ({
+			messages: {
+				...state.messages,
+				[conversationId]: [
+					...(state.messages[conversationId] || []),
+					optimisticMessage,
+				],
+			},
+		}));
+
+		// Emit to server with tempId for tracking
+		socket.emit("send_message", {
+			conversationId,
+			content,
+			tempId,
+		});
 	},
 
 	notifyMessageRead: async (conversationId) => {

@@ -173,21 +173,30 @@ export class SocketService {
 			// messaging actions
 			socket.on(
 				"send_message",
-				async (data: { conversationId: string; content: string }) => {
+				async (data: { conversationId: string; content: string; tempId?: string }) => {
 					try {
-						const { conversationId, content } = data;
+						const { conversationId, content, tempId } = data;
 						const message = await this.messageService.sendMessage({
 							conversationId,
 							senderId: userId,
 							content,
 						});
+
+					// Include tempId in the response so frontend can match optimistic message
+					const messageResponse = tempId
+						? { ...message, tempId }
+						: message;
+
 						this.io
 							.to(`conversation_${conversationId}`)
-							.emit("new_message", message);
+							.emit("new_message", messageResponse);
 					} catch (error) {
 						console.error("Error sending message:", error);
-						socket.emit("error", {
-							event: "send_message",
+
+						// Emit specific error with tempId so frontend can mark message as failed
+						socket.emit("send_message_error", {
+							tempId: data.tempId,
+							conversationId: data.conversationId,
 							message: "Failed to send message",
 						});
 					}

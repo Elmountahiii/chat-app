@@ -354,6 +354,8 @@ function MainChatArea({
 
 								{conversationMessages.map((message, index) => {
 									const isMe = message.sender._id === user?._id;
+									const isPending = message.status === "pending";
+									const isFailed = message.status === "failed";
 									const showAvatar =
 										!isMe &&
 										(index === 0 ||
@@ -366,7 +368,7 @@ function MainChatArea({
 											data-message-id={message._id}
 											className={`flex ${
 												isMe ? "justify-end" : "justify-start"
-											} mb-3`}
+											} mb-3 ${isPending ? "opacity-50" : ""}`}
 										>
 											<div
 												className={`flex max-w-[80%] md:max-w-[60%] ${
@@ -401,7 +403,9 @@ function MainChatArea({
 													<div
 														className={`px-3 py-2 rounded-lg ${
 															isMe
-																? "bg-blue-600 text-white"
+																? isFailed
+																	? "bg-red-500 text-white"
+																	: "bg-blue-600 text-white"
 																: "bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-600"
 														}`}
 													>
@@ -425,10 +429,16 @@ function MainChatArea({
 														</span>
 														{isMe && (
 															<span>
-																{message.readBy.some(
-																	(entry) =>
-																		entry.user._id === otherParticipant?._id,
-																) ? (
+																{isFailed ? (
+																	<span className="text-xs text-red-500 font-medium">
+																		Failed
+																	</span>
+																) : isPending ? (
+																	<Loader2 className="h-3 w-3 text-gray-400 animate-spin" />
+																) : message.readBy.some(
+																		(entry) =>
+																			entry.user._id === otherParticipant?._id,
+																	) ? (
 																	<CheckCheck className="h-3 w-3 text-blue-500" />
 																) : (
 																	<Check className="h-3 w-3 text-gray-400" />

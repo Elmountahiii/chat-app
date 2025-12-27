@@ -1,5 +1,7 @@
 import { User } from "./user";
 
+export type MessageStatus = "pending" | "sent" | "failed";
+
 export interface Message {
 	_id: string;
 	conversationId: string;
@@ -11,6 +13,9 @@ export interface Message {
 	}[];
 	createdAt: string;
 	updatedAt: string;
+	// Optimistic UI fields
+	tempId?: string;
+	status?: MessageStatus;
 }
 
 export interface PaginatedMessages {
