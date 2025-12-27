@@ -223,7 +223,7 @@ function MainChatArea({
 			{conversation ? (
 				<>
 					{/* Chat header - with back button on mobile */}
-					<div className="flex items-center justify-between p-4 lg:p-6 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+					<div className="sticky top-0 z-10 flex items-center justify-between p-4 lg:p-6 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
 						<div className="flex items-center min-w-0">
 							<Button
 								variant="ghost"
@@ -447,7 +447,7 @@ function MainChatArea({
 					</div>
 
 					{/* Message input */}
-					<div className="p-4 lg:p-6 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+					<div className="sticky bottom-0 z-10 p-4 lg:p-6 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
 						<div className="max-w-4xl mx-auto">
 							<div className="flex items-end space-x-3">
 								<div className="flex-1 relative">
