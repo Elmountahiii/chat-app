@@ -461,17 +461,17 @@ function MainChatArea({
 						<div className="max-w-4xl mx-auto">
 							<div className="flex items-end space-x-3">
 								<div className="flex-1 relative">
-									<Input
-										value={newMessage}
-										onChange={(e) => {
-											notifyTyping(conversation._id, e.target.value.length > 0);
-											setNewMessage(e.target.value);
-										}}
-										onKeyDown={handleKeyPress}
-										placeholder="Type a message..."
-										className="pr-12 py-3 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus-visible:ring-2 focus-visible:ring-blue-500 text-sm"
-										style={{ minHeight: "44px" }}
-									/>
+								<Input
+									value={newMessage}
+									onChange={(e) => {
+										notifyTyping(conversation._id, e.target.value.length > 0);
+										setNewMessage(e.target.value);
+									}}
+									onKeyDown={handleKeyPress}
+									placeholder="Type a message..."
+									className="pr-12 py-3 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus-visible:ring-2 focus-visible:ring-blue-500 text-base md:text-sm"
+									style={{ minHeight: "44px" }}
+								/>
 									<div className="absolute right-2 top-1/2 transform -translate-y-1/2">
 										<EmojiSelector onEmojiSelect={handleEmojiSelect} />
 									</div>
