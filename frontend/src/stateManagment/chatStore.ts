@@ -12,10 +12,10 @@ import { User } from "@/types/user";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL
 	? process.env.NEXT_PUBLIC_BACKEND_URL
-	: "http://localhost:3001/api";
+	: "http://192.168.1.3:3001/api";
 
 const SOCKET_URL =
-	process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:3001";
+	process.env.NEXT_PUBLIC_SOCKET_URL || "http://192.168.1.3:3001";
 
 interface ChatState {
 	// state

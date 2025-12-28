@@ -4,6 +4,9 @@ import { AuthValidator } from "../validators/authValidator";
 import { createErrorResponse, createSuccessResponse } from "../types/common";
 import { JwtService } from "../services/jwtService";
 import { HandleError } from "../utils/errorHandler";
+import { config } from "../config/environment";
+
+const isProduction = config.NODE_ENV === "production";
 
 export class AuthController {
 	constructor(
@@ -43,8 +46,8 @@ export class AuthController {
 			const token = await JwtService.signToken(user._id.toString());
 			res.cookie("authToken", token, {
 				httpOnly: true,
-				secure: true,
-				sameSite: "strict",
+				secure: isProduction,
+				sameSite: isProduction ? "strict" : "lax",
 				maxAge: 7 * 24 * 60 * 60 * 1000,
 			});
 			res.status(200).json(createSuccessResponse(user, "Login successful"));

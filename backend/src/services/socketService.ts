@@ -21,7 +21,11 @@ export class SocketService {
 	) {
 		this.io = new Server(server, {
 			cors: {
-				origin: [config.NEXT_PUBLIC_FRONTEND_URL, "http://localhost:3000"],
+				origin: [
+					config.NEXT_PUBLIC_FRONTEND_URL,
+					"http://localhost:3000",
+					"http://192.168.1.3:3000",
+				],
 				methods: ["GET", "POST"],
 				credentials: true,
 			},
@@ -173,7 +177,11 @@ export class SocketService {
 			// messaging actions
 			socket.on(
 				"send_message",
-				async (data: { conversationId: string; content: string; tempId?: string }) => {
+				async (data: {
+					conversationId: string;
+					content: string;
+					tempId?: string;
+				}) => {
 					try {
 						const { conversationId, content, tempId } = data;
 						const message = await this.messageService.sendMessage({
@@ -182,10 +190,8 @@ export class SocketService {
 							content,
 						});
 
-					// Include tempId in the response so frontend can match optimistic message
-					const messageResponse = tempId
-						? { ...message, tempId }
-						: message;
+						// Include tempId in the response so frontend can match optimistic message
+						const messageResponse = tempId ? { ...message, tempId } : message;
 
 						this.io
 							.to(`conversation_${conversationId}`)

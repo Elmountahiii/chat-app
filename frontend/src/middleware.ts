@@ -46,6 +46,7 @@ export async function middleware(request: NextRequest) {
 		const validationResponse: HttpResponse<User> = await response.json();
 		if (!validationResponse.success) {
 			redirectResponse.cookies.delete("authToken");
+			console.log("unauth request ", validationResponse.errorMessage);
 			return redirectResponse;
 		} else {
 			if (isAuthRoute) {

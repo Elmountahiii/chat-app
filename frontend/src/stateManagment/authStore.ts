@@ -30,7 +30,7 @@ interface AuthenticationState {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL
 	? process.env.NEXT_PUBLIC_BACKEND_URL
-	: "http://localhost:3001/api";
+	: "http://192.168.1.3:3001/api";
 
 export const useAuthStore = create<AuthenticationState>((set) => ({
 	// State
@@ -131,7 +131,6 @@ export const useAuthStore = create<AuthenticationState>((set) => ({
 				);
 				set({
 					isLoading: false,
-					error: result.errorMessage,
 				});
 				return;
 			}
@@ -162,7 +161,8 @@ export const useAuthStore = create<AuthenticationState>((set) => ({
 			set({
 				isLoading: false,
 				error:
-					"Unable to create account. Please check your connection and try again.",
+					"Unable to create account. Please check your connection and try again." +
+					API_BASE_URL,
 			});
 		}
 	},
