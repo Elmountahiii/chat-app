@@ -130,10 +130,13 @@ export class MessageRepository {
 			updatedAt: new Date(),
 		});
 
-		return await message.populate([
-			{ path: "sender" },
-			{ path: "readBy.user" },
+		const populatedMessage = await message.populate([
+			{ path: "sender", select: "-password" },
+			{ path: "readBy.user", select: "-password" },
 		]);
+
+		// Convert to plain object to avoid Mongoose document internals
+		return populatedMessage.toObject() as unknown as PopulatedMessage;
 	}
 
 	async getMessageById(messageId: string): Promise<PopulatedMessage> {
