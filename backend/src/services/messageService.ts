@@ -2,11 +2,13 @@ import { MessageRepository } from "../repository/messageRepository";
 import { AppError } from "../types/common";
 import { CreateMessageInput } from "../types/inputs/messagingInputs";
 import { ConversationService } from "./conversatioService";
+import { FriendshipService } from "./friendsipService";
 
 export class MessageService {
 	constructor(
 		private messageRepo: MessageRepository,
 		private conversationService: ConversationService,
+		private friendshipService: FriendshipService,
 	) {}
 
 	async sendMessage(input: CreateMessageInput) {
@@ -27,6 +29,20 @@ export class MessageService {
 				"Sender is not a participant of the conversation",
 				403,
 			);
+		}
+
+		// Check if either user has blocked the other
+		const otherUserId =
+			conversation.participantOne._id.toString() === senderId
+				? conversation.participantTwo._id.toString()
+				: conversation.participantOne._id.toString();
+
+		const blockStatus = await this.friendshipService.isBlocked(
+			senderId,
+			otherUserId,
+		);
+		if (blockStatus.isBlocked) {
+			throw new AppError("You cannot message this user", 403);
 		}
 
 		const message = await this.messageRepo.sendMessage({

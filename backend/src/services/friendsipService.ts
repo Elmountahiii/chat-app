@@ -70,6 +70,11 @@ export class FriendshipService {
 		const result = await this.firendshipRepo.removeFriend(userId, friendId);
 		return result;
 	}
+
+	async isBlocked(userOneId: string, userTwoId: string) {
+		return await this.firendshipRepo.isBlocked(userOneId, userTwoId);
+	}
+
 	async blockUser(userId: string, friendId: string) {
 		if (userId === friendId) {
 			throw new Error("Cannot block oneself");

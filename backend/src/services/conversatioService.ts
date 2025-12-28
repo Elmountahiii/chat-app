@@ -1,5 +1,6 @@
 import { ConversationRepository } from "../repository/conversationRepository";
 import { FriendshipService } from "./friendsipService";
+import { PopulatedConversation } from "../schema/mongodb/conversationSchema";
 
 export class ConversationService {
 	constructor(
@@ -16,7 +17,29 @@ export class ConversationService {
 	async getUserConversationsWithUnreadCounts(userId: string) {
 		const conversations =
 			await this.conversationRepo.getUserConversationsWithUnreadCounts(userId);
-		return conversations;
+
+		// Add blocked status to each conversation
+		const conversationsWithBlockStatus = await Promise.all(
+			conversations.map(async (conv) => {
+				const otherUserId =
+					conv.participantOne._id.toString() === userId
+						? conv.participantTwo._id.toString()
+						: conv.participantOne._id.toString();
+
+				const blockStatus = await this.friendshipService.isBlocked(
+					userId,
+					otherUserId,
+				);
+
+				return {
+					...conv,
+					isBlocked: blockStatus.isBlocked,
+					blockedByMe: blockStatus.blockedByUserId === userId,
+				} as PopulatedConversation & { isBlocked: boolean; blockedByMe: boolean };
+			}),
+		);
+
+		return conversationsWithBlockStatus;
 	}
 
 	async getConversationById(id: string, userId: string) {

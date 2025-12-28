@@ -20,12 +20,14 @@ import {
 	Loader2,
 	Check,
 	CheckCheck,
+	UserCheck,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { User } from "@/types/user";
 import { Input } from "../ui/input";
 import { EmojiSelector } from "./EmojiSelector";
 import { formatDistanceToNow, isToday, isYesterday, format } from "date-fns";
+import { toast } from "sonner";
 
 import {
 	DropdownMenu,
@@ -74,9 +76,10 @@ function MainChatArea({
 		isLoading,
 	} = useChatStore();
 	const { user } = useAuthStore();
-	const { friends, unfriendUser } = useFriendshipStore();
+	const { friends, unfriendUser, blockFriend, unblockUser } = useFriendshipStore();
 	const [blockUserDialogOpen, setBlockUserDialogOpen] = useState(false);
 	const [unfriendUserDialogOpen, setUnfriendUserDialogOpen] = useState(false);
+	const [isBlockingOrUnblocking, setIsBlockingOrUnblocking] = useState(false);
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 	const messagesContainerRef = useRef<HTMLDivElement>(null);
 	const prevMessagesLengthRef = useRef<number>(0);
@@ -92,6 +95,10 @@ function MainChatArea({
 		conversation?.participantOne._id === user?._id
 			? conversation?.participantTwo
 			: conversation?.participantOne;
+
+	// Check if conversation is blocked
+	const isBlocked = conversation?.isBlocked ?? false;
+	const blockedByMe = conversation?.blockedByMe ?? false;
 
 	const conversationMessages = useMemo(
 		() => messages[conversation?._id || ""] || [],
@@ -218,6 +225,32 @@ function MainChatArea({
 		}
 	};
 
+	const handleUnblockUser = async () => {
+		if (otherParticipant) {
+			setIsBlockingOrUnblocking(true);
+			const success = await unblockUser(otherParticipant._id);
+			setIsBlockingOrUnblocking(false);
+			if (success) {
+				toast.success(`${otherParticipant.username} has been unblocked`);
+			} else {
+				toast.error("Failed to unblock user");
+			}
+		}
+	};
+
+	const handleConfirmBlock = async () => {
+		if (otherParticipant) {
+			setIsBlockingOrUnblocking(true);
+			const success = await blockFriend(otherParticipant._id);
+			setIsBlockingOrUnblocking(false);
+			if (success) {
+				toast.success(`${otherParticipant.username} has been blocked`);
+			} else {
+				toast.error("Failed to block user");
+			}
+		}
+	};
+
 	return (
 		<div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-gray-900">
 			{conversation ? (
@@ -306,21 +339,37 @@ function MainChatArea({
 										View Profile
 									</DropdownMenuItem>
 
-									<DropdownMenuItem
-										className="cursor-pointer"
-										onClick={handleUnfriendUser}
-									>
-										<UserRoundMinus className="mr-2 h-4 w-4" />
-										unfriend User
-									</DropdownMenuItem>
-									<DropdownMenuItem
-										className="cursor-pointer"
-										onClick={handleBlockUser}
-									>
-										<UserX className="mr-2 h-4 w-4" />
-										Block User
-									</DropdownMenuItem>
-								</DropdownMenuContent>
+								<DropdownMenuItem
+									className="cursor-pointer"
+									onClick={handleUnfriendUser}
+								>
+									<UserRoundMinus className="mr-2 h-4 w-4" />
+									unfriend User
+								</DropdownMenuItem>
+				{!blockedByMe && (
+					<DropdownMenuItem
+						className="cursor-pointer"
+						onClick={handleBlockUser}
+					>
+						<UserX className="mr-2 h-4 w-4" />
+						Block User
+					</DropdownMenuItem>
+				)}
+				{blockedByMe && (
+					<DropdownMenuItem
+						className="cursor-pointer"
+						onClick={handleUnblockUser}
+						disabled={isBlockingOrUnblocking}
+					>
+						{isBlockingOrUnblocking ? (
+							<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+						) : (
+							<UserCheck className="mr-2 h-4 w-4" />
+						)}
+						Unblock User
+					</DropdownMenuItem>
+				)}
+				</DropdownMenuContent>
 							</DropdownMenu>
 						</div>
 					</div>
@@ -456,37 +505,68 @@ function MainChatArea({
 						)}
 					</div>
 
-					{/* Message input */}
-					<div className="sticky bottom-0 z-10 p-4 lg:p-6 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
-						<div className="max-w-4xl mx-auto">
-							<div className="flex items-end space-x-3">
-								<div className="flex-1 relative">
-								<Input
-									value={newMessage}
-									onChange={(e) => {
-										notifyTyping(conversation._id, e.target.value.length > 0);
-										setNewMessage(e.target.value);
-									}}
-									onKeyDown={handleKeyPress}
-									placeholder="Type a message..."
-									className="pr-12 py-3 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus-visible:ring-2 focus-visible:ring-blue-500 text-base md:text-sm"
-									style={{ minHeight: "44px" }}
-								/>
-									<div className="absolute right-2 top-1/2 transform -translate-y-1/2">
-										<EmojiSelector onEmojiSelect={handleEmojiSelect} />
+					{/* Message input or Blocked notice */}
+					{isBlocked ? (
+						<div className="sticky bottom-0 z-10 p-4 lg:p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800">
+							<div className="max-w-4xl mx-auto text-center">
+								<div className="flex flex-col items-center justify-center space-y-3 py-2">
+									<div className="flex items-center space-x-2 text-gray-500 dark:text-gray-400">
+										<UserX className="h-5 w-5" />
+										<span>
+											{blockedByMe
+												? "You have blocked this user"
+												: "You cannot message this user"}
+										</span>
 									</div>
-								</div>
+							{blockedByMe && (
 								<Button
-									onClick={handleSendMessage}
-									size="icon"
-									disabled={newMessage.trim() === ""}
-									className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed h-11 w-11 transition-colors duration-200"
+									onClick={handleUnblockUser}
+									variant="outline"
+									size="sm"
+									disabled={isBlockingOrUnblocking}
+									className="text-blue-600 border-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-400 dark:hover:bg-blue-900/20"
 								>
-									<Send className="h-5 w-5" />
+									{isBlockingOrUnblocking ? (
+										<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+									) : null}
+									Unblock User
 								</Button>
+							)}
+								</div>
 							</div>
 						</div>
-					</div>
+					) : (
+						<div className="sticky bottom-0 z-10 p-4 lg:p-6 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+							<div className="max-w-4xl mx-auto">
+								<div className="flex items-end space-x-3">
+									<div className="flex-1 relative">
+									<Input
+										value={newMessage}
+										onChange={(e) => {
+											notifyTyping(conversation._id, e.target.value.length > 0);
+											setNewMessage(e.target.value);
+										}}
+										onKeyDown={handleKeyPress}
+										placeholder="Type a message..."
+										className="pr-12 py-3 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus-visible:ring-2 focus-visible:ring-blue-500 text-base md:text-sm"
+										style={{ minHeight: "44px" }}
+									/>
+										<div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+											<EmojiSelector onEmojiSelect={handleEmojiSelect} />
+										</div>
+									</div>
+									<Button
+										onClick={handleSendMessage}
+										size="icon"
+										disabled={newMessage.trim() === ""}
+										className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed h-11 w-11 transition-colors duration-200"
+									>
+										<Send className="h-5 w-5" />
+									</Button>
+								</div>
+							</div>
+						</div>
+					)}
 				</>
 			) : (
 				// Welcome screen when no chat is selected
@@ -512,14 +592,12 @@ function MainChatArea({
 					</div>
 				</div>
 			)}
-			<BlockUserDailog
-				isOpen={blockUserDialogOpen}
-				setIsopen={setBlockUserDialogOpen}
-				user={otherParticipant}
-				onConfirm={() => {
-					console.log("block user :", otherParticipant);
-				}}
-			/>
+		<BlockUserDailog
+		isOpen={blockUserDialogOpen}
+		setIsopen={setBlockUserDialogOpen}
+		user={otherParticipant}
+		onConfirm={handleConfirmBlock}
+		/>
 
 			<UnfriendUserDialog
 				isOpen={unfriendUserDialogOpen}

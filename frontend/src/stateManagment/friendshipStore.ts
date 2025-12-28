@@ -27,7 +27,8 @@ interface FriendshipState {
 	acceptFriendshipRequest: (FriendshipId: string) => Promise<void>;
 	declineFriendshipRequest: (FriendshipId: string) => Promise<void>;
 	unfriendUser: (userId: string) => Promise<void>;
-	blockFriend: (userId: string) => Promise<void>;
+	blockFriend: (userId: string) => Promise<boolean>;
+	unblockUser: (userId: string) => Promise<boolean>;
 	clearError: () => void;
 
 	// Utility to update friends status from socket
@@ -568,7 +569,7 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 					response.errorMessage,
 				);
 				set({ error: response.errorMessage });
-				return;
+				return false;
 			}
 			console.log(
 				"%c ✅ [HTTP] User Blocked:",
@@ -589,7 +590,11 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 				),
 			}));
 
+			// Refresh conversations to get updated blocked status
+			useChatStore.getState().fetchConversations();
+
 			useChatStore.getState().notifyUnfriend(response.data);
+			return true;
 		} catch (err) {
 			console.log(
 				"%c ❌ [HTTP] Block User Error:",
@@ -597,6 +602,66 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 				err,
 			);
 			set({ error: "Failed to block user" });
+			return false;
+		} finally {
+			set({
+				isLoading: false,
+			});
+		}
+	},
+
+	unblockUser: async (userId) => {
+		console.log(
+			"%c 🌐 [HTTP] Unblocking User...",
+			"color: #eab308; font-weight: bold;",
+			{ userId },
+		);
+		set({
+			isLoading: true,
+			error: null,
+		});
+
+		try {
+			const rawResponse = await fetch(
+				`${API_BASE_URL}/friendship/unblock/${userId}`,
+				{
+					method: "POST",
+					credentials: "include",
+					headers: {
+						"Content-Type": "application/json",
+					},
+				},
+			);
+
+			const response: HttpResponse<FriendShipRequest> =
+				await rawResponse.json();
+
+			if (!response.success) {
+				console.log(
+					"%c ❌ [HTTP] Unblock User Failed:",
+					"color: #ef4444; font-weight: bold;",
+					response.errorMessage,
+				);
+				set({ error: response.errorMessage });
+				return false;
+			}
+			console.log(
+				"%c ✅ [HTTP] User Unblocked:",
+				"color: #22c55e; font-weight: bold;",
+				response.data,
+			);
+
+			// Refresh conversations to update blocked status
+			useChatStore.getState().fetchConversations();
+			return true;
+		} catch (err) {
+			console.log(
+				"%c ❌ [HTTP] Unblock User Error:",
+				"color: #ef4444; font-weight: bold;",
+				err,
+			);
+			set({ error: "Failed to unblock user" });
+			return false;
 		} finally {
 			set({
 				isLoading: false,

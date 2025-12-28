@@ -146,6 +146,7 @@ export class Provider {
 				new MessageService(
 					this.getMessageRepository(),
 					this.getConversationService(),
+					this.getFriendshipService(),
 				),
 		);
 	}

@@ -50,6 +50,8 @@ export type PopulatedConversation = Omit<
 	participantTwo: User;
 	lastMessage: PopulatedMessage | undefined;
 	unreadCount: number;
+	isBlocked?: boolean;
+	blockedByMe?: boolean;
 	createdAt: string;
 	updatedAt: string;
 };

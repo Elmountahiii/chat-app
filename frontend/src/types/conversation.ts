@@ -7,6 +7,8 @@ export type Conversation = {
 	participantTwo: User;
 	lastMessage?: Message;
 	unreadCount: number;
+	isBlocked?: boolean;
+	blockedByMe?: boolean;
 	createdAt: string;
 	updatedAt: string;
 };

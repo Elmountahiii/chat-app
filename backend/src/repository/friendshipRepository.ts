@@ -197,19 +197,51 @@ export class FriendshipRepository {
 		return friendship.toObject() as unknown as PopulatedFriendship;
 	}
 
-	async blockUser(userId: string, friendId: string) {
+	async isBlocked(
+		userOneId: string,
+		userTwoId: string,
+	): Promise<{ isBlocked: boolean; blockedByUserId: string | null }> {
 		const friendship = await FriendshipModel.findOne({
 			$or: [
-				{ requester: userId, recipient: friendId },
-				{ requester: friendId, recipient: userId },
+				{ requester: userOneId, recipient: userTwoId },
+				{ requester: userTwoId, recipient: userOneId },
 			],
+			status: "blocked",
 		});
+
 		if (!friendship) {
-			throw new Error("Friendship not found.");
+			return { isBlocked: false, blockedByUserId: null };
 		}
 
-		friendship.status = "blocked";
-		friendship.blockedBy = new mongoose.Types.ObjectId(userId);
+		return {
+			isBlocked: true,
+			blockedByUserId: friendship.blockedBy?.toString() || null,
+		};
+	}
+
+	async blockUser(userId: string, blockedUserId: string) {
+		// Find any existing friendship/block record
+		let friendship = await FriendshipModel.findOne({
+			$or: [
+				{ requester: userId, recipient: blockedUserId },
+				{ requester: blockedUserId, recipient: userId },
+			],
+		});
+
+		if (friendship) {
+			// Update existing record to blocked
+			friendship.status = "blocked";
+			friendship.blockedBy = new mongoose.Types.ObjectId(userId);
+		} else {
+			// Create new blocked record (for blocking non-friends)
+			friendship = new FriendshipModel({
+				requester: userId,
+				recipient: blockedUserId,
+				status: "blocked",
+				blockedBy: userId,
+			});
+		}
+
 		await friendship.save();
 		await friendship.populate([
 			{ path: "requester" },
@@ -221,24 +253,25 @@ export class FriendshipRepository {
 	}
 
 	async unblockUser(userId: string, friendId: string) {
-		const friendship = await FriendshipModel.findOne({
+		const friendship = (await FriendshipModel.findOne({
 			$or: [
 				{ requester: userId, recipient: friendId },
 				{ requester: friendId, recipient: userId },
 			],
-			status: "accepted",
+			status: "blocked",
 		})
 			.populate("requester")
 			.populate("recipient")
-			.populate("blockedBy");
+			.populate("blockedBy")) as PopulatedFriendship | null;
 		if (!friendship) {
 			throw new Error("Friendship not found.");
 		}
-		if (friendship.blockedBy?.toString() !== userId) {
+
+		if (friendship.blockedBy?._id.toString() !== userId) {
 			throw new Error("User is not authorized to unblock this user.");
 		}
 		await FriendshipModel.findByIdAndDelete(friendship._id);
 
-		return friendship.toObject() as unknown as PopulatedFriendship;
+		return friendship;
 	}
 }
