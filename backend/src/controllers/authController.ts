@@ -87,4 +87,20 @@ export class AuthController {
 			});
 		}
 	};
+
+	logout = async (_req: Request, res: Response) => {
+		try {
+			res.cookie("authToken", "", {
+				httpOnly: true,
+				secure: isProduction,
+				sameSite: isProduction ? "strict" : "lax",
+				expires: new Date(0),
+			});
+			res
+				.status(200)
+				.json(createSuccessResponse(null, "Logged out successfully"));
+		} catch (e) {
+			HandleError(e, res, "Error during logout", {});
+		}
+	};
 }
