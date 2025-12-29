@@ -2,7 +2,7 @@ import { NextResponse, NextRequest } from "next/server";
 import { HttpResponse } from "./types/httpResponse";
 import { User } from "./types/user";
 
-const protectedRoutes = ["/home"];
+const protectedRoutes = ["/chat"];
 const authRoutes = ["/auth/login", "/auth/signup"];
 const publicRoutes = ["/", "/about", "/contact"];
 
@@ -50,7 +50,7 @@ export async function middleware(request: NextRequest) {
 			return redirectResponse;
 		} else {
 			if (isAuthRoute) {
-				return NextResponse.redirect(new URL("/home", request.url));
+				return NextResponse.redirect(new URL("/chat", request.url));
 			} else {
 				return NextResponse.next();
 			}

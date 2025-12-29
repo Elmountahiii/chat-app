@@ -46,7 +46,7 @@ function LoginForm() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.push("/home");
+      router.push("/chat");
     }
   }, [isAuthenticated, router]);
 
