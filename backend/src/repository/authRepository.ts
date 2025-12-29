@@ -10,15 +10,19 @@ export class AuthRepository {
 		lastName: string,
 		email: string,
 		password: string,
+		profilePicture?: string,
 	): Promise<User> {
-		const randomIndex = Math.floor(Math.random() * PROFILE_PICTURE_LIST.length);
+		// Use provided profile picture or fall back to random selection
+		const picture =
+			profilePicture ||
+			PROFILE_PICTURE_LIST[Math.floor(Math.random() * PROFILE_PICTURE_LIST.length)];
 		const user = new UserModel({
 			username,
 			firstName,
 			lastName,
 			email,
 			password,
-			profilePicture: PROFILE_PICTURE_LIST[randomIndex],
+			profilePicture: picture,
 		});
 		await user.save();
 		return user.toObject();

@@ -1,5 +1,8 @@
 "use client";
-import { SignUpDataType, SignUpSchema } from "@/schema/auth/signUpSchema";
+import {
+  SignUpCredentialsType,
+  SignUpCredentialsSchema,
+} from "@/schema/auth/signUpSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -22,42 +25,20 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 const SignUpForm = () => {
-  const {
-    signUp,
-    isLoading,
-    isRegistered,
-    error,
-    successMessage,
-    clearError,
-    clearSuccessMessage,
-  } = useAuthStore();
+  const { isLoading, error, clearError } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
   const router = useRouter();
 
-  const form = useForm<SignUpDataType>({
-    resolver: zodResolver(SignUpSchema),
+  const form = useForm<SignUpCredentialsType>({
+    resolver: zodResolver(SignUpCredentialsSchema),
     defaultValues: {
-      firstName: "",
-      lastName: "",
       email: "",
       password: "",
       confirmPassword: "",
     },
   });
-
-  useEffect(() => {
-    if (isRegistered) {
-      router.push("/auth/login");
-    }
-  }, [isRegistered, router]);
-
-  useEffect(() => {
-    if (successMessage) {
-      toast.success(successMessage);
-      clearSuccessMessage();
-    }
-  }, [successMessage, clearSuccessMessage]);
 
   useEffect(() => {
     if (error) {
@@ -66,51 +47,24 @@ const SignUpForm = () => {
     }
   }, [error, clearError]);
 
-  const onSubmit = async (data: SignUpDataType) => {
-    signUp(data);
+  const onSubmit = async (data: SignUpCredentialsType) => {
+    setIsNavigating(true);
+    // Store credentials in sessionStorage for the onboarding page
+    sessionStorage.setItem(
+      "pendingSignup",
+      JSON.stringify({
+        email: data.email,
+        password: data.password,
+      })
+    );
+    // Navigate to onboarding
+    router.push("/onboarding");
   };
+
   return (
     <div>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <div className="flex gap-4">
-            <FormField
-              control={form.control}
-              name="firstName"
-              render={({ field }) => (
-                <FormItem className="flex-1">
-                  <FormLabel>First Name</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="text"
-                      placeholder="John"
-                      {...field}
-                      disabled={isLoading}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="lastName"
-              render={({ field }) => (
-                <FormItem className="flex-1">
-                  <FormLabel>Last Name</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="text"
-                      placeholder="Doe"
-                      {...field}
-                      disabled={isLoading}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
           <FormField
             control={form.control}
             name="email"
@@ -122,7 +76,7 @@ const SignUpForm = () => {
                     type="email"
                     placeholder="john@example.com"
                     {...field}
-                    disabled={isLoading}
+                    disabled={isLoading || isNavigating}
                   />
                 </FormControl>
                 <FormMessage />
@@ -141,7 +95,7 @@ const SignUpForm = () => {
                       type={showPassword ? "text" : "password"}
                       placeholder="Enter your password"
                       {...field}
-                      disabled={isLoading}
+                      disabled={isLoading || isNavigating}
                     />
                     <Button
                       type="button"
@@ -149,7 +103,7 @@ const SignUpForm = () => {
                       size="sm"
                       className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                       onClick={() => setShowPassword(!showPassword)}
-                      disabled={isLoading}>
+                      disabled={isLoading || isNavigating}>
                       {showPassword ? (
                         <EyeOff className="h-4 w-4" />
                       ) : (
@@ -174,7 +128,7 @@ const SignUpForm = () => {
                       type={showConfirmPassword ? "text" : "password"}
                       placeholder="Confirm your password"
                       {...field}
-                      disabled={isLoading}
+                      disabled={isLoading || isNavigating}
                     />
                     <Button
                       type="button"
@@ -184,7 +138,7 @@ const SignUpForm = () => {
                       onClick={() =>
                         setShowConfirmPassword(!showConfirmPassword)
                       }
-                      disabled={isLoading}>
+                      disabled={isLoading || isNavigating}>
                       {showConfirmPassword ? (
                         <EyeOff className="h-4 w-4" />
                       ) : (
@@ -197,14 +151,17 @@ const SignUpForm = () => {
               </FormItem>
             )}
           />
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? (
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={isLoading || isNavigating}>
+            {isNavigating ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Creating account...
+                Continuing...
               </>
             ) : (
-              "Sign Up"
+              "Continue"
             )}
           </Button>
         </form>

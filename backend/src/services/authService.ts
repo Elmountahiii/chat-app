@@ -11,6 +11,7 @@ export class AuthService {
 		lastName: string,
 		email: string,
 		password: string,
+		profilePicture?: string,
 	) {
 		const existingUser = await this.authRepo.findUserByEmail(email);
 		if (existingUser) {
@@ -31,6 +32,7 @@ export class AuthService {
 			lastName,
 			email,
 			hashedPassword,
+			profilePicture,
 		);
 		const { password: _, ...userWithoutPassword } = user;
 		return userWithoutPassword;

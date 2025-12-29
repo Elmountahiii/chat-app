@@ -15,7 +15,7 @@ interface AuthenticationState {
 
 	// actions
 	login: (email: string, password: string) => Promise<void>;
-	signUp: (userData: SignUpDataType) => Promise<void>;
+	signUp: (userData: SignUpDataType) => Promise<boolean>;
 	updateUserInfo: (userData: ProfileSettingsDataType) => Promise<void>;
 	logout: () => Promise<void>;
 	resetPassword: (email: string) => Promise<void>;
@@ -131,8 +131,9 @@ export const useAuthStore = create<AuthenticationState>((set) => ({
 				);
 				set({
 					isLoading: false,
+					error: result.errorMessage,
 				});
-				return;
+				return false;
 			}
 			console.log(
 				"%c ✅ [HTTP] Sign Up Success:",
@@ -152,6 +153,8 @@ export const useAuthStore = create<AuthenticationState>((set) => ({
 					isRegistered: false,
 				});
 			}, 500);
+
+			return true;
 		} catch (e) {
 			console.log(
 				"%c ❌ [HTTP] Sign Up Error:",
@@ -161,9 +164,9 @@ export const useAuthStore = create<AuthenticationState>((set) => ({
 			set({
 				isLoading: false,
 				error:
-					"Unable to create account. Please check your connection and try again." +
-					API_BASE_URL,
+					"Unable to create account. Please check your connection and try again.",
 			});
+			return false;
 		}
 	},
 
@@ -178,7 +181,7 @@ export const useAuthStore = create<AuthenticationState>((set) => ({
 				isLoading: true,
 				error: null,
 			});
-			if (userData.password != "") {
+			if (userData.password !== "") {
 				console.log("Need to update also the password");
 			}
 			const response = await fetch(`${API_BASE_URL}/user/me`, {

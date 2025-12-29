@@ -23,6 +23,7 @@ export class AuthController {
 				validateData.lastName,
 				validateData.email,
 				validateData.password,
+				validateData.profilePicture,
 			);
 
 			res

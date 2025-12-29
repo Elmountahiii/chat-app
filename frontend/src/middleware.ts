@@ -3,7 +3,7 @@ import { HttpResponse } from "./types/httpResponse";
 import { User } from "./types/user";
 
 const protectedRoutes = ["/chat"];
-const authRoutes = ["/auth/login", "/auth/signup"];
+const authRoutes = ["/auth/login", "/auth/signup", "/onboarding"];
 const publicRoutes = ["/", "/about", "/contact"];
 
 const API_BASE_URL = `${

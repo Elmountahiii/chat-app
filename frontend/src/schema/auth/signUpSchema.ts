@@ -1,9 +1,8 @@
 import * as z from "zod";
 
-export const SignUpSchema = z
+// Schema for the initial signup step (email + password only)
+export const SignUpCredentialsSchema = z
   .object({
-    firstName: z.string().min(2, "First name must be at least 2 characters"),
-    lastName: z.string().min(2, "Last name must be at least 2 characters"),
     email: z.email("Please enter a valid email address"),
     password: z.string().min(8, "Password must be at least 8 characters"),
     confirmPassword: z.string(),
@@ -13,4 +12,13 @@ export const SignUpSchema = z
     path: ["confirmPassword"],
   });
 
-export type SignUpDataType = z.infer<typeof SignUpSchema>;
+export type SignUpCredentialsType = z.infer<typeof SignUpCredentialsSchema>;
+
+// Full signup data type (sent to backend after onboarding)
+export type SignUpDataType = {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  profilePicture?: string;
+};
