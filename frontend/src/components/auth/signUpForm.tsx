@@ -17,7 +17,6 @@ import {
 import { Button } from "../ui/button";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { SocialLogin } from "./socialLogin";
 import { useAuthStore } from "@/stateManagment/authStore";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -220,7 +219,6 @@ const SignUpForm = () => {
           </Link>
         </div>
       </Form>
-      <SocialLogin />
     </div>
   );
 };

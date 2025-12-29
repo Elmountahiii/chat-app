@@ -19,7 +19,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
-import { SocialLogin } from "./socialLogin";
 import { useAuthStore } from "@/stateManagment/authStore";
 import { toast } from "sonner";
 
@@ -124,14 +123,6 @@ function LoginForm() {
             )}
           />
 
-          <div className="flex items-center justify-end">
-            <Link
-              href="/auth/forgot-password"
-              className="text-sm font-medium text-blue-600 hover:text-blue-500">
-              Forgot password?
-            </Link>
-          </div>
-
           <Button
             type="submit"
             className="w-full cursor-pointer"
@@ -157,7 +148,6 @@ function LoginForm() {
           </Link>
         </div>
       </Form>
-      <SocialLogin />
     </div>
   );
 }
