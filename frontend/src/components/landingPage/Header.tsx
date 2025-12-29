@@ -1,57 +1,43 @@
 import React from "react";
 import Link from "next/link";
+import { MessageCircle } from "lucide-react";
 
 function Header() {
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
-      <div className="container mx-auto px-6 py-4 flex justify-between items-center">
-        <div className="flex items-center space-x-2">
-          <div className="bg-blue-600 p-2 rounded-lg">
-            <svg
-              className="w-6 h-6 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-              />
-            </svg>
+    <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200/60 support-[backdrop-filter]:bg-white/60">
+      <div className="container mx-auto px-6 h-20 flex justify-between items-center">
+        <div className="flex items-center gap-2.5 group cursor-pointer">
+          <div className="bg-gradient-to-br from-blue-600 to-indigo-600 p-2.5 rounded-xl shadow-lg shadow-blue-500/20 group-hover:shadow-blue-500/30 transition-all duration-300 group-hover:scale-105">
+            <MessageCircle className="w-5 h-5 text-white" />
           </div>
-          <span className="text-xl font-bold text-gray-900 tracking-tight">
+          <span className="text-xl font-bold text-slate-900 tracking-tight group-hover:text-blue-600 transition-colors">
             ChatApp
           </span>
         </div>
 
         <nav className="hidden md:flex items-center space-x-8">
-          <a
-            href="#features"
-            className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors">
-            Features
-          </a>
-          <a
-            href="#tech-stack"
-            className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors">
-            Tech Stack
-          </a>
-          <a
-            href="#architecture"
-            className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors">
-            Architecture
-          </a>
+          {["Features", "Tech Stack", "Architecture"].map((item) => (
+             <a
+              key={item}
+              href={`#${item.toLowerCase().replace(" ", "-")}`}
+              className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-blue-600 after:transition-all hover:after:w-full"
+            >
+              {item}
+            </a>
+          ))}
         </nav>
 
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center gap-4">
           <Link
             href="/auth/login"
-            className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors hidden sm:block">
+            className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors hidden sm:block"
+          >
             Log in
           </Link>
           <Link
             href="/auth/register"
-            className="bg-blue-600 text-white text-sm font-semibold py-2.5 px-5 rounded-full hover:bg-blue-700 transition-all transform hover:scale-105 shadow-lg shadow-blue-500/20">
+            className="bg-slate-900 text-white text-sm font-semibold py-2.5 px-6 rounded-full hover:bg-slate-800 transition-all transform hover:scale-105 shadow-lg hover:shadow-xl active:scale-95"
+          >
             Get Started
           </Link>
         </div>
