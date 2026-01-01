@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import { createErrorResponse } from "../types/common";
 import { JwtService } from "../services/jwtService";
+import { HandleError } from "../utils/errorHandler";
 
 export const authMiddleware = async (
 	req: Request,
@@ -21,9 +22,8 @@ export const authMiddleware = async (
 		req.userId = userId;
 		next();
 	} catch (error) {
-		console.error("JWT verification error:", error);
-		res
-			.status(401)
-			.json(createErrorResponse("Unauthorized access - Invalid token"));
+		HandleError(error, res, "authMiddleware.verifyToken", {
+			hasToken: !!token,
+		});
 	}
 };

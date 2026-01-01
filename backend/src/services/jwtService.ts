@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import { AppError } from "../types/common";
 import { config } from "../config/environment";
+import { logger } from "../config/logger";
 
 export class JwtService {
   static async signToken(userId: string) {
@@ -23,7 +24,7 @@ export class JwtService {
       };
       return decode.userId;
     } catch (e) {
-      console.log("JWT verification error:", e);
+      logger.error("JWT verification error:", e);
       throw new AppError("Invalid or expired token", 401);
     }
   }

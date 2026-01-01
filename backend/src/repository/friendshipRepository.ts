@@ -4,6 +4,7 @@ import {
 	PopulatedFriendship,
 } from "../schema/mongodb/friendshipSchema";
 import { User, UserModel } from "../schema/mongodb/userSchema";
+import { AppError, HttpStatus } from "../types/common";
 
 export class FriendshipRepository {
 	constructor() {}
@@ -89,14 +90,18 @@ export class FriendshipRepository {
 			reciverId,
 		);
 		if (existingFriendship) {
-			throw new Error(
+			throw new AppError(
 				"Friendship request already exists or users are already friends.",
+				HttpStatus.BAD_REQUEST,
 			);
 		}
 		const sender = await UserModel.findById(senderId).select("_id").lean();
 		const receiver = await UserModel.findById(reciverId).select("_id").lean();
 		if (!sender || !receiver) {
-			throw new Error("Sender or receiver does not exist.");
+			throw new AppError(
+				"Sender or receiver does not exist.",
+				HttpStatus.NOT_FOUND,
+			);
 		}
 
 		const friendship = new FriendshipModel({
@@ -118,13 +123,22 @@ export class FriendshipRepository {
 	async acceptFriendShipRequest(userId: string, friendshipId: string) {
 		const friendship = await FriendshipModel.findById(friendshipId);
 		if (!friendship) {
-			throw new Error("Friendship request not found.");
+			throw new AppError(
+				"Friendship request not found.",
+				HttpStatus.NOT_FOUND,
+			);
 		}
 		if (friendship.recipient.toString() !== userId) {
-			throw new Error("User is not authorized to accept this request.");
+			throw new AppError(
+				"User is not authorized to accept this request.",
+				HttpStatus.FORBIDDEN,
+			);
 		}
 		if (friendship.status !== "pending") {
-			throw new Error("Friendship request is not pending.");
+			throw new AppError(
+				"Friendship request is not pending.",
+				HttpStatus.BAD_REQUEST,
+			);
 		}
 
 		friendship.status = "accepted";
@@ -143,13 +157,22 @@ export class FriendshipRepository {
 			.populate(["requester", "recipient", "blockedBy"])
 			.lean()) as PopulatedFriendship | null;
 		if (!friendship) {
-			throw new Error("Friendship request not found.");
+			throw new AppError(
+				"Friendship request not found.",
+				HttpStatus.NOT_FOUND,
+			);
 		}
 		if (friendship.recipient._id.toString() !== userId) {
-			throw new Error("User is not authorized to decline this request.");
+			throw new AppError(
+				"User is not authorized to decline this request.",
+				HttpStatus.FORBIDDEN,
+			);
 		}
 		if (friendship.status !== "pending") {
-			throw new Error("Friendship request is not pending.");
+			throw new AppError(
+				"Friendship request is not pending.",
+				HttpStatus.BAD_REQUEST,
+			);
 		}
 
 		await FriendshipModel.findByIdAndDelete(friendshipId);
@@ -162,13 +185,22 @@ export class FriendshipRepository {
 			.populate(["requester", "recipient", "blockedBy"])
 			.lean()) as PopulatedFriendship | null;
 		if (!friendship) {
-			throw new Error("Friendship request not found.");
+			throw new AppError(
+				"Friendship request not found.",
+				HttpStatus.NOT_FOUND,
+			);
 		}
 		if (friendship.requester._id.toString() !== userId) {
-			throw new Error("User is not authorized to cancel this request.");
+			throw new AppError(
+				"User is not authorized to cancel this request.",
+				HttpStatus.FORBIDDEN,
+			);
 		}
 		if (friendship.status !== "pending") {
-			throw new Error("Friendship request is not pending.");
+			throw new AppError(
+				"Friendship request is not pending.",
+				HttpStatus.BAD_REQUEST,
+			);
 		}
 
 		await FriendshipModel.findByIdAndDelete(friendshipId);
@@ -189,7 +221,10 @@ export class FriendshipRepository {
 			.populate("blockedBy");
 
 		if (!friendship) {
-			throw new Error("Friendship not found.");
+			throw new AppError(
+				"Friendship not found.",
+				HttpStatus.NOT_FOUND,
+			);
 		}
 
 		await FriendshipModel.findByIdAndDelete(friendship._id);
@@ -264,11 +299,17 @@ export class FriendshipRepository {
 			.populate("recipient")
 			.populate("blockedBy")) as PopulatedFriendship | null;
 		if (!friendship) {
-			throw new Error("Friendship not found.");
+			throw new AppError(
+				"Friendship not found.",
+				HttpStatus.NOT_FOUND,
+			);
 		}
 
 		if (friendship.blockedBy?._id.toString() !== userId) {
-			throw new Error("User is not authorized to unblock this user.");
+			throw new AppError(
+				"User is not authorized to unblock this user.",
+				HttpStatus.FORBIDDEN,
+			);
 		}
 		await FriendshipModel.findByIdAndDelete(friendship._id);
 

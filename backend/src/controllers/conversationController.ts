@@ -1,6 +1,7 @@
 import { ConversationService } from "../services/conversatioService";
 import type { Request, Response } from "express";
 import { createErrorResponse, createSuccessResponse } from "../types/common";
+import { HandleError } from "../utils/errorHandler";
 
 export class ConversationController {
 	constructor(private conversationService: ConversationService) {}
@@ -27,10 +28,10 @@ export class ConversationController {
 					),
 				);
 		} catch (error) {
-			console.error("Error creating new converstation: ", error);
-			res
-				.status(500)
-				.send(createErrorResponse("Failed to create conversation"));
+			HandleError(error, res, "ConversationController.createConversation", {
+				userId,
+				otherUserId,
+			});
 		}
 	};
 
@@ -55,10 +56,9 @@ export class ConversationController {
 					),
 				);
 		} catch (error) {
-			console.error("ConversationController.getConversations error:", error, {
+			HandleError(error, res, "ConversationController.getConversations", {
 				userId,
 			});
-			res.status(500).send(createErrorResponse("Failed to get conversations"));
 		}
 	};
 
@@ -98,8 +98,10 @@ export class ConversationController {
 					),
 				);
 		} catch (error) {
-			console.error("Error getting getConversationById : ", error);
-			res.status(500).send(createErrorResponse("Failed to get conversation"));
+			HandleError(error, res, "ConversationController.getConversationById", {
+				userId,
+				conversationId,
+			});
 		}
 	};
 
@@ -130,11 +132,15 @@ export class ConversationController {
 					),
 				);
 		} catch (error) {
-			console.error(
-				"Error getting getUserConversationWithAnotherUser : ",
+			HandleError(
 				error,
+				res,
+				"ConversationController.getUserConversationWithAnotherUser",
+				{
+					userId,
+					otherUserId,
+				},
 			);
-			res.status(500).send(createErrorResponse("Failed to get conversation"));
 		}
 	};
 
@@ -170,10 +176,10 @@ export class ConversationController {
 				.status(200)
 				.send(createSuccessResponse(null, "Conversation deleted successfully"));
 		} catch (error) {
-			console.error("Error deleting conversation: ", error);
-			res
-				.status(500)
-				.send(createErrorResponse("Failed to delete conversation"));
+			HandleError(error, res, "ConversationController.deleteConversation", {
+				userId,
+				conversationId,
+			});
 		}
 	};
 }

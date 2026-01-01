@@ -1,6 +1,7 @@
 import { ConversationRepository } from "../repository/conversationRepository";
 import { FriendshipService } from "./friendsipService";
 import { PopulatedConversation } from "../schema/mongodb/conversationSchema";
+import { AppError, HttpStatus } from "../types/common";
 
 export class ConversationService {
 	constructor(
@@ -64,14 +65,20 @@ export class ConversationService {
 
 	async createConversation(participantOneId: string, participantTwoId: string) {
 		if (participantOneId === participantTwoId) {
-			throw new Error("Cannot create conversation with oneself");
+			throw new AppError(
+				"Cannot create conversation with oneself",
+				HttpStatus.BAD_REQUEST,
+			);
 		}
 		const areFriends = await this.friendshipService.getFriendshipStatus(
 			participantOneId,
 			participantTwoId,
 		);
 		if (!areFriends || areFriends.status !== "accepted") {
-			throw new Error("Users must be friends to create a conversation");
+			throw new AppError(
+				"Users must be friends to create a conversation",
+				HttpStatus.FORBIDDEN,
+			);
 		}
 		const existingConversations = await this.getUserConversationWithAnotherUser(
 			participantOneId,

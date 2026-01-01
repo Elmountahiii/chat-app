@@ -6,6 +6,7 @@ import {
 import { ConversationModel } from "../schema/mongodb/conversationSchema";
 import { AppError } from "../types/common";
 import { CreateMessageInput } from "../types/inputs/messagingInputs";
+import { logger } from "../config/logger";
 
 import { FilterQuery } from "mongoose";
 
@@ -29,7 +30,7 @@ export class MessageRepository {
 				}
 				query.createdAt = { $lt: cursorMessage.createdAt };
 			} catch (error) {
-				console.log(error);
+				logger.error("Error validating cursor:", error);
 				throw new AppError("Invalid cursor", 400);
 			}
 		}

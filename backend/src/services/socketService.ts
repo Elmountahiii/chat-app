@@ -8,6 +8,8 @@ import { FriendshipService } from "./friendsipService";
 import { MessageService } from "./messageService";
 import { PopulatedFriendship } from "../schema/mongodb/friendshipSchema";
 import { PopulatedConversation } from "../schema/mongodb/conversationSchema";
+import { AppError, HttpStatus } from "../types/common";
+import { logger } from "../config/logger";
 
 export class SocketService {
 	private io: Server;
@@ -37,7 +39,7 @@ export class SocketService {
 	private authenticateSocket(socket: Socket, next: (err?: Error) => void) {
 		const cookies = socket.handshake.headers.cookie;
 		if (!cookies) {
-			return next(new Error("Unauthorized - No cookies provided"));
+			return next(new AppError("Unauthorized - No cookies provided", HttpStatus.UNAUTHORIZED));
 		}
 
 		// Parse cookies manually to extract authToken
@@ -47,7 +49,7 @@ export class SocketService {
 			?.split("=")[1];
 
 		if (!token) {
-			return next(new Error("Unauthorized - No auth token in cookies"));
+			return next(new AppError("Unauthorized - No auth token in cookies", HttpStatus.UNAUTHORIZED));
 		}
 
 		JwtService.verifyToken(token)
@@ -56,8 +58,8 @@ export class SocketService {
 				next();
 			})
 			.catch((e) => {
-				console.log("error ", e);
-				next(new Error("Authentication error: Invalid token"));
+				logger.error("Authentication error:", e);
+				next(new AppError("Authentication error: Invalid token", HttpStatus.UNAUTHORIZED));
 			});
 	}
 
@@ -77,7 +79,7 @@ export class SocketService {
 					});
 				});
 			} catch (error) {
-				console.error("Error updating user status on connect:", error);
+				logger.error("Error updating user status on connect:", error);
 			}
 
 			socket.on("disconnect", async () => {
@@ -98,7 +100,7 @@ export class SocketService {
 						}
 					});
 				} catch (error) {
-					console.error("Error updating user status on disconnect:", error);
+					logger.error("Error updating user status on disconnect:", error);
 				}
 			});
 
@@ -112,7 +114,7 @@ export class SocketService {
 							conversation.participantOne._id.toString() !== userId &&
 							conversation.participantTwo._id.toString() !== userId
 						) {
-							throw new Error("Unauthorized to send this notification");
+							throw new AppError("Unauthorized to send this notification", HttpStatus.FORBIDDEN);
 						}
 						const conversationRoomId = `conversation_${conversation._id.toString()}`;
 						const participantOneSockets = await this.io
@@ -133,7 +135,7 @@ export class SocketService {
 							.to(otherParticipantId.toString())
 							.emit("conversation_created", { conversation });
 					} catch (error) {
-						console.error("Error creating conversation:", error);
+						logger.error("Error creating conversation:", error);
 						socket.emit("error", {
 							event: "notify_conversation_created",
 							message: "Failed to notify created conversation",
@@ -147,7 +149,7 @@ export class SocketService {
 					const { conversationId } = data;
 					socket.join(`conversation_${conversationId}`);
 				} catch (error) {
-					console.error("Error joining conversation:", error);
+					logger.error("Error joining conversation:", error);
 					socket.emit("error", {
 						event: "join_conversation",
 						message: "Failed to join conversation",
@@ -169,7 +171,7 @@ export class SocketService {
 								isTyping,
 							});
 					} catch (error) {
-						console.error("Error handling typing event:", error);
+						logger.error("Error handling typing event:", error);
 					}
 				},
 			);
@@ -197,7 +199,7 @@ export class SocketService {
 							.to(`conversation_${conversationId}`)
 							.emit("new_message", messageResponse);
 					} catch (error) {
-						console.error("Error sending message:", error);
+						logger.error("Error sending message:", error);
 
 						// Emit specific error with tempId so frontend can mark message as failed
 						socket.emit("send_message_error", {
@@ -223,7 +225,7 @@ export class SocketService {
 							userId,
 						});
 					} catch (error) {
-						console.error("Error marking messages as read:", error);
+						logger.error("Error marking messages as read:", error);
 						socket.emit("error", {
 							event: "notify_messages_read",
 							message: "Failed to mark messages as read",
@@ -242,14 +244,14 @@ export class SocketService {
 							friendship.recipient._id.toString() !== userId &&
 							friendship.requester._id.toString() !== userId
 						) {
-							throw new Error("Unauthorized to send this notification");
+							throw new AppError("Unauthorized to send this notification", HttpStatus.FORBIDDEN);
 						}
 						const receiverId = friendship.recipient._id.toString();
 						this.io.to(receiverId).emit("friendship_request_received", {
 							friendship,
 						});
 					} catch (error) {
-						console.error("Error sending friendship request:", error);
+						logger.error("Error sending friendship request:", error);
 						socket.emit("error", {
 							event: "notify_friendship_request_sent",
 							message: "Failed to notify friendship request",
@@ -267,14 +269,14 @@ export class SocketService {
 							friendship.recipient._id.toString() !== userId &&
 							friendship.requester._id.toString() !== userId
 						) {
-							throw new Error("Unauthorized to send this notification");
+							throw new AppError("Unauthorized to send this notification", HttpStatus.FORBIDDEN);
 						}
 						const requesterId = friendship.requester._id.toString();
 						this.io
 							.to(requesterId)
 							.emit("friendship_request_accepted", { friendship });
 					} catch (error) {
-						console.error("Error accepting friendship request:", error);
+						logger.error("Error accepting friendship request:", error);
 						socket.emit("error", {
 							event: "notify_friendship_request_accepted",
 							message: "Failed to accept friendship request",
@@ -292,7 +294,7 @@ export class SocketService {
 							friendship.recipient._id.toString() !== userId &&
 							friendship.requester._id.toString() !== userId
 						) {
-							throw new Error("Unauthorized to send this notification");
+							throw new AppError("Unauthorized to send this notification", HttpStatus.FORBIDDEN);
 						}
 
 						const otherParticipent =
@@ -304,7 +306,7 @@ export class SocketService {
 							.to(otherParticipent)
 							.emit("friendship_request_declined", { friendship });
 					} catch (error) {
-						console.error("Error declining friendship request:", error);
+						logger.error("Error declining friendship request:", error);
 						socket.emit("error", {
 							event: "notify_friendship_request_declined",
 							message: "Failed to decline friendship request",
@@ -323,7 +325,7 @@ export class SocketService {
 							friendship.recipient._id.toString() !== userId &&
 							friendship.requester._id.toString() !== userId
 						) {
-							throw new Error("Unauthorized to send this notification");
+							throw new AppError("Unauthorized to send this notification", HttpStatus.FORBIDDEN);
 						}
 						const otherParticipent =
 							friendship.requester._id.toString() === userId
@@ -333,7 +335,7 @@ export class SocketService {
 							friendship,
 						});
 					} catch (error) {
-						console.error("Error canclling friendship request:", error);
+						logger.error("Error canclling friendship request:", error);
 						socket.emit("error", {
 							event: "notify_friendship_request_cancelled",
 							message: "Failed to cancell friendship request",
@@ -352,7 +354,7 @@ export class SocketService {
 							friendship.recipient._id.toString() !== userId &&
 							friendship.requester._id.toString() !== userId
 						) {
-							throw new Error("Unauthorized to send this notification");
+							throw new AppError("Unauthorized to send this notification", HttpStatus.FORBIDDEN);
 						}
 						const otherParticipent =
 							friendship.requester._id.toString() === userId
@@ -362,7 +364,7 @@ export class SocketService {
 							.to(otherParticipent)
 							.emit("friendship_unfriended", { friendship });
 					} catch (error) {
-						console.error("Error unfriending friendship :", error);
+						logger.error("Error unfriending friendship :", error);
 						socket.emit("error", {
 							event: "notify_friendship_unfriended",
 							message: "Failed to unfriend",

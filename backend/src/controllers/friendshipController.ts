@@ -1,6 +1,7 @@
 import { FriendshipService } from "../services/friendsipService";
 import type { Request, Response } from "express";
 import { createErrorResponse, createSuccessResponse } from "../types/common";
+import { HandleError } from "../utils/errorHandler";
 
 export class FriendshipController {
 	constructor(private friendshipService: FriendshipService) {}
@@ -22,8 +23,9 @@ export class FriendshipController {
 					),
 				);
 		} catch (error) {
-			console.error("Error getting friends list:", error);
-			res.status(500).json(createErrorResponse("Failed to get friends list"));
+			HandleError(error, res, "FriendshipController.getFriendsList", {
+				userId,
+			});
 		}
 	};
 
@@ -48,10 +50,10 @@ export class FriendshipController {
 					),
 				);
 		} catch (error) {
-			console.error("Error getting friendship status:", error);
-			res
-				.status(500)
-				.json(createErrorResponse("Failed to get friendship status"));
+			HandleError(error, res, "FriendshipController.getFriendshipStatus", {
+				userOneId,
+				userTwoId,
+			});
 		}
 	};
 
@@ -73,10 +75,14 @@ export class FriendshipController {
 					),
 				);
 		} catch (error) {
-			console.error("Error getting pending friend requests:", error);
-			res
-				.status(500)
-				.json(createErrorResponse("Failed to get pending friend requests"));
+			HandleError(
+				error,
+				res,
+				"FriendshipController.getPendingFriendRequests",
+				{
+					userId,
+				},
+			);
 		}
 	};
 
@@ -98,10 +104,9 @@ export class FriendshipController {
 					),
 				);
 		} catch (error) {
-			console.error("Error getting sent friend requests:", error);
-			res
-				.status(500)
-				.json(createErrorResponse("Failed to get sent friend requests"));
+			HandleError(error, res, "FriendshipController.getSentFriendRequests", {
+				userId,
+			});
 		}
 	};
 
@@ -126,10 +131,10 @@ export class FriendshipController {
 					),
 				);
 		} catch (error) {
-			console.error("Error sending friendship request:", error);
-			res
-				.status(500)
-				.json(createErrorResponse("Failed to send friendship request"));
+			HandleError(error, res, "FriendshipController.sendFriendshipRequest", {
+				senderId,
+				reciverId,
+			});
 		}
 	};
 
@@ -154,10 +159,10 @@ export class FriendshipController {
 					),
 				);
 		} catch (error) {
-			console.error("Error accepting friendship request:", error);
-			res
-				.status(500)
-				.json(createErrorResponse("Failed to accept friendship request"));
+			HandleError(error, res, "FriendshipController.accepetFriendshipRequest", {
+				userId,
+				friendshipId,
+			});
 		}
 	};
 
@@ -182,10 +187,10 @@ export class FriendshipController {
 					),
 				);
 		} catch (error) {
-			console.error("Error declining friendship request:", error);
-			res
-				.status(500)
-				.json(createErrorResponse("Failed to decline friendship request"));
+			HandleError(error, res, "FriendshipController.declineFriendshipRequest", {
+				userId,
+				friendshipId,
+			});
 		}
 	};
 
@@ -210,10 +215,10 @@ export class FriendshipController {
 					),
 				);
 		} catch (error) {
-			console.error("Error canceling friendship request:", error);
-			res
-				.status(500)
-				.json(createErrorResponse("Failed to cancel friendship request"));
+			HandleError(error, res, "FriendshipController.cancelFriendShipRequest", {
+				userId,
+				friendshipId,
+			});
 		}
 	};
 
@@ -235,8 +240,10 @@ export class FriendshipController {
 				.status(200)
 				.json(createSuccessResponse(result, "Friend removed successfully"));
 		} catch (error) {
-			console.error("Error removing friend:", error);
-			res.status(500).json(createErrorResponse("Failed to remove friend"));
+			HandleError(error, res, "FriendshipController.removeFriend", {
+				userId,
+				friendId,
+			});
 		}
 	};
 
@@ -253,8 +260,10 @@ export class FriendshipController {
 				.status(200)
 				.json(createSuccessResponse(result, "User blocked successfully"));
 		} catch (error) {
-			console.error("Error blocking user:", error);
-			res.status(500).json(createErrorResponse("Failed to block user"));
+			HandleError(error, res, "FriendshipController.blockUser", {
+				userId,
+				friendId,
+			});
 		}
 	};
 
@@ -271,8 +280,10 @@ export class FriendshipController {
 				.status(200)
 				.json(createSuccessResponse(result, "User unblocked successfully"));
 		} catch (error) {
-			console.error("Error unblocking user:", error);
-			res.status(500).json(createErrorResponse("Failed to unblock user"));
+			HandleError(error, res, "FriendshipController.unblockUser", {
+				userId,
+				friendId,
+			});
 		}
 	};
 }

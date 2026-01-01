@@ -1,4 +1,5 @@
 import { FriendshipRepository } from "../repository/friendshipRepository";
+import { AppError, HttpStatus } from "../types/common";
 
 export class FriendshipService {
 	constructor(private firendshipRepo: FriendshipRepository) {}
@@ -33,7 +34,10 @@ export class FriendshipService {
 
 	async sendFriendshipRequest(senderId: string, reciverId: string) {
 		if (senderId === reciverId) {
-			throw new Error("Cannot send friend request to oneself");
+			throw new AppError(
+				"Cannot send friend request to oneself",
+				HttpStatus.BAD_REQUEST,
+			);
 		}
 		const friendship = await this.firendshipRepo.sendFriendshipRequest(
 			senderId,
@@ -77,7 +81,10 @@ export class FriendshipService {
 
 	async blockUser(userId: string, friendId: string) {
 		if (userId === friendId) {
-			throw new Error("Cannot block oneself");
+			throw new AppError(
+				"Cannot block oneself",
+				HttpStatus.BAD_REQUEST,
+			);
 		}
 		const result = await this.firendshipRepo.blockUser(userId, friendId);
 		return result;
