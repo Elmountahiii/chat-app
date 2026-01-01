@@ -28,11 +28,11 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(cors(corsConfig));
 
-app.get("/health", (req, res) => {
+app.get("/api/health", (req, res) => {
 	res.status(200).json({ message: "Server is healthy" });
 });
 
-app.get("/protected", authMiddleware, (req, res) => {
+app.get("/api/protected", authMiddleware, (req, res) => {
 	res.status(200).json({ message: "Protected route accessed" });
 });
 
