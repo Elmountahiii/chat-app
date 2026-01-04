@@ -2,16 +2,13 @@ version: "3.8"
 
 services:
   database:
-    build:
-      context: ./mongodb
-      dockerfile: Dockerfile
+    image: mongo:8.0.13-noble
     container_name: chatapp-mongodb
     restart: unless-stopped
     ports:
       - "27017:27017"
     volumes:
       - mongo-data:/data/db
-      - ../mongodb/init:/docker-entrypoint-initdb.d
     environment:
       - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USER:-admin}
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD:-password}
