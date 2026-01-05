@@ -6,6 +6,8 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: chatapp-backend
+    env_file:
+      - ./.env
     restart: unless-stopped
     volumes:
       - backend-logs:/app/logs
