@@ -10,7 +10,6 @@ const envSchema = z.object({
 	PORT: z.number().min(1).max(65535).default(3001),
 	MONGODB_URI: z.string(),
 	NEXT_PUBLIC_FRONTEND_URL: z.url().default("http://localhost:3000"),
-	NEXT_PUBLIC_BACKEND_URL: z.url().default("http://localhost:3001"),
 	JWT_SECRET: z.string().min(1, "JWT_SECRET is required"),
 });
 

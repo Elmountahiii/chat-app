@@ -1,0 +1,19 @@
+version: "3.8"
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: chatapp-backend
+    restart: unless-stopped
+    volumes:
+      - backend-logs:/app/logs
+    networks:
+      - chatapp-network
+    ports:
+      - "3001"
+
+volumes:
+  backend-logs:
+    driver: local

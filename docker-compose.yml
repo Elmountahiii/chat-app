@@ -24,12 +24,8 @@ services:
     restart: unless-stopped
     volumes:
       - backend-logs:/app/logs
-    environment:
-      - NODE_ENV=production
-      - PORT=${BACKEND_PORT:-3001}
-      - MONGODB_URI=mongodb://${MONGO_ROOT_USER:-admin}:${MONGO_ROOT_PASSWORD:-password}@database:27017/${MONGO_DB:-chatapp}?authSource=admin
-      - JWT_SECRET=${JWT_SECRET:-your_jwt_secret}
-      - NEXT_PUBLIC_FRONTEND_URL=${NEXT_PUBLIC_FRONTEND_URL}
+    env_file:
+      - ./backend/.env
     depends_on:
       - database
     networks:
@@ -46,16 +42,11 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        - NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL}
-        - NEXT_PUBLIC_SOCKET_URL=${NEXT_PUBLIC_SOCKET_URL}
-        - BACKEND_ENDPOINT=${BACKEND_ENDPOINT}
+        - NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL:-http://localhost:3001/api}
+        - NEXT_PUBLIC_SOCKET_URL=${NEXT_PUBLIC_SOCKET_URL:-http://localhost:3001}
     container_name: chatapp-frontend
-    environment:
-      - NODE_ENV=production
-      - BACKEND_ENDPOINT=${BACKEND_ENDPOINT}
-      - NEXT_PUBLIC_FRONTEND_URL=${NEXT_PUBLIC_FRONTEND_URL}
-      - NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL}
-      - NEXT_PUBLIC_SOCKET_URL=${NEXT_PUBLIC_SOCKET_URL}
+    env_file:
+      - ./frontend/.env
     restart: unless-stopped
     depends_on:
       - backend
