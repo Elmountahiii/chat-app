@@ -9,8 +9,6 @@ services:
     restart: unless-stopped
     volumes:
       - backend-logs:/app/logs
-    networks:
-      - chatapp-network
     ports:
       - "3001"
 
