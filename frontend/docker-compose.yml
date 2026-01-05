@@ -5,10 +5,13 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+
       args:
         - NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL:-http://localhost:3001/api}
         - NEXT_PUBLIC_SOCKET_URL=${NEXT_PUBLIC_SOCKET_URL:-http://localhost:3001}
     container_name: chatapp-frontend
+    env_file:
+      - ./.env
     restart: unless-stopped
     ports:
       - "3000"
