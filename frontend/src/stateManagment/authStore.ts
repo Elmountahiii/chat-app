@@ -3,6 +3,7 @@ import { HttpResponse } from "@/types/httpResponse";
 import { User } from "@/types/user";
 import { SignUpDataType } from "@/schema/auth/signUpSchema";
 import { ProfileSettingsDataType } from "@/schema/profile/profileSettingsSchema";
+import { useChatStore } from "./chatStore";
 
 interface AuthenticationState {
 	// state
@@ -249,6 +250,7 @@ export const useAuthStore = create<AuthenticationState>((set) => ({
 					"Content-Type": "application/json",
 				},
 			});
+			useChatStore.getState().disconnectSocket();
 			const result: HttpResponse<null> = await response.json();
 			if (!result.success) {
 				console.log(
