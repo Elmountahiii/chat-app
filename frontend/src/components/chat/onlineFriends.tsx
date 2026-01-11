@@ -59,7 +59,7 @@ const OnlineFriends = ({ changeDialogOpen }: OnlineFriendsProps) => {
 	};
 
 	return (
-		<TabsContent value="online" className="space-y-4 mt-4">
+		<TabsContent value="online" className="space-y-4 mt-4 flex-1 flex flex-col overflow-hidden">
 			<div className="relative">
 				<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
 				<Input
@@ -70,7 +70,7 @@ const OnlineFriends = ({ changeDialogOpen }: OnlineFriendsProps) => {
 				/>
 			</div>
 
-			<div className="max-h-96 overflow-y-auto space-y-2">
+			<div className="flex-1 overflow-y-auto space-y-2 pr-1">
 				{online.length > 0 && (
 					<div className="space-y-2">
 						<h3 className="text-sm font-medium text-green-600 flex items-center gap-2">

@@ -38,7 +38,7 @@ const PotentialFriendsList = ({ potentialFriends }: Props) => {
 	};
 
 	return (
-		<div className="max-h-96 overflow-y-auto space-y-2">
+		<div className="flex-1 overflow-y-auto space-y-2 pr-1">
 			<h3 className="text-sm font-medium text-blue-600 flex items-center gap-2">
 				<UserPlus className="h-4 w-4" />
 				People you may know

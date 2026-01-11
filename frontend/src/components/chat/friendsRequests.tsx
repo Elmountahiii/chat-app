@@ -31,12 +31,11 @@ function FriendsRequests() {
 			value="requests"
 			className="space-y-4 mt-4 flex-1 overflow-hidden flex flex-col"
 		>
-			<div className="flex-1 overflow-y-auto space-y-2">
-				<h3 className="text-sm font-medium text-blue-600 flex items-center gap-2">
-					<UserCheck className="h-4 w-4" />
-					Friend Requests ({requestList.length})
-				</h3>
-
+			<h3 className="text-sm font-medium text-blue-600 flex items-center gap-2">
+				<UserCheck className="h-4 w-4" />
+				Friend Requests ({requestList.length})
+			</h3>
+			<div className="flex-1 overflow-y-auto space-y-2 pr-1">
 				{requestList.map((request) => (
 					<div
 						key={request._id}
@@ -85,7 +84,7 @@ function FriendsRequests() {
 					</div>
 				))}
 
-				{receivedFriendshipRequests.length === 0 && (
+				{requestList.length === 0 && (
 					<div className="text-center py-8 text-gray-500">
 						<UserCheck className="h-8 w-8 mx-auto mb-2 opacity-50" />
 						<p>No pending friend requests</p>

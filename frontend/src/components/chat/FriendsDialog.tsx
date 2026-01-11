@@ -39,7 +39,10 @@ export function FriendsDialog() {
 					</DialogTitle>
 				</DialogHeader>
 
-				<Tabs defaultValue="online" className="w-full cursor-pointer">
+				<Tabs
+					defaultValue="online"
+					className="w-full cursor-pointer flex-1 flex flex-col overflow-hidden"
+				>
 					<TabsList className="grid w-full grid-cols-3">
 						<TabsTrigger
 							value="online"
