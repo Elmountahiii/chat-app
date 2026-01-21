@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { User } from "@/types/user";
 import { Calendar, Mail } from "lucide-react";
+import { logger } from "@/utils/logger";
 
 interface UserProfileDialogProps {
   user: User | null;
@@ -49,7 +50,7 @@ export function UserProfileDialog({
     <Dialog
       open={isOpen}
       onOpenChange={(open) => {
-        console.log("open state : ", open);
+        logger.log("open state : ", open);
         if (!open) {
           onClose();
         }

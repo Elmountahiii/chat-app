@@ -1,6 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { HttpResponse } from "./types/httpResponse";
 import { User } from "./types/user";
+import { logger } from "./utils/logger";
 
 const protectedRoutes = ["/chat"];
 const authRoutes = ["/auth/login", "/auth/signup", "/onboarding"];
@@ -34,8 +35,8 @@ export async function middleware(request: NextRequest) {
 	}
 
 	try {
-		console.log("BACKEND_ENDPOINT ", process.env.BACKEND_ENDPOINT);
-		console.log("API_BASE_URL:", API_BASE_URL);
+		logger.log("BACKEND_ENDPOINT ", process.env.BACKEND_ENDPOINT);
+		logger.log("API_BASE_URL:", API_BASE_URL);
 		const response = await fetch(`${API_BASE_URL}/auth/me`, {
 			method: "GET",
 			headers: {
@@ -46,7 +47,7 @@ export async function middleware(request: NextRequest) {
 		const validationResponse: HttpResponse<User> = await response.json();
 		if (!validationResponse.success) {
 			redirectResponse.cookies.delete("authToken");
-			console.log("unauth request ", validationResponse.errorMessage);
+			logger.log("unauth request ", validationResponse.errorMessage);
 			return redirectResponse;
 		} else {
 			if (isAuthRoute) {
@@ -56,7 +57,7 @@ export async function middleware(request: NextRequest) {
 			}
 		}
 	} catch (e) {
-		console.log("Error during authentication check:", e);
+		logger.log("Error during authentication check:", e);
 		redirectResponse.cookies.delete("authToken");
 		return redirectResponse;
 	}

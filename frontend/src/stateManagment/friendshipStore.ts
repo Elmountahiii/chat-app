@@ -3,6 +3,7 @@ import { User } from "@/types/user";
 import { FriendShipRequest } from "@/types/friendShipRequest";
 import { HttpResponse } from "@/types/httpResponse";
 import { useChatStore } from "./chatStore";
+import { logger } from "@/utils/logger";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL
 	? process.env.NEXT_PUBLIC_BACKEND_URL
@@ -56,7 +57,7 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 
 	// Actions
 	getAllFriends: async () => {
-		console.log(
+		logger.log(
 			"%c 🌐 [HTTP] Fetching Friends...",
 			"color: #eab308; font-weight: bold;",
 		);
@@ -72,7 +73,7 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 
 			const result: HttpResponse<User[]> = await response.json();
 			if (!result.success) {
-				console.log(
+				logger.log(
 					"%c ❌ [HTTP] Fetch Friends Failed:",
 					"color: #ef4444; font-weight: bold;",
 					result.errorMessage,
@@ -80,7 +81,7 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 				set({ error: result.errorMessage });
 				return;
 			}
-			console.log(
+			logger.log(
 				"%c ✅ [HTTP] Friends Fetched:",
 				"color: #22c55e; font-weight: bold;",
 				result.data,
@@ -88,7 +89,7 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 
 			set({ friends: result.data });
 		} catch (e) {
-			console.log(
+			logger.log(
 				"%c ❌ [HTTP] Fetch Friends Error:",
 				"color: #ef4444; font-weight: bold;",
 				e,
@@ -100,7 +101,7 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 	},
 
 	searchForPotentialFriends: async (query: string) => {
-		console.log(
+		logger.log(
 			"%c 🌐 [HTTP] Searching Potential Friends...",
 			"color: #eab308; font-weight: bold;",
 			{ query },
@@ -121,7 +122,7 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 
 			const response: HttpResponse<User[]> = await rawResponse.json();
 			if (!response.success) {
-				console.log(
+				logger.log(
 					"%c ❌ [HTTP] Search Potential Friends Failed:",
 					"color: #ef4444; font-weight: bold;",
 					response.errorMessage,
@@ -129,14 +130,14 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 				set({ error: response.errorMessage });
 				return;
 			}
-			console.log(
+			logger.log(
 				"%c ✅ [HTTP] Potential Friends Found:",
 				"color: #22c55e; font-weight: bold;",
 				response.data,
 			);
 			set({ potentialFriends: response.data });
 		} catch (e) {
-			console.log(
+			logger.log(
 				"%c ❌ [HTTP] Search Potential Friends Error:",
 				"color: #ef4444; font-weight: bold;",
 				e,
@@ -148,7 +149,7 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 	},
 
 	getReceivedFriendshipRequests: async () => {
-		console.log(
+		logger.log(
 			"%c 🌐 [HTTP] Fetching Received Friendship Requests...",
 			"color: #eab308; font-weight: bold;",
 		);
@@ -164,7 +165,7 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 			const response: HttpResponse<FriendShipRequest[]> =
 				await rawResponse.json();
 			if (!response.success) {
-				console.log(
+				logger.log(
 					"%c ❌ [HTTP] Fetch Received Friendship Requests Failed:",
 					"color: #ef4444; font-weight: bold;",
 					response.errorMessage,
@@ -172,14 +173,14 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 				set({ error: response.errorMessage });
 				return;
 			}
-			console.log(
+			logger.log(
 				"%c ✅ [HTTP] Received Friendship Requests Fetched:",
 				"color: #22c55e; font-weight: bold;",
 				response.data,
 			);
 			set({ receivedFriendshipRequests: response.data });
 		} catch (e) {
-			console.log(
+			logger.log(
 				"%c ❌ [HTTP] Fetch Received Friendship Requests Error:",
 				"color: #ef4444; font-weight: bold;",
 				e,
@@ -191,7 +192,7 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 	},
 
 	getSentFriendshipRequests: async () => {
-		console.log(
+		logger.log(
 			"%c 🌐 [HTTP] Fetching Sent Friendship Requests...",
 			"color: #eab308; font-weight: bold;",
 		);
@@ -207,7 +208,7 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 			const response: HttpResponse<FriendShipRequest[]> =
 				await rawResponse.json();
 			if (!response.success) {
-				console.log(
+				logger.log(
 					"%c ❌ [HTTP] Fetch Sent Friendship Requests Failed:",
 					"color: #ef4444; font-weight: bold;",
 					response.errorMessage,
@@ -215,14 +216,14 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 				set({ error: response.errorMessage });
 				return;
 			}
-			console.log(
+			logger.log(
 				"%c ✅ [HTTP] Sent Friendship Requests Fetched:",
 				"color: #22c55e; font-weight: bold;",
 				response.data,
 			);
 			set({ sentFriendshipRequests: response.data });
 		} catch (e) {
-			console.log(
+			logger.log(
 				"%c ❌ [HTTP] Fetch Sent Friendship Requests Error:",
 				"color: #ef4444; font-weight: bold;",
 				e,
@@ -234,7 +235,7 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 	},
 
 	sendFriendshipRequest: async (receiverId: string) => {
-		console.log(
+		logger.log(
 			"%c 🌐 [HTTP] Sending Friendship Request...",
 			"color: #eab308; font-weight: bold;",
 			{ receiverId },
@@ -255,7 +256,7 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 			const response: HttpResponse<FriendShipRequest> =
 				await rawResponse.json();
 			if (!response.success) {
-				console.log(
+				logger.log(
 					"%c ❌ [HTTP] Send Friendship Request Failed:",
 					"color: #ef4444; font-weight: bold;",
 					response.errorMessage,
@@ -263,7 +264,7 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 				set({ error: response.errorMessage });
 				return;
 			}
-			console.log(
+			logger.log(
 				"%c ✅ [HTTP] Friendship Request Sent:",
 				"color: #22c55e; font-weight: bold;",
 				response.data,
@@ -289,7 +290,7 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 				],
 			}));
 		} catch (e) {
-			console.log(
+			logger.log(
 				"%c ❌ [HTTP] Send Friendship Request Error:",
 				"color: #ef4444; font-weight: bold;",
 				e,
@@ -301,7 +302,7 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 	},
 
 	cancelFriendshipRequest: async (friendshipId: string) => {
-		console.log(
+		logger.log(
 			"%c 🌐 [HTTP] Canceling Friendship Request...",
 			"color: #eab308; font-weight: bold;",
 			{ friendshipId },
@@ -322,7 +323,7 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 			const response: HttpResponse<FriendShipRequest> =
 				await rawResponse.json();
 			if (!response.success) {
-				console.log(
+				logger.log(
 					"%c ❌ [HTTP] Cancel Friendship Request Failed:",
 					"color: #ef4444; font-weight: bold;",
 					response.errorMessage,
@@ -330,7 +331,7 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 				set({ error: response.errorMessage });
 				return;
 			}
-			console.log(
+			logger.log(
 				"%c ✅ [HTTP] Friendship Request Canceled:",
 				"color: #22c55e; font-weight: bold;",
 				response.data,
@@ -344,7 +345,7 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 
 			useChatStore.getState().notifyFriendshipCancelled(response.data);
 		} catch (e) {
-			console.log(
+			logger.log(
 				"%c ❌ [HTTP] Cancel Friendship Request Error:",
 				"color: #ef4444; font-weight: bold;",
 				e,
@@ -356,7 +357,7 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 	},
 
 	acceptFriendshipRequest: async (FriendshipId: string) => {
-		console.log(
+		logger.log(
 			"%c 🌐 [HTTP] Accepting Friendship Request...",
 			"color: #eab308; font-weight: bold;",
 			{ FriendshipId },
@@ -376,7 +377,7 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 			const response: HttpResponse<FriendShipRequest> =
 				await rawResponse.json();
 			if (!response.success) {
-				console.log(
+				logger.log(
 					"%c ❌ [HTTP] Accept Friendship Request Failed:",
 					"color: #ef4444; font-weight: bold;",
 					response.errorMessage,
@@ -384,7 +385,7 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 				set({ error: response.errorMessage });
 				return;
 			}
-			console.log(
+			logger.log(
 				"%c ✅ [HTTP] Friendship Request Accepted:",
 				"color: #22c55e; font-weight: bold;",
 				response.data,
@@ -401,7 +402,7 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 
 			get().getAllFriends();
 		} catch (e) {
-			console.log(
+			logger.log(
 				"%c ❌ [HTTP] Accept Friendship Request Error:",
 				"color: #ef4444; font-weight: bold;",
 				e,
@@ -413,7 +414,7 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 	},
 
 	declineFriendshipRequest: async (FriendshipId: string) => {
-		console.log(
+		logger.log(
 			"%c 🌐 [HTTP] Declining Friendship Request...",
 			"color: #eab308; font-weight: bold;",
 			{ FriendshipId },
@@ -433,7 +434,7 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 			const response: HttpResponse<FriendShipRequest> =
 				await rawResponse.json();
 			if (!response.success) {
-				console.log(
+				logger.log(
 					"%c ❌ [HTTP] Decline Friendship Request Failed:",
 					"color: #ef4444; font-weight: bold;",
 					response.errorMessage,
@@ -441,7 +442,7 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 				set({ error: response.errorMessage });
 				return;
 			}
-			console.log(
+			logger.log(
 				"%c ✅ [HTTP] Friendship Request Declined:",
 				"color: #22c55e; font-weight: bold;",
 				response.data,
@@ -457,7 +458,7 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 			});
 			useChatStore.getState().notifyFriendshipDeclined(response.data);
 		} catch (e) {
-			console.log(
+			logger.log(
 				"%c ❌ [HTTP] Decline Friendship Request Error:",
 				"color: #ef4444; font-weight: bold;",
 				e,
@@ -469,7 +470,7 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 	},
 
 	unfriendUser: async (userId) => {
-		console.log(
+		logger.log(
 			"%c 🌐 [HTTP] Unfriending User...",
 			"color: #eab308; font-weight: bold;",
 			{ userId },
@@ -495,7 +496,7 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 				await rawResponse.json();
 
 			if (!response.success) {
-				console.log(
+				logger.log(
 					"%c ❌ [HTTP] Unfriend User Failed:",
 					"color: #ef4444; font-weight: bold;",
 					response.errorMessage,
@@ -503,7 +504,7 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 				set({ error: response.errorMessage });
 				return;
 			}
-			console.log(
+			logger.log(
 				"%c ✅ [HTTP] User Unfriended:",
 				"color: #22c55e; font-weight: bold;",
 				response.data,
@@ -524,7 +525,7 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 
 			useChatStore.getState().notifyUnfriend(response.data);
 		} catch (err) {
-			console.log(
+			logger.log(
 				"%c ❌ [HTTP] Unfriend User Error:",
 				"color: #ef4444; font-weight: bold;",
 				err,
@@ -537,7 +538,7 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 		}
 	},
 	blockFriend: async (userId) => {
-		console.log(
+		logger.log(
 			"%c 🌐 [HTTP] Blocking User...",
 			"color: #eab308; font-weight: bold;",
 			{ userId },
@@ -563,7 +564,7 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 				await rawResponse.json();
 
 			if (!response.success) {
-				console.log(
+				logger.log(
 					"%c ❌ [HTTP] Block User Failed:",
 					"color: #ef4444; font-weight: bold;",
 					response.errorMessage,
@@ -571,7 +572,7 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 				set({ error: response.errorMessage });
 				return false;
 			}
-			console.log(
+			logger.log(
 				"%c ✅ [HTTP] User Blocked:",
 				"color: #22c55e; font-weight: bold;",
 				response.data,
@@ -596,7 +597,7 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 			useChatStore.getState().notifyUnfriend(response.data);
 			return true;
 		} catch (err) {
-			console.log(
+			logger.log(
 				"%c ❌ [HTTP] Block User Error:",
 				"color: #ef4444; font-weight: bold;",
 				err,
@@ -611,7 +612,7 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 	},
 
 	unblockUser: async (userId) => {
-		console.log(
+		logger.log(
 			"%c 🌐 [HTTP] Unblocking User...",
 			"color: #eab308; font-weight: bold;",
 			{ userId },
@@ -637,7 +638,7 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 				await rawResponse.json();
 
 			if (!response.success) {
-				console.log(
+				logger.log(
 					"%c ❌ [HTTP] Unblock User Failed:",
 					"color: #ef4444; font-weight: bold;",
 					response.errorMessage,
@@ -645,7 +646,7 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 				set({ error: response.errorMessage });
 				return false;
 			}
-			console.log(
+			logger.log(
 				"%c ✅ [HTTP] User Unblocked:",
 				"color: #22c55e; font-weight: bold;",
 				response.data,
@@ -655,7 +656,7 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
 			useChatStore.getState().fetchConversations();
 			return true;
 		} catch (err) {
-			console.log(
+			logger.log(
 				"%c ❌ [HTTP] Unblock User Error:",
 				"color: #ef4444; font-weight: bold;",
 				err,

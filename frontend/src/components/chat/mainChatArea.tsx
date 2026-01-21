@@ -1,6 +1,7 @@
 "use client";
 import { useAuthStore } from "@/stateManagment/authStore";
 import { useChatStore } from "@/stateManagment/chatStore";
+import { logger } from "@/utils/logger";
 import React, {
 	useRef,
 	useState,
@@ -190,12 +191,12 @@ function MainChatArea({
 
 	const handleSendMessage = (): void => {
 		if (!conversation) {
-			console.log("no conversation selected");
+			logger.log("no conversation selected");
 			return;
 		}
 
 		if (newMessage.trim() === "") {
-			console.log("message is empty");
+			logger.log("message is empty");
 			return;
 		}
 		notifyTyping(conversation._id, false);
@@ -206,7 +207,7 @@ function MainChatArea({
 	const handleBlockUser = () => {
 		setDropdownOpen(false);
 		setBlockUserDialogOpen(true);
-		console.log("blocking user");
+		logger.log("blocking user");
 	};
 
 	const handleUnfriendUser = () => {

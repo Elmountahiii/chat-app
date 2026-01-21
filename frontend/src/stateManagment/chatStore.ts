@@ -9,6 +9,7 @@ import { FriendShipRequest } from "@/types/friendShipRequest";
 import { useFriendshipStore } from "./friendshipStore";
 import { useAuthStore } from "./authStore";
 import { User } from "@/types/user";
+import { logger } from "@/utils/logger";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL
 	? process.env.NEXT_PUBLIC_BACKEND_URL
@@ -77,7 +78,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 	// actions
 	initializeSocket: () => {
 		if (get().status === "connected" || get().status === "connecting") {
-			console.log("Socket is already connected or connecting");
+			logger.log("Socket is already connected or connecting");
 			return;
 		}
 		set({ status: "connecting" });
@@ -91,7 +92,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 		});
 
 		socket.on("connect_error", (err) => {
-			console.log(
+			logger.log(
 				"%c ❌ [Socket] Connection Error:",
 				"color: #ef4444; font-weight: bold;",
 				err,
@@ -100,7 +101,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 		});
 
 		socket.on("connect", async () => {
-			console.log(
+			logger.log(
 				"%c ⚡ [Socket] Connected",
 				"color: #0ea5e9; font-weight: bold;",
 			);
@@ -120,7 +121,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 		});
 
 		socket.on("disconnect", () => {
-			console.log(
+			logger.log(
 				"%c 🔌 [Socket] Disconnected",
 				"color: #0ea5e9; font-weight: bold;",
 			);
@@ -131,7 +132,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 		socket.on(
 			"user:statusChanged",
 			(data: { userId: string; status: "online" | "offline" | "away" }) => {
-				console.log(
+				logger.log(
 					"%c 👤 [Socket] User Status Changed:",
 					"color: #0ea5e9; font-weight: bold;",
 					data,
@@ -146,7 +147,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 		socket.on(
 			"conversation_created",
 			(data: { conversation: Conversation }) => {
-				console.log(
+				logger.log(
 					"%c 💬 [Socket] Conversation Created:",
 					"color: #0ea5e9; font-weight: bold;",
 					data,
@@ -160,7 +161,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 		socket.on(
 			"conversation_typing",
 			(data: { conversationId: string; userId: string; isTyping: boolean }) => {
-				console.log(
+				logger.log(
 					"%c ⌨️ [Socket] Typing Status:",
 					"color: #0ea5e9; font-weight: bold;",
 					data,
@@ -170,7 +171,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
 		// Message events
 		socket.on("new_message", (message: Message) => {
-			console.log(
+			logger.log(
 				"%c 📩 [Socket] New Message:",
 				"color: #0ea5e9; font-weight: bold;",
 				message,
@@ -248,7 +249,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 		socket.on(
 			"messages_read",
 			(data: { conversationId: string; userId: string }) => {
-				console.log(
+				logger.log(
 					"%c 👀 [Socket] Messages Read:",
 					"color: #0ea5e9; font-weight: bold;",
 					data,
@@ -286,7 +287,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 		socket.on(
 			"friendship_request_received",
 			(data: { friendship: FriendShipRequest }) => {
-				console.log(
+				logger.log(
 					"%c 🤝 [Socket] Friend Request Received:",
 					"color: #0ea5e9; font-weight: bold;",
 					data,
@@ -300,7 +301,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 		socket.on(
 			"friendship_request_accepted",
 			(data: { friendship: FriendShipRequest }) => {
-				console.log(
+				logger.log(
 					"%c 🤝 [Socket] Friend Request Accepted:",
 					"color: #0ea5e9; font-weight: bold;",
 					data,
@@ -314,7 +315,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 		socket.on(
 			"friendship_request_declined",
 			(data: { friendship: FriendShipRequest }) => {
-				console.log(
+				logger.log(
 					"%c 🤝 [Socket] Friend Request Declined:",
 					"color: #0ea5e9; font-weight: bold;",
 					data,
@@ -328,7 +329,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 		socket.on(
 			"friendship_request_cancelled",
 			(data: { friendship: FriendShipRequest }) => {
-				console.log(
+				logger.log(
 					"%c 🤝 [Socket] Friend Request Cancelled:",
 					"color: #0ea5e9; font-weight: bold;",
 					data,
@@ -342,7 +343,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 		socket.on(
 			"friendship_unfriended",
 			(data: { friendship: FriendShipRequest }) => {
-				console.log(
+				logger.log(
 					"%c 🤝 [Socket] Unfriended:",
 					"color: #0ea5e9; font-weight: bold;",
 					data,
@@ -353,7 +354,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
 		// Error handling
 		socket.on("error", (error: { event: string; message: string }) => {
-			console.log(
+			logger.log(
 				"%c ⚠️ [Socket] Error:",
 				"color: #ef4444; font-weight: bold;",
 				error,
@@ -365,7 +366,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 		socket.on(
 			"send_message_error",
 			(data: { tempId: string; conversationId: string; message: string }) => {
-				console.log(
+				logger.log(
 					"%c ❌ [Socket] Message Send Failed:",
 					"color: #ef4444; font-weight: bold;",
 					data,
@@ -405,7 +406,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
 	// conversation actions
 	fetchConversations: async () => {
-		console.log(
+		logger.log(
 			"%c 🌐 [HTTP] Fetching Conversations...",
 			"color: #eab308; font-weight: bold;",
 		);
@@ -420,7 +421,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 			});
 			const result: HttpResponse<Conversation[]> = await response.json();
 			if (!result.success) {
-				console.log(
+				logger.log(
 					"%c ❌ [HTTP] Fetch Conversations Failed:",
 					"color: #ef4444; font-weight: bold;",
 					result.errorMessage,
@@ -428,7 +429,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 				return;
 			}
 
-			console.log(
+			logger.log(
 				"%c ✅ [HTTP] Conversations Fetched:",
 				"color: #22c55e; font-weight: bold;",
 				result.data,
@@ -436,7 +437,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
 			set({ conversations: result.data, isLoading: false });
 		} catch (e) {
-			console.log(
+			logger.log(
 				"%c ❌ [HTTP] Fetch Conversations Error:",
 				"color: #ef4444; font-weight: bold;",
 				e,
@@ -447,7 +448,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 	},
 
 	createConversation: async (userId) => {
-		console.log(
+		logger.log(
 			"%c 🌐 [HTTP] Creating Conversation...",
 			"color: #eab308; font-weight: bold;",
 			{ userId },
@@ -466,7 +467,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 			);
 			const response: HttpResponse<Conversation> = await rawResponse.json();
 			if (!response.success) {
-				console.log(
+				logger.log(
 					"%c ❌ [HTTP] Create Conversation Failed:",
 					"color: #ef4444; font-weight: bold;",
 					response.errorMessage,
@@ -474,7 +475,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 				return;
 			}
 
-			console.log(
+			logger.log(
 				"%c ✅ [HTTP] Conversation Created:",
 				"color: #22c55e; font-weight: bold;",
 				response.data,
@@ -493,7 +494,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 				};
 			});
 		} catch (e) {
-			console.log(
+			logger.log(
 				"%c ❌ [HTTP] Create Conversation Error:",
 				"color: #ef4444; font-weight: bold;",
 				e,
@@ -509,7 +510,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
 	// message actions
 	loadInitialMessages: async (conversationId) => {
-		console.log(
+		logger.log(
 			"%c 🌐 [HTTP] Fetching Initial Messages...",
 			"color: #eab308; font-weight: bold;",
 			{ conversationId },
@@ -528,7 +529,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 			);
 			const result: HttpResponse<Message[]> = await response.json();
 			if (!result.success) {
-				console.log(
+				logger.log(
 					"%c ❌ [HTTP] Fetch Initial Messages Failed:",
 					"color: #ef4444; font-weight: bold;",
 					result.errorMessage,
@@ -536,7 +537,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 				return;
 			}
 
-			console.log(
+			logger.log(
 				"%c ✅ [HTTP] Initial Messages Fetched:",
 				"color: #22c55e; font-weight: bold;",
 				{ count: result.data.length },
@@ -573,7 +574,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 				}));
 			}, 500);
 		} catch (e) {
-			console.log(
+			logger.log(
 				"%c ❌ [HTTP] Fetch Initail Messages Error:",
 				"color: #ef4444; font-weight: bold;",
 				e,
@@ -582,7 +583,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 		}
 	},
 	loadMessages: async (conversationId) => {
-		console.log(
+		logger.log(
 			"%c 🌐 [HTTP] Fetching Messages...",
 			"color: #eab308; font-weight: bold;",
 			{ conversationId },
@@ -602,7 +603,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 			const result: HttpResponse<PaginatedMessages> = await response.json();
 
 			if (!result.success) {
-				console.log(
+				logger.log(
 					"%c ❌ [HTTP] Fetch Messages Failed:",
 					"color: #ef4444; font-weight: bold;",
 					result.errorMessage,
@@ -610,7 +611,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 				return;
 			}
 
-			console.log(
+			logger.log(
 				"%c ✅ [HTTP] Messages Fetched:",
 				"color: #22c55e; font-weight: bold;",
 				{
@@ -638,7 +639,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 			}));
 			get().notifyMessageRead(conversationId);
 		} catch (e) {
-			console.log(
+			logger.log(
 				"%c ❌ [HTTP] Fetch Messages Error:",
 				"color: #ef4444; font-weight: bold;",
 				e,
@@ -655,7 +656,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 			return;
 		}
 
-		console.log(
+		logger.log(
 			"%c 🌐 [HTTP] Fetching More Messages...",
 			"color: #eab308; font-weight: bold;",
 			{ conversationId, cursor: pagination.nextCursor },
@@ -691,7 +692,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 			const result: HttpResponse<PaginatedMessages> = await response.json();
 
 			if (!result.success) {
-				console.log(
+				logger.log(
 					"%c ❌ [HTTP] Fetch More Messages Failed:",
 					"color: #ef4444; font-weight: bold;",
 					result.errorMessage,
@@ -708,7 +709,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 				return;
 			}
 
-			console.log(
+			logger.log(
 				"%c ✅ [HTTP] More Messages Fetched:",
 				"color: #22c55e; font-weight: bold;",
 				{
@@ -738,7 +739,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 				};
 			});
 		} catch (e) {
-			console.log(
+			logger.log(
 				"%c ❌ [HTTP] Fetch More Messages Error:",
 				"color: #ef4444; font-weight: bold;",
 				e,
@@ -755,7 +756,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 		}
 	},
 	sendMessage: async (conversationId, content) => {
-		console.log(
+		logger.log(
 			"%c 📤 [Socket] Sending Message...",
 			"color: #eab308; font-weight: bold;",
 			{ conversationId, content },
@@ -764,7 +765,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 		const user = useAuthStore.getState().user;
 
 		if (!socket || !user) {
-			console.log(
+			logger.log(
 				"%c ❌ [Socket] Cannot send message - no socket or user",
 				"color: #ef4444; font-weight: bold;",
 			);
@@ -807,7 +808,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 	},
 
 	notifyMessageRead: async (conversationId) => {
-		console.log(
+		logger.log(
 			"%c 🌐 [HTTP] Marking as Read...",
 			"color: #eab308; font-weight: bold;",
 			{ conversationId },

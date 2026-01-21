@@ -4,6 +4,7 @@ import { User } from "@/types/user";
 import { SignUpDataType } from "@/schema/auth/signUpSchema";
 import { ProfileSettingsDataType } from "@/schema/profile/profileSettingsSchema";
 import { useChatStore } from "./chatStore";
+import { logger } from "@/utils/logger";
 
 interface AuthenticationState {
 	// state
@@ -44,7 +45,7 @@ export const useAuthStore = create<AuthenticationState>((set) => ({
 
 	// Actions
 	login: async (email: string, password: string) => {
-		console.log(
+		logger.log(
 			"%c 🌐 [HTTP] Logging in...",
 			"color: #eab308; font-weight: bold;",
 			{ email },
@@ -65,7 +66,7 @@ export const useAuthStore = create<AuthenticationState>((set) => ({
 
 			const result: HttpResponse<User> = await response.json();
 			if (!result.success) {
-				console.log(
+				logger.log(
 					"%c ❌ [HTTP] Login Failed:",
 					"color: #ef4444; font-weight: bold;",
 					result.errorMessage,
@@ -76,7 +77,7 @@ export const useAuthStore = create<AuthenticationState>((set) => ({
 				});
 				return;
 			}
-			console.log(
+			logger.log(
 				"%c ✅ [HTTP] Login Success:",
 				"color: #22c55e; font-weight: bold;",
 				result.data,
@@ -90,7 +91,7 @@ export const useAuthStore = create<AuthenticationState>((set) => ({
 				error: null,
 			});
 		} catch (e) {
-			console.log(
+			logger.log(
 				"%c ❌ [HTTP] Login Error:",
 				"color: #ef4444; font-weight: bold;",
 				e,
@@ -103,7 +104,7 @@ export const useAuthStore = create<AuthenticationState>((set) => ({
 	},
 
 	signUp: async (userData: SignUpDataType) => {
-		console.log(
+		logger.log(
 			"%c 🌐 [HTTP] Signing Up...",
 			"color: #eab308; font-weight: bold;",
 			userData,
@@ -125,7 +126,7 @@ export const useAuthStore = create<AuthenticationState>((set) => ({
 			const result: HttpResponse<User> = await response.json();
 
 			if (!result.success) {
-				console.log(
+				logger.log(
 					"%c ❌ [HTTP] Sign Up Failed:",
 					"color: #ef4444; font-weight: bold;",
 					result.errorMessage,
@@ -136,7 +137,7 @@ export const useAuthStore = create<AuthenticationState>((set) => ({
 				});
 				return false;
 			}
-			console.log(
+			logger.log(
 				"%c ✅ [HTTP] Sign Up Success:",
 				"color: #22c55e; font-weight: bold;",
 				result.data,
@@ -157,7 +158,7 @@ export const useAuthStore = create<AuthenticationState>((set) => ({
 
 			return true;
 		} catch (e) {
-			console.log(
+			logger.log(
 				"%c ❌ [HTTP] Sign Up Error:",
 				"color: #ef4444; font-weight: bold;",
 				e,
@@ -172,7 +173,7 @@ export const useAuthStore = create<AuthenticationState>((set) => ({
 	},
 
 	updateUserInfo: async (userData: ProfileSettingsDataType) => {
-		console.log(
+		logger.log(
 			"%c 🌐 [HTTP] Updating User Info...",
 			"color: #eab308; font-weight: bold;",
 			userData,
@@ -183,7 +184,7 @@ export const useAuthStore = create<AuthenticationState>((set) => ({
 				error: null,
 			});
 			if (userData.password !== "") {
-				console.log("Need to update also the password");
+				logger.log("Need to update also the password");
 			}
 			const response = await fetch(`${API_BASE_URL}/user/me`, {
 				method: "PUT",
@@ -196,7 +197,7 @@ export const useAuthStore = create<AuthenticationState>((set) => ({
 			const result: HttpResponse<User> = await response.json();
 
 			if (!result.success) {
-				console.log(
+				logger.log(
 					"%c ❌ [HTTP] Update Info Failed:",
 					"color: #ef4444; font-weight: bold;",
 					result.errorMessage,
@@ -208,7 +209,7 @@ export const useAuthStore = create<AuthenticationState>((set) => ({
 				return;
 			}
 
-			console.log(
+			logger.log(
 				"%c ✅ [HTTP] Update Info Success:",
 				"color: #22c55e; font-weight: bold;",
 				result.data,
@@ -221,7 +222,7 @@ export const useAuthStore = create<AuthenticationState>((set) => ({
 				error: null,
 			});
 		} catch (e) {
-			console.log(
+			logger.log(
 				"%c ❌ [HTTP] Update Info Error:",
 				"color: #ef4444; font-weight: bold;",
 				e,
@@ -234,7 +235,7 @@ export const useAuthStore = create<AuthenticationState>((set) => ({
 	},
 
 	logout: async () => {
-		console.log(
+		logger.log(
 			"%c 🌐 [HTTP] Logging out...",
 			"color: #eab308; font-weight: bold;",
 		);
@@ -253,13 +254,13 @@ export const useAuthStore = create<AuthenticationState>((set) => ({
 			useChatStore.getState().disconnectSocket();
 			const result: HttpResponse<null> = await response.json();
 			if (!result.success) {
-				console.log(
+				logger.log(
 					"%c ❌ [HTTP] Logout Failed:",
 					"color: #ef4444; font-weight: bold;",
 					result.errorMessage,
 				);
 			} else {
-				console.log(
+				logger.log(
 					"%c ✅ [HTTP] Logout Success:",
 					"color: #22c55e; font-weight: bold;",
 				);
@@ -273,7 +274,7 @@ export const useAuthStore = create<AuthenticationState>((set) => ({
 				successMessage: "Logged out successfully",
 			});
 		} catch (e) {
-			console.log(
+			logger.log(
 				"%c ❌ [HTTP] Logout Error:",
 				"color: #ef4444; font-weight: bold;",
 				e,
@@ -289,11 +290,11 @@ export const useAuthStore = create<AuthenticationState>((set) => ({
 	},
 
 	resetPassword: async (email: string) => {
-		console.log("Reset password for:", email);
+		logger.log("Reset password for:", email);
 	},
 
 	checkAuthStatus: async () => {
-		console.log(
+		logger.log(
 			"%c 🌐 [HTTP] Checking Auth Status...",
 			"color: #eab308; font-weight: bold;",
 		);
@@ -308,7 +309,7 @@ export const useAuthStore = create<AuthenticationState>((set) => ({
 			});
 			const result: HttpResponse<User> = await response.json();
 			if (!result.success) {
-				console.log(
+				logger.log(
 					"%c ❌ [HTTP] Check Auth Status Failed:",
 					"color: #ef4444; font-weight: bold;",
 					result.errorMessage,
@@ -318,7 +319,7 @@ export const useAuthStore = create<AuthenticationState>((set) => ({
 				});
 				return;
 			}
-			console.log(
+			logger.log(
 				"%c ✅ [HTTP] Auth Status Checked:",
 				"color: #22c55e; font-weight: bold;",
 				result.data,
@@ -331,7 +332,7 @@ export const useAuthStore = create<AuthenticationState>((set) => ({
 				error: null,
 			});
 		} catch (e) {
-			console.log(
+			logger.log(
 				"%c ❌ [HTTP] Check Auth Status Error:",
 				"color: #ef4444; font-weight: bold;",
 				e,
