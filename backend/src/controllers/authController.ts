@@ -18,17 +18,28 @@ export class AuthController {
 		const body = req.body;
 		try {
 			const validateData = await this.authValidator.validateSignUpInput(body);
-			const user = await this.authService.registerUser(
-				validateData.firstName,
-				validateData.lastName,
-				validateData.email,
-				validateData.password,
-				validateData.profilePicture,
-			);
+		const user = await this.authService.registerUser(
+			validateData.firstName,
+			validateData.lastName,
+			validateData.email,
+			validateData.password,
+			validateData.profilePicture,
+		);
 
-			res
-				.status(201)
-				.json(createSuccessResponse(user, "Account created successfully"));
+		const signupTimestamp = new Date().toLocaleString('en-US', { 
+			weekday: 'long', 
+			year: 'numeric', 
+			month: 'long', 
+			day: 'numeric', 
+			hour: '2-digit', 
+			minute: '2-digit', 
+			second: '2-digit' 
+		});
+		console.log(`[AUTH] New user account created: ${user.email} (ID: ${user._id}) - ${signupTimestamp}`);
+
+		res
+			.status(201)
+			.json(createSuccessResponse(user, "Account created successfully"));
 		} catch (e) {
 			HandleError(e, res, "Error during sign up", {
 				body,
@@ -44,14 +55,26 @@ export class AuthController {
 				validData.email,
 				validData.password,
 			);
-			const token = await JwtService.signToken(user._id.toString());
-			res.cookie("authToken", token, {
-				httpOnly: true,
-				secure: isProduction,
-				sameSite: isProduction ? "strict" : "lax",
-				maxAge: 7 * 24 * 60 * 60 * 1000,
-			});
-			res.status(200).json(createSuccessResponse(user, "Login successful"));
+		const token = await JwtService.signToken(user._id.toString());
+		res.cookie("authToken", token, {
+			httpOnly: true,
+			secure: isProduction,
+			sameSite: isProduction ? "strict" : "lax",
+			maxAge: 7 * 24 * 60 * 60 * 1000,
+		});
+
+		const loginTimestamp = new Date().toLocaleString('en-US', { 
+			weekday: 'long', 
+			year: 'numeric', 
+			month: 'long', 
+			day: 'numeric', 
+			hour: '2-digit', 
+			minute: '2-digit', 
+			second: '2-digit' 
+		});
+		console.log(`[AUTH] User logged in: ${user.email} (ID: ${user._id}) - ${loginTimestamp}`);
+
+		res.status(200).json(createSuccessResponse(user, "Login successful"));
 		} catch (e) {
 			HandleError(e, res, "Error during login", body);
 		}
