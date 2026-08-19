@@ -27,23 +27,21 @@ RUN  npm run build
 
 
 FROM base AS runtime
+
 WORKDIR /app
 
-
-# ENV NODE_ENV=production
-# ENV NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL}
-# ENV NEXT_PUBLIC_SOCKET_URL=${NEXT_PUBLIC_SOCKET_URL}
-# ENV BACKEND_ENDPOINT=${BACKEND_ENDPOINT}
+ENV NODE_ENV=production
+ENV HOSTNAME="0.0.0.0"
+ENV PORT=3000
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-RUN apk add curl
+RUN apk add --no-cache curl
 
 COPY --from=dev-builder /app/public ./public
 COPY --from=dev-builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=dev-builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-
 
 USER nextjs
 
